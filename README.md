@@ -12,6 +12,8 @@ Singulax is an English-friendly programming language using `.sglx` files. This d
 
 Github Pages: https://lyte3075.github.io/SingulaX/
 
+Cloudflare Pages: https://singulax.pages.dev
+
 ## Browser / iPhone
 
 Singulax Studio is browser-first. It does not require Python. Host the `browser/` directory with the adjacent `runtime/` directory on any static web server, open it in Safari/Chrome, and optionally add it to the home screen. After the first load, the service worker caches the app for offline use.
