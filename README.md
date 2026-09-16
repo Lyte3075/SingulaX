@@ -1,7 +1,5 @@
 # Singulax
 
-Link: https://lyte3075.github.io/SingulaX/
-
 Singulax is an English-friendly programming language using `.sglx` files. This distribution contains:
 
 - `runtime/sglx.mjs`: dependency-free JavaScript runtime for browsers and Node.js
@@ -9,6 +7,10 @@ Singulax is an English-friendly programming language using `.sglx` files. This d
 - `bin/sglx.mjs`: terminal runner for Node.js
 - `sglx.py`: legacy/reference Python runtime
 - `examples/`: language examples
+
+##Links
+
+Github Pages: https://lyte3075.github.io/SingulaX/
 
 ## Browser / iPhone
 
