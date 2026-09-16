@@ -8,7 +8,7 @@ Singulax is an English-friendly programming language using `.sglx` files. This d
 - `sglx.py`: legacy/reference Python runtime
 - `examples/`: language examples
 
-##Links
+## Links
 
 Github Pages: https://lyte3075.github.io/SingulaX/
 
