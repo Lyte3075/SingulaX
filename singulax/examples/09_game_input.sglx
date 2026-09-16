@@ -1,0 +1,26 @@
+# 09_game_input.sglx
+# Run this from Singulax Studio. Use arrow keys and click the canvas.
+
+local x = 350
+local y = 190
+
+forever do
+  clear_screen()
+
+  if key_down("ArrowLeft") then
+    x -= 4
+  elseif key_down("ArrowRight") then
+    x += 4
+  end
+
+  if key_down("ArrowUp") then
+    y -= 4
+  elseif key_down("ArrowDown") then
+    y += 4
+  end
+
+  draw_rect(x, y, 70, 70, "dodgerblue")
+  draw_circle(mouse_x(), mouse_y(), 12, "white")
+  draw_text("Arrow keys move the square", 20, 30, 22, "white")
+  draw_text("Mouse: {mouse_x()}, {mouse_y()}", 20, 60, 16, "white")
+end

@@ -1,0 +1,12 @@
+# geometry.sglx
+# A small reusable module. Any Singulax file can be pulled in with "use".
+
+let pi = 3.14159
+
+function circle_area(radius)
+  return pi * radius ^ 2
+end
+
+function rectangle_area(width, height)
+  return width * height
+end

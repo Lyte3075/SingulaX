@@ -1,0 +1,8 @@
+# 05_modules.sglx
+# Split code across files with "use". Run this one -- it pulls in geometry.sglx.
+
+use "geometry.sglx" as geometry
+
+say("Pi is about", geometry.pi)
+say("Circle area (r=3):", geometry.circle_area(3))
+say("Rectangle area (4x5):", geometry.rectangle_area(4, 5))

@@ -1,0 +1,15 @@
+# SingulaX repeat.until examples
+local ready = false
+
+function check_ready()
+  return ready
+end
+
+# Poll a task until its state/result is true
+repeat.until(check_ready, true)
+
+# Repeat a statement until its result matches the requested state
+local a = 0
+repeat.until.statement(a = 1, true)
+
+say("repeat.until examples complete")

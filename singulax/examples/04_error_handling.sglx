@@ -1,0 +1,30 @@
+# 04_error_handling.sglx
+# try/catch for handling problems gracefully, and "raise" to signal your own.
+
+function safe_divide(a, b)
+  try
+    return a / b
+  catch as e
+    say("Could not divide:", e)
+    return nothing
+  end
+end
+
+say(safe_divide(10, 2))
+say(safe_divide(10, 0))
+
+function withdraw(balance, amount)
+  if amount > balance then
+    raise "insufficient funds"
+  end
+  return balance - amount
+end
+
+try
+  let new_balance = withdraw(50, 100)
+  say("New balance:", new_balance)
+catch as problem
+  say("Transaction failed:", problem)
+end
+
+say("Program kept running after the error was handled.")

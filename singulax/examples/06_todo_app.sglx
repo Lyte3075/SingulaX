@@ -1,0 +1,60 @@
+# 06_todo_app.sglx
+# A small interactive program that ties everything together:
+# lists of dictionaries, functions, loops, conditionals, and user input.
+#
+# Run it and type: add, list, done, quit
+
+let tasks = []
+
+function add_task(title)
+  tasks.push({title: title, complete: false})
+  say("Added:", title)
+end
+
+function complete_task(index)
+  if index < 0 or index >= len(tasks) then
+    say("No task at that number.")
+    return nothing
+  end
+  tasks[index].complete = true
+  say("Marked done:", tasks[index].title)
+end
+
+function show_tasks()
+  if len(tasks) == 0 then
+    say("(no tasks yet)")
+    return nothing
+  end
+  let i = 0
+  for each task in tasks do
+    let status = "[ ]"
+    if task.complete then
+      status = "[x]"
+    end
+    say(i, status, task.title)
+    i = i + 1
+  end
+end
+
+say("Simple Singulax To-Do List. Commands: add, list, done, quit")
+
+let running = true
+while running do
+  let command = ask("> ").trim().lower()
+
+  if command == "add" then
+    let title = ask("Task title: ")
+    add_task(title)
+  otherwise if command == "list" then
+    show_tasks()
+  otherwise if command == "done" then
+    let idx = to_number(ask("Task number to complete: "))
+    complete_task(idx)
+  otherwise if command == "quit" then
+    running = false
+  otherwise
+    say("Unknown command. Try: add, list, done, quit")
+  end
+end
+
+say("Goodbye!")
