@@ -1,0 +1,36 @@
+# 08_control_flow.sglx
+# Luau-friendly declarations and control flow.
+
+local score = 87
+if score >= 90 then
+  say("A")
+elseif score >= 80 then
+  say("B")
+else
+  say("C or below")
+end
+
+local total = 0
+for i = 1, 5 do
+  total += i
+end
+say("numeric for:", total)
+
+for i = 5, 1, -1 do
+  say("countdown:", i)
+end
+
+local n = 0
+while n < 3 do
+  n += 1
+end
+say("while:", n)
+
+local stopped = 0
+forever do
+  stopped += 1
+  if stopped >= 3 then
+    break
+  end
+end
+say("forever:", stopped)

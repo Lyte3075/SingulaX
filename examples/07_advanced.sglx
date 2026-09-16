@@ -1,0 +1,76 @@
+# 07_advanced.sglx
+# The "advanced but still simple" side of Singulax: inline conditionals,
+# list comprehensions, functional list methods, destructuring, variadic
+# functions, pattern matching, and JSON.
+
+# --- inline conditional expressions ---
+let n = 7
+let parity = if n % 2 == 0 then "even" otherwise "odd"
+say("{n} is {parity}")
+
+# they chain naturally:
+function grade(score)
+  return if score >= 90 then "A" otherwise
+         if score >= 80 then "B" otherwise
+         if score >= 70 then "C" otherwise "F"
+end
+say("Score 84 gets a", grade(84))
+
+# --- list comprehensions ---
+let nums = range(1, 11)                          # 1..10
+let squares = [x * x for each x in nums]
+let evens = [x for each x in nums where x % 2 == 0]
+say("squares:", squares)
+say("evens:", evens)
+
+# --- functional list methods (map / filter / reduce / each) ---
+let doubled = nums.map(function(x) return x * 2 end)
+let big = nums.filter(function(x) return x > 7 end)
+let total = nums.reduce(function(acc, x) return acc + x end, 0)
+say("doubled:", doubled)
+say("over 7:", big)
+say("sum 1..10:", total)
+
+# --- destructuring / multiple values ---
+let a, b = 1, 2
+say("before:", a, b)
+a, b = b, a                     # swap, no temp variable needed
+say("after swap:", a, b)
+
+function min_and_max(list)
+  return [min(list), max(list)]     # "return" a pair as a 2-item list
+end
+let lowest, highest = min_and_max(nums)
+say("range:", lowest, "to", highest)
+
+# --- variadic parameters & spread ---
+function total_of(...values)
+  return values.reduce(function(acc, x) return acc + x end, 0)
+end
+say("total_of(1,2,3):", total_of(1, 2, 3))
+
+let more_numbers = [4, 5, 6]
+say("with spread:", total_of(1, 2, 3, ...more_numbers))
+
+# --- pattern matching ---
+function describe_day(day)
+  match day
+    when "Saturday" then
+      return "Weekend!"
+    when "Sunday" then
+      return "Weekend!"
+    otherwise
+      return "Just a weekday"
+  end
+end
+say(describe_day("Saturday"), "/", describe_day("Tuesday"))
+
+# --- assert (great for quick self-checks) ---
+assert(total_of(1, 2, 3) == 6, "total_of is broken")
+
+# --- JSON in and out ---
+let profile = {name: "Ada", skills: ["math", "engineering"], active: true}
+let as_json = to_json(profile)
+say("as JSON:", as_json)
+let round_tripped = from_json(as_json)
+say("back to Singulax:", round_tripped.name, round_tripped.skills)

@@ -1,0 +1,32 @@
+# SingulaX language showcase
+local score = 0
+local target = random_int(5, 10)
+
+function add_points(amount)
+  score += amount
+  return score
+end
+
+if score == 0 then
+  say("Start!")
+elseif score > 0 then
+  say("Playing")
+else
+  say("Impossible")
+end
+
+for i = 1, 5 do
+  say("Round " .. i)
+end
+
+repeat 3 times
+  say(random_choice({"red", "green", "blue"}))
+end
+
+wait(1)
+wait.until(gamepad_connected, done)
+
+# repeat.until(task, state) is a single-line polling/repetition primitive.
+# It repeatedly evaluates/calls the task until the returned/current state matches.
+# Example:
+# repeat.until(ui, "done")

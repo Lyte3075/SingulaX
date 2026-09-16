@@ -1,0 +1,55 @@
+# 01_basics.sglx
+# A tour of variables, math, strings, conditionals, and loops.
+
+let name = "Singulax"
+say("Hello, " + name + "!")
+say("Hello, {name}!")            # string interpolation does the same thing
+
+# numbers
+let a = 7
+let b = 2
+say(a + b, a - b, a * b, a / b, a // b, a % b, a ^ 2)
+
+# booleans and "nothing" (null)
+let is_ready = true
+let winner = nothing
+say(is_ready, winner, winner or "no winner yet")
+
+# conditionals
+let score = 82
+if score >= 90 then
+  say("Grade: A")
+otherwise if score >= 80 then
+  say("Grade: B")
+otherwise
+  say("Grade: C or below")
+end
+
+# while loop
+let countdown = 3
+while countdown > 0 do
+  say(countdown, "...")
+  countdown = countdown - 1
+end
+say("Liftoff!")
+
+# repeat N times (with a 1-based loop counter)
+repeat 3 times as i
+  say("Repetition #", i)
+end
+
+# lists
+let colors = ["red", "green", "blue"]
+for each color in colors do
+  say("Color:", color)
+end
+colors.push("purple")
+say("All colors:", colors, "- count:", len(colors))
+
+# dictionaries
+let person = {name: "Ada", age: 30}
+for each key, value in person do
+  say(key, "->", value)
+end
+person.job = "Engineer"
+say(person)

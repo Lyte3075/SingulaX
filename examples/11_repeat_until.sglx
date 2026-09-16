@@ -1,0 +1,16 @@
+// Repeat examples //
+repeat(10)
+  say("Hello World")
+end
+
+// Task/state repeat //
+repeat.until(ui(), done)
+  say("running ui")
+  wait(0.1)
+end
+
+// Statement/state repeat //
+repeat.until.statement(player.health <= 50, true)
+  say("checking player health")
+  wait(0.1)
+end

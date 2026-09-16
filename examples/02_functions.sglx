@@ -1,0 +1,51 @@
+# 02_functions.sglx
+# Functions, default parameters, recursion, and closures.
+
+function add(a, b)
+  return a + b
+end
+say("add(2, 3) =", add(2, 3))
+
+# default parameter values
+function greet(name = "friend")
+  return "Hey there, " + name + "!"
+end
+say(greet())
+say(greet("Grace"))
+
+# recursion
+function factorial(n)
+  if n <= 1 then
+    return 1
+  end
+  return n * factorial(n - 1)
+end
+say("5! =", factorial(5))
+
+# functions are values -- you can store and pass them around
+function double(x)
+  return x * 2
+end
+let operation = double
+say("operation(21) =", operation(21))
+
+# closures: a function that remembers state from where it was created
+function make_counter()
+  let count = 0
+  function increment()
+    count = count + 1
+    return count
+  end
+  return increment
+end
+
+let counter_a = make_counter()
+let counter_b = make_counter()
+say(counter_a(), counter_a(), counter_a())   # 1 2 3
+say(counter_b())                             # 1 (separate, independent state)
+
+# anonymous functions
+let square = function(x)
+  return x * x
+end
+say("square(9) =", square(9))
