@@ -1,0 +1,1 @@
+{"name":"singulax","version":"0.4.0-browser","private":false,"type":"module","bin":{"sglx":"bin/sglx.mjs"},"description":"Singulax browser and Node runtime"}
