@@ -1,0 +1,17 @@
+{
+  "name": "SingulaX Studio",
+  "short_name": "SingulaX",
+  "start_url": "./full-ide.html",
+  "display": "standalone",
+  "background_color": "#080a12",
+  "theme_color": "#101321",
+  "icons": [
+    {
+      "src": "singulax-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "./"
+}
