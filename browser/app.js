@@ -1,1718 +1,2492 @@
-// SingulaX browser runtime is loaded by index.html before this file.
-const $=id=>document.getElementById(id);
+// SingulaX browser runtime is loaded by the HTML before this file.
 
-let project={
-  name:"MyProject",
-  files:{
-    "main.sglx":'say("Welcome to SingulaX!")'
+const $ = id => document.getElementById(id);
+
+const editor = $('editor');
+const consoleEl = $('console');
+const canvas = $('game');
+
+let project = {
+  name: 'MyProject',
+  files: {
+    'main.sglx': 'say("Welcome to SingulaX!")\n'
   },
-  assets:{},
-  folders:[]
+  assets: {},
+  folders: [],
+  settings: {
+    theme: 'midnight',
+    fontSize: 15,
+    autosave: true
+  }
 };
 
-let currentFile="main.sglx";
-let runtime=null;
-let latestFrame=[];
-let paintHandle=0;
+let current = 'main.sglx';
+let mode = 'code';
+let runtime = null;
+let blocks = [];
 
-const keys=new Set();
-const buttons=new Set();
+const keys = new Set();
+const buttons = new Set();
 
-const mouse={
-  x:0,
-  y:0,
-  down:false
+let mouse = {
+  x: 0,
+  y: 0
 };
 
-const touch={
-  x:0,
-  y:0,
-  down:false
+let touch = {
+  x: 0,
+  y: 0,
+  active: false
 };
 
-function save(){
-  localStorage.setItem("singulax-project",JSON.stringify(project));
-  localStorage.setItem("singulax-current-file",currentFile);
+const keywords = [
+  'if',
+  'then',
+  'elseif',
+  'else',
+  'end',
+  'while',
+  'do',
+  'forever',
+  'for',
+  'each',
+  'in',
+  'repeat',
+  'times',
+  'repeat.until',
+  'repeat.until.statement',
+  'wait',
+  'wait.until',
+  'ask',
+  'answer',
+  'result',
+  'get',
+  'find',
+  'list',
+  'push',
+  'pop',
+  'data',
+  'data.store',
+  'data.find',
+  'function',
+  'local',
+  'var',
+  'let',
+  'return',
+  'break',
+  'continue'
+];
+
+const builtins = [
+  'say',
+  'print',
+  'input',
+  'random',
+  'random_int',
+  'random_choice',
+  'abs',
+  'floor',
+  'ceil',
+  'round',
+  'sqrt',
+  'pow',
+  'sin',
+  'cos',
+  'tan',
+  'min',
+  'max',
+  'clamp',
+  'lerp',
+  'length',
+  'to_json',
+  'from_json',
+  'draw_rect',
+  'draw_circle',
+  'draw_line',
+  'draw_text',
+  'draw_image',
+  'draw_cube',
+  'clear_screen',
+  'key_down',
+  'key_pressed',
+  'mouse_down',
+  'mouse_clicked',
+  'mouse_x',
+  'mouse_y',
+  'touching',
+  'touch_x',
+  'touch_y',
+  'gamepad_connected',
+  'gamepad_button',
+  'gamepad_axis',
+  'asset',
+  'asset_url',
+  'play_audio',
+  'stop_audio',
+  'ask',
+  'answer',
+  'result',
+  'get',
+  'find',
+  'list',
+  'push',
+  'pop'
+];
+
+function log(value) {
+  if (!consoleEl) return;
+
+  consoleEl.textContent +=
+    (consoleEl.textContent ? '\n' : '') +
+    String(value);
+
+  consoleEl.scrollTop = consoleEl.scrollHeight;
 }
 
-function load(){
-  try{
-    const saved=localStorage.getItem("singulax-project");
-
-    if(saved){
-      const parsed=JSON.parse(saved);
-
-      project={
-        name:parsed.name||"MyProject",
-        files:parsed.files||{},
-        assets:parsed.assets||{},
-        folders:Array.isArray(parsed.folders)?parsed.folders:[]
-      };
-
-      if(!Object.keys(project.files).length){
-        project.files["main.sglx"]='say("Welcome to SingulaX!")';
-      }
-    }
-  }catch(e){
-    project={
-      name:"MyProject",
-      files:{
-        "main.sglx":'say("Welcome to SingulaX!")'
-      },
-      assets:{},
-      folders:[]
-    };
-  }
-
-  currentFile=localStorage.getItem("singulax-current-file")||"main.sglx";
-
-  if(!project.files[currentFile]){
-    currentFile=Object.keys(project.files)[0]||"main.sglx";
-  }
+function esc(value = '') {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }
 
-function normalizePath(path){
-  return String(path||"")
-    .replaceAll("\\","/")
-    .replace(/^\/+/,"")
-    .replace(/\/+/g,"/");
-}
+function save() {
+  if (!editor) return;
 
-function basename(path){
-  const parts=normalizePath(path).split("/");
-  return parts[parts.length-1]||path;
-}
+  project.files[current] = editor.value;
 
-function dirname(path){
-  const parts=normalizePath(path).split("/");
-  parts.pop();
-  return parts.join("/");
-}
+  const projectName = $('projectName');
 
-function ext(path){
-  const name=basename(path).toLowerCase();
-  const i=name.lastIndexOf(".");
-  return i>=0?name.slice(i):"";
-}
-
-function uniqueName(base,collection){
-  let name=base;
-  let n=2;
-
-  while(collection[name]){
-    const dot=base.lastIndexOf(".");
-    if(dot>0){
-      name=base.slice(0,dot)+"_"+n+base.slice(dot);
-    }else{
-      name=base+"_"+n;
-    }
-    n++;
+  if (projectName) {
+    project.name = projectName.value || 'MyProject';
   }
 
-  return name;
-}
-
-function uniqueFolderName(base){
-  let name=base;
-  let n=2;
-
-  while(project.folders.includes(name)){
-    name=base+"_"+n;
-    n++;
-  }
-
-  return name;
-}
-
-function log(...args){
-  const el=$("console");
-  if(!el)return;
-
-  const text=args.map(v=>{
-    if(typeof v==="string")return v;
-
-    try{
-      return JSON.stringify(v);
-    }catch{
-      return String(v);
-    }
-  }).join(" ");
-
-  el.textContent+=(el.textContent?"\n":"")+text;
-  el.scrollTop=el.scrollHeight;
-}
-
-function showError(error){
-  const message=error&&error.message?error.message:String(error);
-
-  if($("diagnostics")){
-    $("diagnostics").textContent=message;
-  }
-
-  log("[error] "+message);
-}
-
-function setEditorText(text){
-  const editor=$("editor");
-  if(!editor)return;
-
-  editor.value=String(text??"");
-  updateEditor();
-}
-
-function getEditorText(){
-  return $("editor")?.value||"";
-}
-
-function saveCurrentFile(){
-  if(!currentFile)return;
-
-  project.files[currentFile]=getEditorText();
-  save();
-}
-
-function openFile(path){
-  path=normalizePath(path);
-
-  if(!project.files[path])return;
-
-  saveCurrentFile();
-
-  currentFile=path;
-
-  if($("fileTitle")){
-    $("fileTitle").textContent=basename(path);
-  }
-
-  setEditorText(project.files[path]);
-  renderTree();
-  save();
-}
-
-function createFile(){
-  let name=prompt("New SingulaX file name","main.sglx");
-
-  if(!name)return;
-
-  name=normalizePath(name);
-
-  if(!name.endsWith(".sglx")){
-    name+=".sglx";
-  }
-
-  if(project.files[name]){
-    alert("A script with that name already exists.");
-    return;
-  }
-
-  project.files[name]='say("Welcome to SingulaX!")';
-
-  currentFile=name;
-
-  renderTree();
-  openFile(name);
-  save();
-}
-
-function renameFile(oldPath){
-  const oldName=basename(oldPath);
-
-  let newName=prompt("Rename script",oldName);
-
-  if(!newName)return;
-
-  newName=basename(newName);
-
-  if(!newName.endsWith(".sglx")){
-    newName+=".sglx";
-  }
-
-  const folder=dirname(oldPath);
-  const newPath=folder?folder+"/"+newName:newName;
-
-  if(newPath!==oldPath&&project.files[newPath]){
-    alert("A script with that name already exists.");
-    return;
-  }
-
-  project.files[newPath]=project.files[oldPath];
-  delete project.files[oldPath];
-
-  if(currentFile===oldPath){
-    currentFile=newPath;
-  }
-
-  renderTree();
-  openFile(currentFile);
-  save();
-}
-
-function deleteFile(path){
-  if(!confirm(`Delete "${basename(path)}"?`))return;
-
-  delete project.files[path];
-
-  const remaining=Object.keys(project.files);
-
-  if(!remaining.length){
-    project.files["main.sglx"]='say("Welcome to SingulaX!")';
-  }
-
-  if(currentFile===path){
-    currentFile=Object.keys(project.files)[0];
-  }
-
-  renderTree();
-  openFile(currentFile);
-  save();
-}
-
-function moveFile(path){
-  if(!project.folders.length){
-    alert("Create a folder first.");
-    return;
-  }
-
-  const choices=["/ Root",...project.folders.map(f=>"/ "+f)];
-  const choice=prompt(
-    "Move script to:\n\n"+choices.map((v,i)=>`${i+1}. ${v}`).join("\n")+
-    "\n\nEnter the number."
-  );
-
-  if(choice===null)return;
-
-  const index=Number(choice)-1;
-
-  if(!Number.isInteger(index)||index<0||index>=choices.length){
-    alert("Invalid folder.");
-    return;
-  }
-
-  const folder=index===0?"":project.folders[index-1];
-  const newPath=folder?folder+"/"+basename(path):basename(path);
-
-  if(newPath===path)return;
-
-  if(project.files[newPath]){
-    alert("A script with that name already exists there.");
-    return;
-  }
-
-  project.files[newPath]=project.files[path];
-  delete project.files[path];
-
-  if(currentFile===path){
-    currentFile=newPath;
-  }
-
-  renderTree();
-  openFile(currentFile);
-  save();
-}
-
-function renameAsset(oldName){
-  const newName=prompt("Rename asset",basename(oldName));
-
-  if(!newName)return;
-
-  const clean=basename(newName);
-
-  if(project.assets[clean]&&clean!==oldName){
-    alert("An asset with that name already exists.");
-    return;
-  }
-
-  project.assets[clean]=project.assets[oldName];
-  delete project.assets[oldName];
-
-  renderTree();
-  save();
-}
-
-function deleteAsset(name){
-  if(!confirm(`Delete "${basename(name)}"?`))return;
-
-  delete project.assets[name];
-
-  renderTree();
-  save();
-}
-
-function moveAsset(name){
-  if(!project.folders.length){
-    alert("Create a folder first.");
-    return;
-  }
-
-  alert(
-    "Assets are stored by filename in this browser project. " +
-    "Folders currently organize scripts and project items visually."
-  );
-}
-
-function createFolder(){
-  let name=prompt("Folder name","NewFolder");
-
-  if(!name)return;
-
-  name=basename(name);
-
-  if(project.folders.includes(name)){
-    alert("That folder already exists.");
-    return;
-  }
-
-  project.folders.push(name);
-
-  renderTree();
-  save();
-}
-
-function renameFolder(oldName){
-  const newName=prompt("Rename folder",oldName);
-
-  if(!newName)return;
-
-  const clean=basename(newName);
-
-  if(!clean||project.folders.includes(clean)){
-    alert("That folder name already exists.");
-    return;
-  }
-
-  const affected={};
-
-  for(const path of Object.keys(project.files)){
-    if(path===oldName||path.startsWith(oldName+"/")){
-      const newPath=clean+path.slice(oldName.length);
-      affected[newPath]=project.files[path];
-    }
-  }
-
-  for(const path of Object.keys(affected)){
-    const oldPath=Object.keys(project.files).find(
-      p=>
-        (p===oldName||p.startsWith(oldName+"/")) &&
-        clean+p.slice(oldName.length)===path
-    );
-
-    if(oldPath){
-      delete project.files[oldPath];
-    }
-  }
-
-  Object.assign(project.files,affected);
-
-  const index=project.folders.indexOf(oldName);
-
-  if(index>=0){
-    project.folders[index]=clean;
-  }
-
-  if(currentFile===oldName||currentFile.startsWith(oldName+"/")){
-    currentFile=clean+currentFile.slice(oldName.length);
-  }
-
-  renderTree();
-  openFile(currentFile);
-  save();
-}
-
-function deleteFolder(name){
-  if(!confirm(`Delete folder "${name}" and everything inside it?`))return;
-
-  for(const path of Object.keys(project.files)){
-    if(path===name||path.startsWith(name+"/")){
-      delete project.files[path];
-    }
-  }
-
-  project.folders=project.folders.filter(f=>f!==name);
-
-  const remaining=Object.keys(project.files);
-
-  if(!remaining.length){
-    project.files["main.sglx"]='say("Welcome to SingulaX!")';
-  }
-
-  if(!project.files[currentFile]){
-    currentFile=Object.keys(project.files)[0];
-  }
-
-  renderTree();
-  openFile(currentFile);
-  save();
-}
-
-function moveFolder(name){
-  alert("Folders are currently top-level project folders.");
-}
-
-function makeButton(text,action){
-  const button=document.createElement("button");
-  button.textContent=text;
-  button.onclick=action;
-  return button;
-}
-
-function renderTree(){
-  const tree=$("tree");
-  if(!tree)return;
-
-  tree.innerHTML="";
-
-  const scriptsSection=document.createElement("div");
-  scriptsSection.className="treeSection";
-
-  const scriptsTitle=document.createElement("div");
-  scriptsTitle.className="treeTitle";
-  scriptsTitle.textContent="📜 Scripts";
-  scriptsSection.appendChild(scriptsTitle);
-
-  const scriptPaths=Object.keys(project.files).sort();
-
-  if(!scriptPaths.length){
-    const empty=document.createElement("div");
-    empty.className="treeEmpty";
-    empty.textContent="No scripts";
-    scriptsSection.appendChild(empty);
-  }
-
-  for(const path of scriptPaths){
-    const row=document.createElement("div");
-    row.className="treeRow";
-
-    if(path===currentFile){
-      row.classList.add("selected");
-    }
-
-    const name=document.createElement("button");
-    name.className="treeName";
-    name.textContent="📄 "+path;
-    name.onclick=()=>openFile(path);
-
-    const actions=document.createElement("span");
-    actions.className="treeActions";
-
-    actions.appendChild(makeButton("✎",()=>renameFile(path)));
-    actions.appendChild(makeButton("↕",()=>moveFile(path)));
-    actions.appendChild(makeButton("×",()=>deleteFile(path)));
-
-    row.appendChild(name);
-    row.appendChild(actions);
-    scriptsSection.appendChild(row);
-  }
-
-  tree.appendChild(scriptsSection);
-
-  const assetsSection=document.createElement("div");
-  assetsSection.className="treeSection";
-
-  const assetsTitle=document.createElement("div");
-  assetsTitle.className="treeTitle";
-  assetsTitle.textContent="🧰 Assets";
-  assetsSection.appendChild(assetsTitle);
-
-  const assetNames=Object.keys(project.assets).sort();
-
-  if(!assetNames.length){
-    const empty=document.createElement("div");
-    empty.className="treeEmpty";
-    empty.textContent="No assets";
-    assetsSection.appendChild(empty);
-  }
-
-  for(const name of assetNames){
-    const row=document.createElement("div");
-    row.className="treeRow";
-
-    const label=document.createElement("span");
-    label.className="treeName";
-    label.textContent="📦 "+name;
-
-    const actions=document.createElement("span");
-    actions.className="treeActions";
-
-    actions.appendChild(makeButton("✎",()=>renameAsset(name)));
-    actions.appendChild(makeButton("↕",()=>moveAsset(name)));
-    actions.appendChild(makeButton("×",()=>deleteAsset(name)));
-
-    row.appendChild(label);
-    row.appendChild(actions);
-
-    assetsSection.appendChild(row);
-  }
-
-  tree.appendChild(assetsSection);
-
-  const foldersSection=document.createElement("div");
-  foldersSection.className="treeSection";
-
-  const foldersTitle=document.createElement("div");
-  foldersTitle.className="treeTitle";
-  foldersTitle.textContent="📁 Folders";
-  foldersSection.appendChild(foldersTitle);
-
-  if(!project.folders.length){
-    const empty=document.createElement("div");
-    empty.className="treeEmpty";
-    empty.textContent="No folders";
-    foldersSection.appendChild(empty);
-  }
-
-  for(const folder of project.folders){
-    const row=document.createElement("div");
-    row.className="treeRow";
-
-    const label=document.createElement("span");
-    label.className="treeName";
-    label.textContent="📁 "+folder;
-
-    const actions=document.createElement("span");
-    actions.className="treeActions";
-
-    actions.appendChild(makeButton("✎",()=>renameFolder(folder)));
-    actions.appendChild(makeButton("↕",()=>moveFolder(folder)));
-    actions.appendChild(makeButton("×",()=>deleteFolder(folder)));
-
-    row.appendChild(label);
-    row.appendChild(actions);
-
-    foldersSection.appendChild(row);
-  }
-
-  tree.appendChild(foldersSection);
-}
-
-function updateGutter(){
-  const gutter=$("gutter");
-  const editor=$("editor");
-
-  if(!gutter||!editor)return;
-
-  const lines=Math.max(1,editor.value.split("\n").length);
-
-  gutter.innerHTML=Array.from(
-    {length:lines},
-    (_,i)=>`<div>${i+1}</div>`
-  ).join("");
-}
-
-function updateEditor(){
-  updateGutter();
-  updateDiagnostics();
-  updateSuggestions();
-}
-
-function updateDiagnostics(){
-  const diagnostics=$("diagnostics");
-  const count=$("diagCount");
-
-  if(!diagnostics)return;
-
-  const text=getEditorText();
-
-  const issues=[];
-
-  if(/\botherwise\b/i.test(text)){
-    issues.push("SingulaX does not use 'otherwise'. Use 'else' or 'elseif'.");
-  }
-
-  if(/^\s*#/m.test(text)){
-    issues.push("SingulaX comments use // ... //, not #.");
-  }
-
-  if(count){
-    count.textContent=issues.length?`${issues.length} issue${issues.length===1?"":"s"}`:"";
-  }
-
-  diagnostics.textContent=issues.join("\n");
-}
-
-function updateSuggestions(){
-  const box=$("suggestions");
-
-  if(!box)return;
-
-  const editor=$("editor");
-
-  if(!editor){
-    box.hidden=true;
-    return;
-  }
-
-  const value=editor.value;
-  const cursor=editor.selectionStart;
-
-  const before=value.slice(0,cursor);
-  const match=before.match(/[A-Za-z_][A-Za-z0-9_]*$/);
-
-  if(!match){
-    box.hidden=true;
-    return;
-  }
-
-  const prefix=match[0].toLowerCase();
-
-  const words=[
-    "say",
-    "local",
-    "if",
-    "then",
-    "elseif",
-    "else",
-    "end",
-    "while",
-    "forever",
-    "for",
-    "function",
-    "return",
-    "repeat",
-    "wait",
-    "random",
-    "list",
-    "push",
-    "pop",
-    "list_add",
-    "list_remove",
-    "list_get",
-    "list_set",
-    "data",
-    "ask",
-    "answer",
-    "result",
-    "get",
-    "find",
-    "draw_rect",
-    "draw_circle",
-    "draw_text",
-    "draw_sprite"
-  ];
-
-  const results=words.filter(word=>word.startsWith(prefix));
-
-  if(!results.length){
-    box.hidden=true;
-    return;
-  }
-
-  box.innerHTML="";
-
-  results.slice(0,8).forEach(word=>{
-    const button=document.createElement("button");
-    button.textContent=word;
-
-    button.onclick=()=>{
-      const start=cursor-prefix.length;
-
-      editor.value=
-        editor.value.slice(0,start)+
-        word+
-        editor.value.slice(cursor);
-
-      editor.selectionStart=editor.selectionEnd=start+word.length;
-
-      updateEditor();
-      editor.focus();
-    };
-
-    box.appendChild(button);
-  });
-
-  const rect=editor.getBoundingClientRect();
-
-  box.style.left=`${Math.max(0,rect.left)}px`;
-  box.style.top=`${Math.min(window.innerHeight-180,rect.top+60)}px`;
-
-  box.hidden=false;
-}
-
-function drawFrame(frame){
-  latestFrame=Array.isArray(frame)?frame:[];
-
-  paintCanvas(latestFrame);
-}
-
-function paintCanvas(frame){
-  const canvas=$("game");
-
-  if(!canvas)return;
-
-  const ctx=canvas.getContext("2d");
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  for(const item of frame||[]){
-    if(!item||typeof item!=="object")continue;
-
-    try{
-      if(item.type==="rect"){
-        ctx.fillStyle=item.color||"#fff";
-
-        ctx.fillRect(
-          Number(item.x)||0,
-          Number(item.y)||0,
-          Number(item.width??item.w)||0,
-          Number(item.height??item.h)||0
-        );
-      }
-
-      if(item.type==="circle"){
-        ctx.fillStyle=item.color||"#fff";
-
-        ctx.beginPath();
-
-        ctx.arc(
-          Number(item.x)||0,
-          Number(item.y)||0,
-          Number(item.radius??item.r)||10,
-          0,
-          Math.PI*2
-        );
-
-        ctx.fill();
-      }
-
-      if(item.type==="text"){
-        ctx.fillStyle=item.color||"#fff";
-        ctx.font=item.font||"20px sans-serif";
-
-        ctx.fillText(
-          String(item.text??""),
-          Number(item.x)||0,
-          Number(item.y)||0
-        );
-      }
-
-      if(item.type==="image"&&item.image){
-        ctx.drawImage(
-          item.image,
-          Number(item.x)||0,
-          Number(item.y)||0,
-          Number(item.width||item.image.width),
-          Number(item.height||item.image.height)
-        );
-      }
-    }catch{}
-  }
-}
-
-async function run(){
-  saveCurrentFile();
-
-  stop();
-
-  const consoleEl=$("console");
-
-  if(consoleEl){
-    consoleEl.textContent="";
-  }
-
-  if($("diagnostics")){
-    $("diagnostics").textContent="";
-  }
-
-  latestFrame=[];
-
-  runtime=new SingulaxRuntime({
-    output:log,
-
-    frame:drawFrame,
-
-    input:async promptText=>{
-      log(promptText);
-
-      return await new Promise(resolve=>{
-        window._inputResolve=resolve;
-
-        const input=$("stdin");
-
-        if(input){
-          input.focus();
-        }
-      });
-    },
-
-    fileRead:async path=>{
-      path=normalizePath(path);
-
-      return project.files[path]??
-        project.assets[path]??
-        "";
-    },
-
-    fileWrite:async(path,content)=>{
-      path=normalizePath(path);
-
-      project.files[path]=String(content);
-
-      renderTree();
-      save();
-
-      return true;
-    },
-
-    playAudio:path=>{
-      const asset=project.assets[path];
-
-      if(!asset)return;
-
-      try{
-        const audio=new Audio(asset);
-        audio.play().catch(()=>{});
-      }catch{}
-    },
-
-    mode3d:value=>{
-      const select=$("previewMode");
-
-      if(select){
-        select.value=value?"3d":"2d";
-      }
-    }
-  });
-
-  runtime.setInput({
-    keys:[...keys],
-    buttons:[...buttons],
-    mouse,
-    touch,
-    gamepads:readGamepads()
-  });
-
-  paintFrame(latestFrame);
-
-  try{
-    await runtime.runProject(project);
-
-    log("[finished]");
-
-    if(paintHandle){
-      cancelAnimationFrame(paintHandle);
-    }
-
-    paintHandle=0;
-    runtime=null;
-  }catch(error){
-    showError(error);
-
-    if(paintHandle){
-      cancelAnimationFrame(paintHandle);
-    }
-
-    paintHandle=0;
-    runtime=null;
-  }
-}
-
-function stop(){
-  if(runtime){
-    runtime.running=false;
-    runtime=null;
-  }
-
-  if(paintHandle){
-    cancelAnimationFrame(paintHandle);
-    paintHandle=0;
-  }
-
-  paintCanvas(latestFrame);
-
-  log("[stopped]");
-}
-
-function paintFrame(){
-  if(paintHandle){
-    cancelAnimationFrame(paintHandle);
-  }
-
-  const tick=()=>{
-    paintCanvas(latestFrame);
-    paintHandle=requestAnimationFrame(tick);
+  project.settings = {
+    theme: $('theme')?.value || project.settings.theme || 'midnight',
+    fontSize: +( $('fontSize')?.value || project.settings.fontSize || 15 ),
+    autosave: $('autosave')?.checked ?? project.settings.autosave
   };
 
-  paintHandle=requestAnimationFrame(tick);
-}
-
-function readGamepads(){
-  try{
-    return [...navigator.getGamepads()]
-      .filter(Boolean)
-      .map(g=>({
-        id:g.id,
-        index:g.index,
-        buttons:g.buttons.map(b=>b.pressed),
-        axes:[...g.axes]
-      }));
-  }catch{
-    return [];
-  }
-}
-
-function exportJSON(){
-  saveCurrentFile();
-
-  const blob=new Blob(
-    [JSON.stringify(project,null,2)],
-    {type:"application/json"}
-  );
-
-  downloadBlob(
-    blob,
-    `${project.name||"SingulaX-project"}.sglxproj`
+  localStorage.setItem(
+    'singulax-project',
+    JSON.stringify(project)
   );
 }
 
-function downloadBlob(blob,name){
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
+function renderTree() {
+  const tree = $('tree');
 
-  a.href=url;
-  a.download=name;
+  if (!tree) return;
 
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  const paths = Object.keys(project.files).sort();
 
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+  const folders = new Set();
 
-function createZip(){
-  saveCurrentFile();
+  for (const file of paths) {
+    const parts = file.split('/');
 
-  if(typeof fflate==="undefined"){
-    alert(
-      "ZIP support needs the fflate library. " +
-      "Make sure the ZIP library is loaded before app.js."
-    );
-    return;
-  }
-
-  const files={};
-
-  files["project.sglxproj"]=JSON.stringify(project,null,2);
-
-  for(const path of Object.keys(project.files)){
-    files["scripts/"+path]=project.files[path];
-  }
-
-  for(const name of Object.keys(project.assets)){
-    const asset=project.assets[name];
-
-    if(typeof asset==="string"){
-      files["assets/"+name]=asset;
+    for (let i = 1; i < parts.length; i++) {
+      folders.add(parts.slice(0, i).join('/'));
     }
   }
 
-  const zipped=fflate.zipSync(
-    Object.fromEntries(
-      Object.entries(files).map(([name,value])=>[
-        name,
-        typeof value==="string"
-          ?new TextEncoder().encode(value)
-          :value
-      ])
-    ),
-    {level:6}
-  );
+  const folderHTML = folder => {
+    const depth = folder.split('/').length;
 
-  downloadBlob(
-    new Blob([zipped],{type:"application/zip"}),
-    `${project.name||"SingulaX-project"}.zip`
+    return `
+      <div class="folder"
+           style="padding-left:${8 + depth * 12}px">
+
+        <span>
+          📁 ${esc(folder.split('/').at(-1))}
+        </span>
+
+        <button
+          class="mini"
+          data-new-in-folder="${encodeURIComponent(folder)}">
+          ＋
+        </button>
+
+        <button
+          class="mini"
+          data-rename-folder="${encodeURIComponent(folder)}">
+          ✎
+        </button>
+
+        <button
+          class="mini"
+          data-delete-folder="${encodeURIComponent(folder)}">
+          ×
+        </button>
+
+      </div>
+    `;
+  };
+
+  const fileHTML = file => {
+    const depth = file.split('/').length - 1;
+    const name = file.split('/').at(-1);
+
+    return `
+      <div
+        class="treeitem ${file === current ? 'active' : ''}"
+        style="padding-left:${8 + depth * 18}px">
+
+        <button
+          class="name"
+          data-file="${encodeURIComponent(file)}">
+          📄 ${esc(name)}
+        </button>
+
+        <button
+          class="mini"
+          title="Move"
+          data-move="${encodeURIComponent(file)}">
+          ↗
+        </button>
+
+        <button
+          class="mini"
+          title="Rename"
+          data-rename="${encodeURIComponent(file)}">
+          ✎
+        </button>
+
+        <button
+          class="mini"
+          title="Delete"
+          data-delete="${encodeURIComponent(file)}">
+          ×
+        </button>
+
+      </div>
+    `;
+  };
+
+  const assetHTML = Object.keys(project.assets)
+    .sort()
+    .map(asset => `
+      <div class="treeitem">
+
+        <button
+          class="name"
+          data-asset="${encodeURIComponent(asset)}">
+          🧩 ${esc(asset)}
+        </button>
+
+        <button
+          class="mini"
+          title="Rename"
+          data-rename-asset="${encodeURIComponent(asset)}">
+          ✎
+        </button>
+
+        <button
+          class="mini"
+          title="Delete"
+          data-delete-asset="${encodeURIComponent(asset)}">
+          ×
+        </button>
+
+      </div>
+    `)
+    .join('');
+
+  tree.innerHTML = `
+    <b>Scripts</b>
+
+    ${[...folders]
+      .sort()
+      .map(folderHTML)
+      .join('')}
+
+    ${paths.map(fileHTML).join('')}
+
+    <hr>
+
+    <b>Assets</b>
+
+    ${assetHTML}
+
+    <hr>
+
+    <b>Folders</b>
+
+    <div class="treeitem">
+      <button
+        class="name"
+        id="sidebarNewFolder">
+        📁 New Folder
+      </button>
+    </div>
+  `;
+
+  $('sidebarNewFolder')?.addEventListener(
+    'click',
+    createFolder
   );
 }
 
-async function importProjectFile(file){
-  const name=file.name.toLowerCase();
+function render() {
+  renderTree();
 
-  if(name.endsWith(".zip")){
-    await importZip(file);
-    return;
+  if ($('projectName')) {
+    $('projectName').value = project.name;
   }
 
-  const text=await file.text();
+  if (editor) {
+    editor.value = project.files[current] ?? '';
+  }
 
-  try{
-    const imported=JSON.parse(text);
+  if ($('fileTitle')) {
+    $('fileTitle').textContent = current;
+  }
 
-    if(imported.files){
-      project={
-        name:imported.name||"MyProject",
-        files:imported.files||{},
-        assets:imported.assets||{},
-        folders:imported.folders||[]
-      };
+  applySettings();
+  diagnose();
+}
 
-      currentFile=Object.keys(project.files)[0]||"main.sglx";
+function openFile(file) {
+  if (!project.files[file]) {
+    project.files[file] = '';
+  }
 
-      renderTree();
-      openFile(currentFile);
+  if (editor && current) {
+    project.files[current] = editor.value;
+  }
+
+  current = file;
+
+  render();
+}
+
+function createFolder() {
+  const name = prompt(
+    'Folder name',
+    'scripts'
+  );
+
+  if (!name) return;
+
+  const clean = name
+    .trim()
+    .replace(/^\/+|\/+$/g, '');
+
+  if (!clean) return;
+
+  const firstScript = clean + '/main.sglx';
+
+  if (!project.files[firstScript]) {
+    project.files[firstScript] = '';
+  }
+
+  current = firstScript;
+
+  render();
+  save();
+}
+
+if ($('tree')) {
+  $('tree').addEventListener('click', event => {
+    const target = event.target.closest('[data-file],[data-rename],[data-delete],[data-move],[data-new-in-folder],[data-rename-folder],[data-delete-folder],[data-asset],[data-rename-asset],[data-delete-asset]');
+
+    if (!target) return;
+
+    const data = target.dataset;
+
+    if (data.file) {
+      openFile(
+        decodeURIComponent(data.file)
+      );
+      return;
+    }
+
+    if (data.rename) {
+      const old = decodeURIComponent(data.rename);
+      const base = old.split('/').at(-1);
+
+      const name = prompt(
+        'Rename script',
+        base
+      );
+
+      if (!name || name === base) return;
+
+      const folder = old.includes('/')
+        ? old.slice(0, old.lastIndexOf('/') + 1)
+        : '';
+
+      const newPath = folder + name;
+
+      project.files[newPath] =
+        project.files[old];
+
+      delete project.files[old];
+
+      if (current === old) {
+        current = newPath;
+      }
+
+      render();
       save();
 
       return;
     }
-  }catch{}
 
-  if(name.endsWith(".sglx")){
-    const fileName=uniqueName(
-      file.name,
-      project.files
-    );
+    if (data.delete) {
+      const file = decodeURIComponent(data.delete);
 
-    project.files[fileName]=text;
-
-    currentFile=fileName;
-
-    renderTree();
-    openFile(currentFile);
-    save();
-
-    return;
-  }
-
-  alert("Unsupported project file.");
-}
-
-async function importZip(file){
-  if(typeof fflate==="undefined"){
-    alert(
-      "ZIP support needs the fflate library. " +
-      "Make sure the ZIP library is loaded before app.js."
-    );
-    return;
-  }
-
-  try{
-    const data=new Uint8Array(await file.arrayBuffer());
-    const extracted=fflate.unzipSync(data);
-
-    let importedProject=null;
-
-    for(const path of Object.keys(extracted)){
-      const clean=normalizePath(path);
-
-      if(clean.endsWith("project.sglxproj")){
-        try{
-          importedProject=JSON.parse(
-            new TextDecoder().decode(extracted[path])
-          );
-        }catch{}
-      }
-    }
-
-    if(importedProject&&importedProject.files){
-      project={
-        name:importedProject.name||file.name.replace(/\.zip$/i,""),
-        files:importedProject.files||{},
-        assets:importedProject.assets||{},
-        folders:importedProject.folders||[]
-      };
-    }
-
-    for(const originalPath of Object.keys(extracted)){
-      const clean=normalizePath(originalPath);
-
-      if(
-        clean.endsWith("/")||
-        clean.endsWith("project.sglxproj")
-      ){
-        continue;
-      }
-
-      const bytes=extracted[originalPath];
-
-      if(clean.startsWith("scripts/")){
-        let path=clean.slice("scripts/".length);
-
-        if(!path.endsWith(".sglx")){
-          continue;
-        }
-
-        path=uniqueName(path,project.files);
-
-        project.files[path]=
-          new TextDecoder().decode(bytes);
-
-        const folder=dirname(path);
-
-        if(folder&&!project.folders.includes(folder)){
-          project.folders.push(folder);
-        }
-
-        continue;
-      }
-
-      if(clean.startsWith("assets/")){
-        const assetName=uniqueName(
-          basename(clean),
-          project.assets
+      if (
+        Object.keys(project.files).length <= 1
+      ) {
+        alert(
+          'SingulaX projects must contain at least one script.'
         );
-
-        project.assets[assetName]=
-          bytesToDataURL(bytes,guessMime(assetName));
-
-        continue;
+        return;
       }
 
-      if(clean.endsWith(".sglx")){
-        const path=uniqueName(
-          basename(clean),
-          project.files
-        );
-
-        project.files[path]=
-          new TextDecoder().decode(bytes);
-
-        continue;
+      if (
+        !confirm(
+          'Delete ' + file + '?'
+        )
+      ) {
+        return;
       }
 
-      const assetName=basename(clean);
+      delete project.files[file];
 
-      if(assetName){
-        project.assets[uniqueName(assetName,project.assets)]=
-          bytesToDataURL(bytes,guessMime(assetName));
+      if (current === file) {
+        current =
+          Object.keys(project.files)[0];
       }
-    }
 
-    if(!Object.keys(project.files).length){
-      project.files["main.sglx"]=
-        'say("Welcome to SingulaX!")';
-    }
-
-    currentFile=Object.keys(project.files)[0];
-
-    renderTree();
-    openFile(currentFile);
-    save();
-
-    log(`[ZIP imported] ${file.name}`);
-  }catch(error){
-    alert("Could not extract ZIP: "+error.message);
-  }
-}
-
-function bytesToDataURL(bytes,mime){
-  let binary="";
-
-  const chunk=0x8000;
-
-  for(let i=0;i<bytes.length;i+=chunk){
-    binary+=String.fromCharCode(
-      ...bytes.subarray(i,i+chunk)
-    );
-  }
-
-  return `data:${mime};base64,${btoa(binary)}`;
-}
-
-function guessMime(name){
-  const e=ext(name);
-
-  const types={
-    ".png":"image/png",
-    ".jpg":"image/jpeg",
-    ".jpeg":"image/jpeg",
-    ".gif":"image/gif",
-    ".webp":"image/webp",
-    ".svg":"image/svg+xml",
-    ".mp3":"audio/mpeg",
-    ".wav":"audio/wav",
-    ".ogg":"audio/ogg",
-    ".m4a":"audio/mp4",
-    ".mp4":"video/mp4",
-    ".webm":"video/webm",
-    ".txt":"text/plain",
-    ".md":"text/markdown",
-    ".json":"application/json"
-  };
-
-  return types[e]||"application/octet-stream";
-}
-
-function addAssets(files){
-  for(const file of files){
-    const reader=new FileReader();
-
-    reader.onload=()=>{
-      project.assets[
-        uniqueName(file.name,project.assets)
-      ]=reader.result;
-
-      renderTree();
+      render();
       save();
-    };
 
-    reader.readAsDataURL(file);
-  }
-}
+      return;
+    }
 
-function showHelp(){
-  let dialog=$("helpDialog");
+    if (data.move) {
+      const file =
+        decodeURIComponent(data.move);
 
-  if(!dialog){
-    dialog=document.createElement("dialog");
-    dialog.id="helpDialog";
-
-    dialog.innerHTML=`
-      <div class="helpInner">
-        <div class="panelHead">
-          <h2>SingulaX Examples</h2>
-          <button id="closeHelp">Close</button>
-        </div>
-
-        <div id="helpExamples"></div>
-      </div>
-    `;
-
-    document.body.appendChild(dialog);
-
-    $("closeHelp").onclick=()=>{
-      dialog.close();
-    };
-  }
-
-  loadExamples(dialog);
-  dialog.showModal();
-}
-
-async function loadExamples(dialog){
-  const container=dialog.querySelector("#helpExamples");
-
-  if(!container)return;
-
-  container.innerHTML="<p>Loading examples...</p>";
-
-  const names=[
-    "01_basics.sglx",
-    "02_functions.sglx",
-    "03_blueprints.sglx",
-    "04_error_handling.sglx",
-    "05_modules.sglx",
-    "06_todo_app.sglx",
-    "07_advanced.sglx",
-    "08_control_flow.sglx",
-    "09_game_input.sglx",
-    "10_singulax_showcase.sglx",
-    "11_repeat_until.sglx",
-    "geometry.sglx"
-  ];
-
-  const results=[];
-
-  for(const name of names){
-    try{
-      const response=await fetch(
-        `../examples/${encodeURIComponent(name)}`
+      const folder = prompt(
+        'Move script into folder.\n\nLeave blank to move it to the project root.',
+        ''
       );
 
-      if(!response.ok)continue;
+      if (folder === null) return;
 
-      let text=await response.text();
+      const clean = folder
+        .trim()
+        .replace(/^\/+|\/+$/g, '');
 
-      text=normalizeExampleComments(text);
-      text=normalizeExampleSyntax(text);
+      const name =
+        file.split('/').at(-1);
 
-      results.push({
-        name,
-        text
-      });
-    }catch{}
+      const newPath = clean
+        ? clean + '/' + name
+        : name;
+
+      if (newPath === file) return;
+
+      project.files[newPath] =
+        project.files[file];
+
+      delete project.files[file];
+
+      if (current === file) {
+        current = newPath;
+      }
+
+      render();
+      save();
+
+      return;
+    }
+
+    if (data.newInFolder) {
+      const folder =
+        decodeURIComponent(
+          data.newInFolder
+        );
+
+      let name = prompt(
+        'New script name',
+        'script.sglx'
+      );
+
+      if (!name) return;
+
+      if (!name.endsWith('.sglx')) {
+        name += '.sglx';
+      }
+
+      const path =
+        folder + '/' + name;
+
+      project.files[path] = '';
+
+      current = path;
+
+      render();
+      save();
+
+      return;
+    }
+
+    if (data.renameFolder) {
+      const old =
+        decodeURIComponent(
+          data.renameFolder
+        );
+
+      const base =
+        old.split('/').at(-1);
+
+      const name = prompt(
+        'Rename folder',
+        base
+      );
+
+      if (!name || name === base) {
+        return;
+      }
+
+      const parent =
+        old.includes('/')
+          ? old.slice(
+              0,
+              old.lastIndexOf('/') + 1
+            )
+          : '';
+
+      const newPath =
+        parent + name;
+
+      const updated = {};
+
+      for (
+        const file of Object.keys(
+          project.files
+        )
+      ) {
+        if (
+          file === old ||
+          file.startsWith(old + '/')
+        ) {
+          const replacement =
+            newPath +
+            file.slice(old.length);
+
+          updated[replacement] =
+            project.files[file];
+
+          delete project.files[file];
+        }
+      }
+
+      Object.assign(
+        project.files,
+        updated
+      );
+
+      if (
+        current === old ||
+        current.startsWith(old + '/')
+      ) {
+        current =
+          newPath +
+          current.slice(old.length);
+      }
+
+      render();
+      save();
+
+      return;
+    }
+
+    if (data.deleteFolder) {
+      const folder =
+        decodeURIComponent(
+          data.deleteFolder
+        );
+
+      if (
+        !confirm(
+          'Delete folder and all scripts inside it?\n\n' +
+          folder
+        )
+      ) {
+        return;
+      }
+
+      for (
+        const file of Object.keys(
+          project.files
+        )
+      ) {
+        if (
+          file === folder ||
+          file.startsWith(folder + '/')
+        ) {
+          delete project.files[file];
+        }
+      }
+
+      const remaining =
+        Object.keys(project.files);
+
+      if (!remaining.length) {
+        project.files['main.sglx'] =
+          'say("Welcome to SingulaX!")\n';
+      }
+
+      current =
+        remaining[0] ||
+        'main.sglx';
+
+      render();
+      save();
+
+      return;
+    }
+
+    if (data.asset) {
+      previewAsset(
+        decodeURIComponent(
+          data.asset
+        )
+      );
+
+      return;
+    }
+
+    if (data.renameAsset) {
+      const old =
+        decodeURIComponent(
+          data.renameAsset
+        );
+
+      const name = prompt(
+        'Rename asset',
+        old
+      );
+
+      if (!name || name === old) {
+        return;
+      }
+
+      project.assets[name] =
+        project.assets[old];
+
+      delete project.assets[old];
+
+      render();
+      save();
+
+      return;
+    }
+
+    if (data.deleteAsset) {
+      const asset =
+        decodeURIComponent(
+          data.deleteAsset
+        );
+
+      if (
+        !confirm(
+          'Delete asset ' +
+          asset +
+          '?'
+        )
+      ) {
+        return;
+      }
+
+      delete project.assets[asset];
+
+      render();
+      save();
+    }
+  });
+}
+
+function wireBasicButtons() {
+  $('saveBtn')?.addEventListener(
+    'click',
+    save
+  );
+
+  $('clearConsole')?.addEventListener(
+    'click',
+    () => {
+      if (consoleEl) {
+        consoleEl.textContent = '';
+      }
+    }
+  );
+
+  $('newFileBtn')?.addEventListener(
+    'click',
+    () => {
+      let name = prompt(
+        'File name',
+        'script.sglx'
+      );
+
+      if (!name) return;
+
+      if (!/\.[\w-]+$/.test(name)) {
+        name += '.sglx';
+      }
+
+      project.files[name] = '';
+
+      current = name;
+
+      render();
+      save();
+    }
+  );
+
+  $('newFolderBtn')?.addEventListener(
+    'click',
+    createFolder
+  );
+
+  $('newBtn')?.addEventListener(
+    'click',
+    () => {
+      if (
+        !confirm(
+          'Create a new project?'
+        )
+      ) {
+        return;
+      }
+
+      project = {
+        name: 'MyProject',
+        files: {
+          'main.sglx':
+            'say("Welcome to SingulaX!")\n'
+        },
+        assets: {},
+        folders: [],
+        settings: {
+          theme: 'midnight',
+          fontSize: 15,
+          autosave: true
+        }
+      };
+
+      current = 'main.sglx';
+
+      render();
+      save();
+    }
+  );
+}
+
+let latestFrame = [];
+let paintHandle = 0;
+
+function draw(frame = []) {
+  latestFrame =
+    Array.isArray(frame)
+      ? frame.slice()
+      : [];
+}
+
+function paintFrame() {
+  if (paintHandle) {
+    cancelAnimationFrame(
+      paintHandle
+    );
   }
 
-  if(!results.length){
-    container.innerHTML=
-      "<p>Examples could not be loaded. Make sure the examples folder is next to the browser folder.</p>";
+  const tick = () => {
+    if (!runtime) {
+      paintHandle = 0;
+      return;
+    }
+
+    paintCanvas(latestFrame);
+
+    paintHandle =
+      requestAnimationFrame(tick);
+  };
+
+  paintHandle =
+    requestAnimationFrame(tick);
+}
+
+function paintCanvas(frame = []) {
+  if (!canvas) return;
+
+  const ctx =
+    canvas.getContext('2d');
+
+  if (!ctx) return;
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  ctx.fillStyle = '#05060a';
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  for (const item of frame) {
+    ctx.fillStyle =
+      item.fill || 'white';
+
+    ctx.strokeStyle =
+      item.fill || 'white';
+
+    if (item.type === 'rect') {
+      ctx.fillRect(
+        item.x,
+        item.y,
+        item.w,
+        item.h
+      );
+    }
+
+    if (item.type === 'circle') {
+      ctx.beginPath();
+
+      ctx.arc(
+        item.x,
+        item.y,
+        item.r,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+    }
+
+    if (item.type === 'line') {
+      ctx.lineWidth =
+        item.width || 2;
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        item.x1,
+        item.y1
+      );
+
+      ctx.lineTo(
+        item.x2,
+        item.y2
+      );
+
+      ctx.stroke();
+    }
+
+    if (item.type === 'text') {
+      ctx.font =
+        (item.size || 20) +
+        'px sans-serif';
+
+      ctx.fillText(
+        item.text,
+        item.x,
+        item.y
+      );
+    }
+
+    if (item.type === 'cube') {
+      drawCube(ctx, item);
+    }
+
+    if (item.type === 'image') {
+      const url =
+        project.assets[item.asset];
+
+      if (url) {
+        paintCanvas.images ??=
+          new Map();
+
+        let image =
+          paintCanvas.images.get(
+            url
+          );
+
+        if (!image) {
+          image = new Image();
+          image.src = url;
+
+          paintCanvas.images.set(
+            url,
+            image
+          );
+        }
+
+        if (image.complete) {
+          ctx.drawImage(
+            image,
+            item.x,
+            item.y,
+            item.w || image.width,
+            item.h || image.height
+          );
+        }
+      }
+    }
+  }
+}
+
+function drawCube(ctx, item) {
+  const size =
+    70 * (item.size || 1);
+
+  const cx =
+    400 +
+    (item.x || 0) * 60;
+
+  const cy =
+    240 -
+    (item.z || 0) * 40 -
+    (item.y || 0) * 60;
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    cx - size,
+    cy - size
+  );
+
+  ctx.lineTo(
+    cx,
+    cy - size * 0.55
+  );
+
+  ctx.lineTo(
+    cx + size,
+    cy - size
+  );
+
+  ctx.lineTo(
+    cx + size,
+    cy
+  );
+
+  ctx.lineTo(
+    cx,
+    cy + size * 0.45
+  );
+
+  ctx.lineTo(
+    cx - size,
+    cy
+  );
+
+  ctx.closePath();
+
+  ctx.strokeStyle =
+    item.fill || '#7cf';
+
+  ctx.stroke();
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    cx - size,
+    cy
+  );
+
+  ctx.lineTo(
+    cx,
+    cy + size * 0.45
+  );
+
+  ctx.lineTo(
+    cx + size,
+    cy
+  );
+
+  ctx.stroke();
+}
+
+async function run() {
+  if (
+    typeof SingulaxRuntime ===
+    'undefined'
+  ) {
+    alert(
+      'SingulaX runtime.js could not be loaded.'
+    );
 
     return;
   }
 
-  container.innerHTML="";
+  save();
 
-  for(const example of results){
-    const section=document.createElement("section");
-    section.className="helpExample";
+  stop();
 
-    const title=document.createElement("h3");
-    title.textContent=example.name;
+  if (consoleEl) {
+    consoleEl.textContent = '';
+  }
 
-    const copy=document.createElement("button");
-    copy.textContent="Copy";
+  if ($('diagnostics')) {
+    $('diagnostics').textContent = '';
+  }
 
-    copy.onclick=async()=>{
-      await navigator.clipboard.writeText(example.text);
-      copy.textContent="Copied!";
+  latestFrame = [];
 
-      setTimeout(()=>{
-        copy.textContent="Copy";
-      },1000);
-    };
+  runtime =
+    new SingulaxRuntime({
+      output: log,
 
-    const pre=document.createElement("pre");
-    pre.textContent=example.text;
+      frame: draw,
 
-    section.appendChild(title);
-    section.appendChild(copy);
-    section.appendChild(pre);
+      input: async promptText => {
+        log(promptText);
 
-    container.appendChild(section);
+        return await new Promise(
+          resolve => {
+            window._inputResolve =
+              resolve;
+
+            $('stdin')?.focus();
+          }
+        );
+      },
+
+      fileRead: async path =>
+        project.files[path] ??
+        project.assets[path] ??
+        '',
+
+      fileWrite: async (
+        path,
+        content
+      ) => {
+        project.files[path] =
+          String(content);
+
+        renderTree();
+        save();
+
+        return true;
+      },
+
+      playAudio,
+
+      mode3d: value => {
+        if ($('previewMode')) {
+          $('previewMode').value =
+            value
+              ? '3d'
+              : '2d';
+        }
+      }
+    });
+
+  runtime.setInput({
+    keys: [...keys],
+    buttons: [...buttons],
+    mouse,
+    touch,
+    gamepads: readGamepads()
+  });
+
+  paintFrame();
+
+  try {
+    await runtime.runProject(
+      project
+    );
+
+    paintCanvas(
+      latestFrame
+    );
+
+    log('[finished]');
+
+  } catch (error) {
+    showError(error);
+
+  } finally {
+    if (paintHandle) {
+      cancelAnimationFrame(
+        paintHandle
+      );
+
+      paintHandle = 0;
+    }
+
+    runtime = null;
   }
 }
 
-function normalizeExampleComments(text){
-  return text
-    .split("\n")
-    .map(line=>{
-      const trimmed=line.trim();
+function stop() {
+  if (runtime) {
+    runtime.running = false;
+    runtime = null;
+  }
 
-      if(trimmed.startsWith("#")){
-        return line.replace(
-          /^\s*#\s?/,
-          `${line.match(/^\s*/)?.[0]||""}// `
-        )+" //";
+  if (paintHandle) {
+    cancelAnimationFrame(
+      paintHandle
+    );
+
+    paintHandle = 0;
+  }
+
+  paintCanvas(
+    latestFrame
+  );
+
+  log('[stopped]');
+}
+
+function wireRunStop() {
+  const runButton =
+    $('runBtn');
+
+  const stopButton =
+    $('stopBtn');
+
+  if (runButton) {
+    runButton.onclick = run;
+  }
+
+  if (stopButton) {
+    stopButton.onclick = stop;
+  }
+}
+
+if ($('stdin')) {
+  $('stdin').addEventListener(
+    'keydown',
+    event => {
+      if (
+        event.key === 'Enter' &&
+        window._inputResolve
+      ) {
+        const value =
+          event.target.value;
+
+        event.target.value = '';
+
+        const resolve =
+          window._inputResolve;
+
+        window._inputResolve =
+          null;
+
+        resolve(value);
+      }
+    }
+  );
+}
+
+window.addEventListener(
+  'keydown',
+  event => {
+    keys.add(event.key);
+
+    runtime?.setInput({
+      keys: [event.key],
+      pressed: [event.key]
+    });
+  }
+);
+
+window.addEventListener(
+  'keyup',
+  event => {
+    keys.delete(event.key);
+
+    runtime?.setInput({
+      up: [event.key]
+    });
+  }
+);
+
+function readGamepads() {
+  try {
+    return navigator
+      .getGamepads?.()
+      ?.filter(Boolean)
+      .map(gamepad => ({
+        id: gamepad.id,
+        index: gamepad.index,
+        buttons:
+          gamepad.buttons.map(
+            button => ({
+              pressed:
+                button.pressed,
+              value:
+                button.value
+            })
+          ),
+        axes:
+          [...gamepad.axes]
+      })) || [];
+  } catch {
+    return [];
+  }
+}
+
+function pointerPosition(event) {
+  if (!canvas) {
+    return {
+      x: 0,
+      y: 0
+    };
+  }
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+  return {
+    x:
+      (event.clientX -
+        rect.left) *
+      (canvas.width /
+        rect.width),
+
+    y:
+      (event.clientY -
+        rect.top) *
+      (canvas.height /
+        rect.height)
+  };
+}
+
+if (canvas) {
+  canvas.addEventListener(
+    'pointermove',
+    event => {
+      const p =
+        pointerPosition(event);
+
+      mouse.x = p.x;
+      mouse.y = p.y;
+
+      if (event.pointerType === 'touch') {
+        touch.x = p.x;
+        touch.y = p.y;
       }
 
-      const hashIndex=line.indexOf("#");
+      runtime?.setInput({
+        mouse,
+        touch
+      });
+    }
+  );
 
-      if(hashIndex>=0){
-        const before=line.slice(0,hashIndex).trimEnd();
-        const comment=line.slice(hashIndex+1).trim();
+  canvas.addEventListener(
+    'pointerdown',
+    event => {
+      const p =
+        pointerPosition(event);
 
-        if(comment){
-          return `${before} // ${comment} //`;
+      mouse.x = p.x;
+      mouse.y = p.y;
+
+      mouse.down = true;
+
+      if (
+        event.pointerType ===
+        'touch'
+      ) {
+        touch.x = p.x;
+        touch.y = p.y;
+        touch.active = true;
+      }
+
+      runtime?.setInput({
+        mouse,
+        touch
+      });
+    }
+  );
+
+  canvas.addEventListener(
+    'pointerup',
+    event => {
+      mouse.down = false;
+
+      if (
+        event.pointerType ===
+        'touch'
+      ) {
+        touch.active = false;
+      }
+
+      runtime?.setInput({
+        mouse,
+        touch
+      });
+    }
+  );
+}
+
+function showError(error) {
+  const message =
+    error?.message ||
+    String(error);
+
+  log(
+    '[error] ' +
+    message
+  );
+
+  if ($('diagnostics')) {
+    $('diagnostics').innerHTML =
+      `<div>● ${esc(message)}</div>`;
+  }
+
+  console.error(
+    'SingulaX error:',
+    error
+  );
+}
+
+function diagnose() {
+  if (!$('diagnostics') || !editor) {
+    return;
+  }
+
+  const source =
+    editor.value;
+
+  const lines =
+    source.split(/\r?\n/);
+
+  const diagnostics = [];
+
+  let depth = 0;
+
+  for (
+    let i = 0;
+    i < lines.length;
+    i++
+  ) {
+    const raw =
+      lines[i];
+
+    const line =
+      raw.trim();
+
+    if (!line) continue;
+
+    if (
+      line.startsWith('//')
+    ) {
+      continue;
+    }
+
+    if (
+      /^(if|while|forever|for|function|repeat(?:\.until(?:\.statement)?)?)\b/.test(
+        line
+      )
+    ) {
+      depth++;
+    }
+
+    if (
+      line === 'end'
+    ) {
+      depth--;
+
+      if (depth < 0) {
+        diagnostics.push(
+          `Line ${i + 1}: unexpected end`
+        );
+
+        depth = 0;
+      }
+    }
+
+    if (
+      /\botherwise\b/.test(
+        line
+      )
+    ) {
+      diagnostics.push(
+        `Line ${i + 1}: "otherwise" is not SingulaX syntax. Use "else".`
+      );
+    }
+  }
+
+  if (depth > 0) {
+    diagnostics.push(
+      'A block is missing an "end".'
+    );
+  }
+
+  if (diagnostics.length) {
+    $('diagnostics').innerHTML =
+      diagnostics
+        .map(
+          d =>
+            `<div>● ${esc(d)}</div>`
+        )
+        .join('');
+  } else {
+    $('diagnostics').textContent =
+      '';
+  }
+}
+
+if (editor) {
+  editor.addEventListener(
+    'input',
+    () => {
+      if (
+        project.settings.autosave
+      ) {
+        project.files[current] =
+          editor.value;
+
+        localStorage.setItem(
+          'singulax-project',
+          JSON.stringify(project)
+        );
+      }
+
+      diagnose();
+      showCompletions();
+    }
+  );
+
+  editor.addEventListener(
+    'scroll',
+    () => {
+      if ($('gutter')) {
+        $('gutter').scrollTop =
+          editor.scrollTop;
+      }
+    }
+  );
+
+  editor.addEventListener(
+    'keydown',
+    event => {
+      if (event.key === 'Tab') {
+        if (
+          !$('suggestions')?.hidden
+        ) {
+          acceptCompletion();
+          event.preventDefault();
+          return;
         }
 
-        return before;
+        event.preventDefault();
+
+        const a =
+          editor.selectionStart;
+
+        const b =
+          editor.selectionEnd;
+
+        editor.setRangeText(
+          '  ',
+          a,
+          b,
+          'end'
+        );
+
+        return;
       }
 
-      return line;
-    })
-    .join("\n");
-}
+      if (
+        event.key === 'Enter'
+      ) {
+        if (
+          !$('suggestions')?.hidden
+        ) {
+          acceptCompletion();
+          event.preventDefault();
+          return;
+        }
 
-function normalizeExampleSyntax(text){
-  return text
-    .replace(/\botherwise\s+if\b/gi,"elseif")
-    .replace(/\botherwise\b/gi,"else");
-}
-
-function setupInput(){
-  window.addEventListener("keydown",event=>{
-    keys.add(event.key.toLowerCase());
-
-    if(runtime){
-      runtime.setInput({
-        keys:[...keys],
-        buttons:[...buttons],
-        mouse,
-        touch,
-        gamepads:readGamepads()
-      });
-    }
-  });
-
-  window.addEventListener("keyup",event=>{
-    keys.delete(event.key.toLowerCase());
-
-    if(runtime){
-      runtime.setInput({
-        keys:[...keys],
-        buttons:[...buttons],
-        mouse,
-        touch,
-        gamepads:readGamepads()
-      });
-    }
-  });
-
-  const canvas=$("game");
-
-  if(canvas){
-    canvas.addEventListener("mousemove",event=>{
-      const rect=canvas.getBoundingClientRect();
-
-      mouse.x=
-        (event.clientX-rect.left)*
-        canvas.width/
-        rect.width;
-
-      mouse.y=
-        (event.clientY-rect.top)*
-        canvas.height/
-        rect.height;
-    });
-
-    canvas.addEventListener("mousedown",()=>{
-      mouse.down=true;
-    });
-
-    canvas.addEventListener("mouseup",()=>{
-      mouse.down=false;
-    });
-
-    canvas.addEventListener("touchstart",event=>{
-      touch.down=true;
-
-      const t=event.touches[0];
-
-      if(t){
-        const rect=canvas.getBoundingClientRect();
-
-        touch.x=
-          (t.clientX-rect.left)*
-          canvas.width/
-          rect.width;
-
-        touch.y=
-          (t.clientY-rect.top)*
-          canvas.height/
-          rect.height;
+        setTimeout(
+          diagnose,
+          0
+        );
       }
-    });
 
-    canvas.addEventListener("touchend",()=>{
-      touch.down=false;
-    });
+      if (
+        event.key === 'ArrowDown' &&
+        !$('suggestions')?.hidden
+      ) {
+        moveCompletion(1);
+        event.preventDefault();
+      }
+
+      if (
+        event.key === 'ArrowUp' &&
+        !$('suggestions')?.hidden
+      ) {
+        moveCompletion(-1);
+        event.preventDefault();
+      }
+
+      if (
+        event.key === 'Escape'
+      ) {
+        hideCompletions();
+      }
+
+      if (
+        (event.ctrlKey ||
+          event.metaKey) &&
+        event.code ===
+          'Space'
+      ) {
+        event.preventDefault();
+        showCompletions(true);
+      }
+    }
+  );
+}
+
+if ($('settingsBtn')) {
+  $('settingsBtn').onclick =
+    () => $('settings')?.showModal();
+}
+
+if ($('closeSettings')) {
+  $('closeSettings').onclick =
+    () => {
+      $('settings')?.close();
+      applySettings();
+      save();
+    };
+}
+
+if ($('theme')) {
+  $('theme').onchange =
+    applySettings;
+}
+
+if ($('fontSize')) {
+  $('fontSize').oninput =
+    applySettings;
+}
+
+if ($('autosave')) {
+  $('autosave').onchange =
+    save;
+}
+
+function applySettings() {
+  const settings =
+    project.settings || {};
+
+  document.documentElement.style.setProperty(
+    '--code-size',
+    (settings.fontSize || 15) +
+      'px'
+  );
+
+  if ($('theme')) {
+    document.body.dataset.theme =
+      $('theme').value ||
+      settings.theme ||
+      'midnight';
   }
-
-  document.querySelectorAll("[data-touch]").forEach(button=>{
-    const key=button.dataset.touch;
-
-    button.addEventListener("pointerdown",()=>{
-      buttons.add(key);
-    });
-
-    button.addEventListener("pointerup",()=>{
-      buttons.delete(key);
-    });
-
-    button.addEventListener("pointerleave",()=>{
-      buttons.delete(key);
-    });
-  });
 }
 
-function setupUI(){
-  $("runBtn")?.addEventListener("click",run);
-  $("stopBtn")?.addEventListener("click",stop);
+let completionItems = [];
+let completionIndex = 0;
 
-  $("saveBtn")?.addEventListener("click",()=>{
-    saveCurrentFile();
-    log("[saved]");
-  });
-
-  $("newFileBtn")?.addEventListener("click",createFile);
-  $("newFolderBtn")?.addEventListener("click",createFolder);
-
-  $("addAssetBtn")?.addEventListener("click",()=>{
-    $("assetFile")?.click();
-  });
-
-  $("assetFile")?.addEventListener("change",event=>{
-    addAssets(event.target.files);
-    event.target.value="";
-  });
-
-  $("importBtn")?.addEventListener("click",()=>{
-    $("importFile")?.click();
-  });
-
-  $("importFile")?.addEventListener("change",async event=>{
-    for(const file of event.target.files){
-      await importProjectFile(file);
-    }
-
-    event.target.value="";
-  });
-
-  $("exportBtn")?.addEventListener("click",()=>{
-    const choice=prompt(
-      "Export project:\n\n"+
-      "1 = SingulaX project (.sglxproj)\n"+
-      "2 = Full project ZIP\n\n"+
-      "Enter 1 or 2."
+function completionContext() {
+  const before =
+    editor.value.slice(
+      0,
+      editor.selectionStart
     );
 
-    if(choice==="2"){
-      createZip();
-    }else if(choice==="1"){
-      exportJSON();
+  const word =
+    (
+      before.match(
+        /[A-Za-z_]\w*$/
+      ) || ['']
+    )[0];
+
+  const member =
+    before.match(
+      /([A-Za-z_]\w*)\.([A-Za-z_]\w*)$/
+    );
+
+  return {
+    word,
+    member
+  };
+}
+
+function showCompletions(
+  force = false
+) {
+  if (!editor) return;
+
+  const {
+    word,
+    member
+  } = completionContext();
+
+  if (
+    !force &&
+    !word &&
+    !member
+  ) {
+    hideCompletions();
+    return;
+  }
+
+  const snippets = {
+    if:
+      'if condition then\n  \nend',
+
+    elseif:
+      'elseif condition then',
+
+    while:
+      'while condition do\n  \nend',
+
+    forever:
+      'forever do\n  \nend',
+
+    for:
+      'for i = 1, 10 do\n  \nend',
+
+    function:
+      'function name()\n  \nend',
+
+    repeat:
+      'repeat(10)\n  \nend',
+
+    'repeat.until':
+      'repeat.until(task(), done)\n  \nend',
+
+    'repeat.until.statement':
+      'repeat.until.statement(condition, true)\n  \nend',
+
+    wait:
+      'wait(1)',
+
+    'wait.until':
+      'wait.until(task, done)'
+  };
+
+  let pool = [];
+
+  if (member) {
+    const query =
+      member[2].toLowerCase();
+
+    pool = [
+      'state',
+      'value',
+      'length',
+      'x',
+      'y',
+      'z',
+      'health',
+      'position',
+      'ready',
+      'done',
+      'starts',
+      'during',
+      'update',
+      'destroy',
+      'play',
+      'stop'
+    ].filter(
+      item =>
+        item.startsWith(query)
+    );
+
+  } else {
+    const names = [
+      ...new Set([
+        ...keywords,
+        ...builtins,
+        ...Object.keys(
+          project.files
+        ).map(
+          name =>
+            name.replace(
+              /\.sglx$/,
+              ''
+            )
+        ),
+        ...Object.keys(
+          project.assets
+        )
+      ])
+    ];
+
+    pool =
+      names.filter(
+        name =>
+          name
+            .toLowerCase()
+            .startsWith(
+              word.toLowerCase()
+            )
+      );
+
+    if (
+      snippets[
+        word.toLowerCase()
+      ]
+    ) {
+      pool = [
+        word.toLowerCase(),
+        ...pool.filter(
+          item =>
+            item.toLowerCase() !==
+            word.toLowerCase()
+        )
+      ];
     }
-  });
+  }
 
-  $("clearConsole")?.addEventListener("click",()=>{
-    $("console").textContent="";
-  });
+  completionItems =
+    pool.slice(0, 12);
 
-  $("projectName")?.addEventListener("input",event=>{
-    project.name=event.target.value||"MyProject";
-    save();
-  });
+  completionIndex = 0;
 
-  $("editor")?.addEventListener("input",()=>{
-    project.files[currentFile]=getEditorText();
-    updateEditor();
+  const box =
+    $('suggestions');
 
-    if($("autosave")?.checked!==false){
-      save();
-    }
-  });
+  if (
+    !box ||
+    !completionItems.length
+  ) {
+    hideCompletions();
+    return;
+  }
 
-  $("editor")?.addEventListener("keyup",updateSuggestions);
-  $("editor")?.addEventListener("click",updateSuggestions);
+  box.hidden = false;
 
-  $("editor")?.addEventListener("scroll",()=>{
-    const gutter=$("gutter");
+  box.innerHTML =
+    completionItems
+      .map(
+        (item, index) =>
+          `
+          <button
+            class="completion ${
+              index === 0
+                ? 'selected'
+                : ''
+            }"
+            data-sug-index="${index}">
+            <b>${esc(item)}</b>
+          </button>
+          `
+      )
+      .join('');
 
-    if(gutter){
-      gutter.scrollTop=$("editor").scrollTop;
-    }
-  });
+  box.onclick =
+    event => {
+      const button =
+        event.target.closest(
+          '[data-sug-index]'
+        );
 
-  $("newBtn")?.addEventListener("click",()=>{
-    project={
-      name:"MyProject",
-      files:{
-        "main.sglx":'say("Welcome to SingulaX!")'
-      },
-      assets:{},
-      folders:[]
+      if (!button) return;
+
+      completionIndex =
+        Number(
+          button.dataset
+            .sugIndex
+        );
+
+      acceptCompletion();
     };
 
-    currentFile="main.sglx";
-
-    renderTree();
-    openFile(currentFile);
-    save();
-  });
-
-  $("settingsBtn")?.addEventListener("click",()=>{
-    $("settings")?.showModal();
-  });
-
-  $("closeSettings")?.addEventListener("click",()=>{
-    $("settings")?.close();
-  });
-
-  $("theme")?.addEventListener("change",event=>{
-    document.body.dataset.theme=event.target.value;
-    localStorage.setItem(
-      "singulax-theme",
-      event.target.value
-    );
-  });
-
-  $("fontSize")?.addEventListener("input",event=>{
-    document.documentElement.style.setProperty(
-      "--editor-size",
-      `${event.target.value}px`
-    );
-  });
-
-  $("modeBtn")?.addEventListener("click",()=>{
-    const pane=$("blocksPane");
-    const editor=$("window-code");
-
-    if(!pane||!editor)return;
-
-    const showing=pane.hidden;
-
-    pane.hidden=!showing;
-    editor.hidden=showing;
-  });
-
-  $("tab-code")?.addEventListener("click",()=>{
-    showWindow("window-code");
-  });
-
-  $("tab-console")?.addEventListener("click",()=>{
-    showWindow("window-console");
-  });
-
-  $("tab-preview")?.addEventListener("click",()=>{
-    showWindow("window-preview");
-  });
-
-  $("multitaskBtn")?.addEventListener("click",()=>{
-    document.body.classList.toggle("multitask");
-  });
-
-  $("resetLayoutBtn")?.addEventListener("click",()=>{
-    document.body.classList.remove("multitask");
-
-    $("window-code")?.removeAttribute("hidden");
-    $("window-console")?.removeAttribute("hidden");
-    $("window-preview")?.removeAttribute("hidden");
-  });
+  positionCompletions();
 }
 
-function showWindow(id){
-  const ids=[
-    "window-code",
-    "window-console",
-    "window-preview"
+function positionCompletions() {
+  const box =
+    $('suggestions');
+
+  if (!box) return;
+
+  box.style.left =
+    '58px';
+
+  box.style.top =
+    '36px';
+}
+
+function acceptCompletion() {
+  if (
+    !completionItems.length ||
+    !editor
+  ) {
+    return;
+  }
+
+  const {
+    word,
+    member
+  } =
+    completionContext();
+
+  const end =
+    editor.selectionStart;
+
+  const prefixLength =
+    member
+      ? member[2].length
+      : word.length;
+
+  const chosen =
+    completionItems[
+      completionIndex
+    ];
+
+  const snippets = {
+    if:
+      'if condition then\n  \nend',
+
+    while:
+      'while condition do\n  \nend',
+
+    forever:
+      'forever do\n  \nend',
+
+    for:
+      'for i = 1, 10 do\n  \nend',
+
+    function:
+      'function name()\n  \nend',
+
+    repeat:
+      'repeat(10)\n  \nend',
+
+    'repeat.until':
+      'repeat.until(task(), done)\n  \nend',
+
+    'repeat.until.statement':
+      'repeat.until.statement(condition, true)\n  \nend',
+
+    wait:
+      'wait(1)',
+
+    'wait.until':
+      'wait.until(task, done)'
+  };
+
+  editor.setRangeText(
+    snippets[chosen] ||
+      chosen,
+
+    end - prefixLength,
+    end,
+    'end'
+  );
+
+  hideCompletions();
+
+  editor.focus();
+
+  diagnose();
+}
+
+function moveCompletion(delta) {
+  if (
+    !completionItems.length
+  ) {
+    return;
+  }
+
+  completionIndex =
+    (
+      completionIndex +
+      delta +
+      completionItems.length
+    ) %
+    completionItems.length;
+
+  document
+    .querySelectorAll(
+      '.completion'
+    )
+    .forEach(
+      (button, index) => {
+        button.classList.toggle(
+          'selected',
+          index ===
+            completionIndex
+        );
+      }
+    );
+}
+
+function hideCompletions() {
+  if ($('suggestions')) {
+    $('suggestions').hidden =
+      true;
+  }
+
+  completionItems = [];
+}
+
+async function previewAsset(
+  name
+) {
+  const url =
+    project.assets[name];
+
+  if (
+    url?.startsWith(
+      'data:image/'
+    )
+  ) {
+    const windowRef =
+      window.open();
+
+    if (!windowRef) return;
+
+    windowRef.document.write(
+      `<img src="${url}" style="max-width:100%">`
+    );
+
+  } else if (
+    url?.startsWith(
+      'data:audio/'
+    )
+  ) {
+    const windowRef =
+      window.open();
+
+    if (!windowRef) return;
+
+    windowRef.document.write(
+      `<audio controls autoplay src="${url}"></audio>`
+    );
+
+  } else if (
+    url?.startsWith(
+      'data:video/'
+    )
+  ) {
+    const windowRef =
+      window.open();
+
+    if (!windowRef) return;
+
+    windowRef.document.write(
+      `<video controls autoplay style="max-width:100%" src="${url}"></video>`
+    );
+
+  } else {
+    alert(name);
+  }
+}
+
+function playAudio(name) {
+  const url =
+    project.assets[name] ||
+    name;
+
+  if (!url) return;
+
+  const audio =
+    new Audio(url);
+
+  audio.play().catch(
+    () => {}
+  );
+}
+
+// ------------------------------
+// HELP
+// ------------------------------
+
+function ensureHelp() {
+  if (!$('helpBtn')) {
+    const button =
+      document.createElement(
+        'button'
+      );
+
+    button.id =
+      'helpBtn';
+
+    button.textContent =
+      '? Help';
+
+    button.title =
+      'Open SingulaX examples';
+
+    document
+      .querySelector('header')
+      ?.appendChild(
+        button
+      );
+
+    button.onclick =
+      openHelp;
+  }
+
+  if (!$('helpDialog')) {
+    const dialog =
+      document.createElement(
+        'dialog'
+      );
+
+    dialog.id =
+      'helpDialog';
+
+    dialog.style.cssText =
+      `
+      width:min(900px,94vw);
+      max-height:88vh;
+      overflow:auto;
+      `;
+
+    dialog.innerHTML =
+      `
+      <h2>
+        SingulaX Help & Examples
+      </h2>
+
+      <p>
+        These examples use
+        SingulaX syntax.
+        Comments use
+        <code>// ... //</code>.
+      </p>
+
+      <div id="exampleList">
+        Loading examples...
+      </div>
+
+      <button id="closeHelp">
+        Close
+      </button>
+      `;
+
+    document.body.appendChild(
+      dialog
+    );
+
+    $('closeHelp').onclick =
+      () => dialog.close();
+  }
+}
+
+async function openHelp() {
+  ensureHelp();
+
+  const dialog =
+    $('helpDialog');
+
+  const box =
+    $('exampleList');
+
+  if (!dialog || !box) {
+    return;
+  }
+
+  dialog.showModal();
+
+  box.textContent =
+    'Loading examples...';
+
+  const names = [
+    '01_basics.sglx',
+    '02_functions.sglx',
+    '03_blueprints.sglx',
+    '04_error_handling.sglx',
+    '05_modules.sglx',
+    '06_todo_app.sglx',
+    '07_advanced.sglx',
+    '08_control_flow.sglx',
+    '09_game_input.sglx',
+    '10_singulax_showcase.sglx',
+    '11_repeat_until.sglx',
+    'geometry.sglx'
   ];
 
-  for(const name of ids){
-    const element=$(name);
+  box.innerHTML = '';
 
-    if(element){
-      element.hidden=name!==id;
+  for (
+    const name of names
+  ) {
+    const section =
+      document.createElement(
+        'details'
+      );
+
+    const title =
+      document.createElement(
+        'summary'
+      );
+
+    title.textContent =
+      name;
+
+    const pre =
+      document.createElement(
+        'pre'
+      );
+
+    pre.style.cssText =
+      `
+      white-space:pre-wrap;
+      background:#070910;
+      padding:12px;
+      border-radius:8px;
+      overflow:auto;
+      `;
+
+    try {
+      let text =
+        await fetch(
+          '../examples/' +
+          encodeURIComponent(
+            name
+          )
+        ).then(
+          response => {
+            if (!response.ok) {
+              throw new Error(
+                'HTTP ' +
+                response.status
+              );
+            }
+
+            return response.text();
+          }
+        );
+
+      text =
+        cleanExampleComments(
+          text
+        );
+
+      pre.textContent =
+        text;
+
+    } catch (error) {
+      pre.textContent =
+        'Could not load this example: ' +
+        error.message;
     }
-  }
-}
 
-function setupHelpButton(){
-  if($("helpBtn"))return;
-
-  const settings=$("settingsBtn");
-
-  const button=document.createElement("button");
-  button.id="helpBtn";
-  button.textContent="❔ Help";
-  button.onclick=showHelp;
-
-  if(settings&&settings.parentNode){
-    settings.parentNode.insertBefore(
-      button,
-      settings.nextSibling
+    section.append(
+      title,
+      pre
     );
-  }else{
-    document.querySelector("header")?.appendChild(button);
+
+    box.appendChild(
+      section
+    );
   }
 }
 
-function loadSettings(){
-  const theme=localStorage.getItem("singulax-theme");
+function cleanExampleComments(
+  text
+) {
+  return String(text)
+    .replace(
+      /^\s*#\s?(.*)$/gm,
+      '// $1 //'
+    )
+    .replace(
+      /\s+#\s?(.*)$/gm,
+      ' // $1 //'
+    )
+    .replace(
+      /\botherwise\b/g,
+      'else'
+    );
+}
 
-  if(theme){
-    document.body.dataset.theme=theme;
+// ------------------------------
+// STUDIO TABS
+// ------------------------------
 
-    if($("theme")){
-      $("theme").value=theme;
+const studioTabs = [
+  'code',
+  'console',
+  'preview'
+];
+
+function setStudioTab(
+  name
+) {
+  studioTabs.forEach(
+    panel => {
+      const element =
+        $('window-' + panel);
+
+      if (element) {
+        element.classList.toggle(
+          'active-window',
+          panel === name
+        );
+      }
+
+      const button =
+        $('tab-' + panel);
+
+      if (button) {
+        button.classList.toggle(
+          'active',
+          panel === name
+        );
+      }
+    }
+  );
+
+  document.body.dataset.focusPanel =
+    name;
+}
+
+function initStudioTabs() {
+  studioTabs.forEach(
+    name => {
+      const button =
+        $('tab-' + name);
+
+      if (!button) return;
+
+      button.onclick =
+        () =>
+          setStudioTab(name);
+    }
+  );
+
+  const multitask =
+    $('multitaskBtn');
+
+  if (multitask) {
+    multitask.onclick =
+      () =>
+        document.body.classList.toggle(
+          'multitask'
+        );
+  }
+
+  const reset =
+    $('resetLayoutBtn');
+
+  if (reset) {
+    reset.onclick =
+      () => {
+        document.body.classList.remove(
+          'multitask'
+        );
+
+        setStudioTab(
+          'code'
+        );
+      };
+  }
+
+  setStudioTab(
+    'code'
+  );
+}
+
+// ------------------------------
+// PROJECT LOADING
+// ------------------------------
+
+function normalizeProject(
+  value
+) {
+  let p =
+    value &&
+    typeof value ===
+      'object'
+      ? value
+      : {};
+
+  p.name =
+    typeof p.name ===
+      'string' &&
+    p.name
+      ? p.name
+      : 'MyProject';
+
+  p.files =
+    p.files &&
+    typeof p.files ===
+      'object'
+      ? p.files
+      : {
+          'main.sglx':
+            'say("Welcome to SingulaX!")\n'
+        };
+
+  p.assets =
+    p.assets &&
+    typeof p.assets ===
+      'object'
+      ? p.assets
+      : {};
+
+  p.folders =
+    Array.isArray(
+      p.folders
+    )
+      ? p.folders
+      : [];
+
+  p.settings =
+    p.settings &&
+    typeof p.settings ===
+      'object'
+      ? p.settings
+      : {
+          theme: 'midnight',
+          fontSize: 15,
+          autosave: true
+        };
+
+  if (
+    !Object.keys(
+      p.files
+    ).length
+  ) {
+    p.files['main.sglx'] =
+      'say("Welcome to SingulaX!")\n';
+  }
+
+  return p;
+}
+
+function startStudio() {
+  try {
+    const saved =
+      localStorage.getItem(
+        'singulax-project'
+      );
+
+    if (saved) {
+      try {
+        project =
+          normalizeProject(
+            JSON.parse(
+              saved
+            )
+          );
+      } catch {
+        project =
+          normalizeProject(
+            null
+          );
+      }
+    } else {
+      project =
+        normalizeProject(
+          project
+        );
+    }
+
+    current =
+      Object.keys(
+        project.files
+      )[0] ||
+      'main.sglx';
+
+    if ($('projectName')) {
+      $('projectName').value =
+        project.name;
+    }
+
+    if ($('theme')) {
+      $('theme').value =
+        project.settings.theme ||
+        'midnight';
+    }
+
+    if ($('fontSize')) {
+      $('fontSize').value =
+        project.settings.fontSize ||
+        15;
+    }
+
+    if ($('autosave')) {
+      $('autosave').checked =
+        project.settings.autosave !==
+        false;
+    }
+
+    render();
+
+    wireBasicButtons();
+    wireRunStop();
+    ensureHelp();
+    initStudioTabs();
+
+  } catch (error) {
+    console.error(
+      'SingulaX startup error:',
+      error
+    );
+
+    const diagnostics =
+      $('diagnostics');
+
+    if (diagnostics) {
+      diagnostics.innerHTML =
+        `<div>● Studio startup error: ${esc(
+          error.message ||
+            error
+        )}</div>`;
     }
   }
-}
 
-function init(){
-  load();
-
-  if($("projectName")){
-    $("projectName").value=project.name;
-  }
-
-  renderTree();
-  openFile(currentFile);
-
-  setupUI();
-  setupInput();
-  setupHelpButton();
-  loadSettings();
-
-  paintFrame(latestFrame);
-
-  if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js?v=7").catch(()=>{});
+  if (
+    'serviceWorker' in
+    navigator
+  ) {
+    navigator.serviceWorker
+      .register(
+        'sw.js?v=8'
+      )
+      .catch(
+        error =>
+          console.warn(
+            'Service worker:',
+            error
+          )
+      );
   }
 }
 
-document.addEventListener("DOMContentLoaded",init);
+// Start only after the HTML exists.
+
+if (
+  document.readyState ===
+  'loading'
+) {
+  document.addEventListener(
+    'DOMContentLoaded',
+    startStudio,
+    {
+      once: true
+    }
+  );
+} else {
+  startStudio();
+}
