@@ -1,7 +1,6 @@
-// SingulaX browser runtime is loaded by the HTML before this file.
+// SingulaX browser runtime is loaded before this file.
 
 const $ = id => document.getElementById(id);
-
 const editor = $('editor');
 const consoleEl = $('console');
 const canvas = $('game');
@@ -133,18 +132,15 @@ const builtins = [
   'pop'
 ];
 
-function log(value) {
-  if (!consoleEl) return;
-
+function log(s) {
   consoleEl.textContent +=
-    (consoleEl.textContent ? '\n' : '') +
-    String(value);
+    (consoleEl.textContent ? '\n' : '') + s;
 
   consoleEl.scrollTop = consoleEl.scrollHeight;
 }
 
-function esc(value = '') {
-  return String(value)
+function esc(s = '') {
+  return String(s)
     .replaceAll('&', '&amp;')
     .replaceAll('"', '&quot;')
     .replaceAll('<', '&lt;')
@@ -152,408 +148,324 @@ function esc(value = '') {
 }
 
 function save() {
-  if (!editor) return;
-
   project.files[current] = editor.value;
 
-  const projectName = $('projectName');
-
-  if (projectName) {
-    project.name = projectName.value || 'MyProject';
-  }
+  project.name =
+    $('projectName').value || 'MyProject';
 
   project.settings = {
-    theme: $('theme')?.value || project.settings.theme || 'midnight',
-    fontSize: +( $('fontSize')?.value || project.settings.fontSize || 15 ),
-    autosave: $('autosave')?.checked ?? project.settings.autosave
+    theme:
+      $('theme')?.value ||
+      project.settings.theme,
+
+    fontSize:
+      +(
+        $('fontSize')?.value ||
+        project.settings.fontSize
+      ),
+
+    autosave:
+      $('autosave')?.checked ??
+      project.settings.autosave
   };
+
+  project.folders ??= {};
+  project.assets ??= {};
+  project.files ??= {};
 
   localStorage.setItem(
     'singulax-project',
     JSON.stringify(project)
   );
+
+  if (project.settings.autosave) {
+    log('Saved locally.');
+  }
 }
 
 function renderTree() {
-  const tree = $('tree');
-
-  if (!tree) return;
-
   const paths = Object.keys(project.files).sort();
 
   const folders = new Set();
 
-  for (const file of paths) {
-    const parts = file.split('/');
+  for (const f of paths) {
+    const parts = f.split('/');
 
     for (let i = 1; i < parts.length; i++) {
       folders.add(parts.slice(0, i).join('/'));
     }
   }
 
-  const folderHTML = folder => {
-    const depth = folder.split('/').length;
+  for (const f of project.folders || []) {
+    folders.add(f);
+  }
 
-    return `
-      <div class="folder"
-           style="padding-left:${8 + depth * 12}px">
+  const folderHTML = f => `
+    <div
+      class="folder"
+      style="padding-left:${8 + f.split('/').length * 12}px"
+    >
+      <span>📁 ${esc(f.split('/').at(-1))}</span>
 
-        <span>
-          📁 ${esc(folder.split('/').at(-1))}
-        </span>
+      <button
+        class="mini"
+        data-new-in-folder="${encodeURIComponent(f)}"
+      >＋</button>
 
-        <button
-          class="mini"
-          data-new-in-folder="${encodeURIComponent(folder)}">
-          ＋
-        </button>
+      <button
+        class="mini"
+        data-rename-folder="${encodeURIComponent(f)}"
+      >✎</button>
 
-        <button
-          class="mini"
-          data-rename-folder="${encodeURIComponent(folder)}">
-          ✎
-        </button>
+      <button
+        class="mini"
+        data-delete-folder="${encodeURIComponent(f)}"
+      >×</button>
+    </div>
+  `;
 
-        <button
-          class="mini"
-          data-delete-folder="${encodeURIComponent(folder)}">
-          ×
-        </button>
-
-      </div>
-    `;
-  };
-
-  const fileHTML = file => {
-    const depth = file.split('/').length - 1;
-    const name = file.split('/').at(-1);
+  const fileHTML = f => {
+    const depth = f.split('/').length - 1;
+    const name = f.split('/').at(-1);
 
     return `
       <div
-        class="treeitem ${file === current ? 'active' : ''}"
-        style="padding-left:${8 + depth * 18}px">
-
+        class="treeitem ${f === current ? 'active' : ''}"
+        style="padding-left:${8 + depth * 18}px"
+      >
         <button
           class="name"
-          data-file="${encodeURIComponent(file)}">
+          data-file="${encodeURIComponent(f)}"
+        >
           📄 ${esc(name)}
         </button>
 
         <button
           class="mini"
-          title="Move"
-          data-move="${encodeURIComponent(file)}">
-          ↗
-        </button>
+          data-move="${encodeURIComponent(f)}"
+        >↗</button>
 
         <button
           class="mini"
-          title="Rename"
-          data-rename="${encodeURIComponent(file)}">
-          ✎
-        </button>
+          data-rename="${encodeURIComponent(f)}"
+        >✎</button>
 
         <button
           class="mini"
-          title="Delete"
-          data-delete="${encodeURIComponent(file)}">
-          ×
-        </button>
-
+          data-delete="${encodeURIComponent(f)}"
+        >×</button>
       </div>
     `;
   };
 
   const assetHTML = Object.keys(project.assets)
     .sort()
-    .map(asset => `
+    .map(a => `
       <div class="treeitem">
-
         <button
           class="name"
-          data-asset="${encodeURIComponent(asset)}">
-          🧩 ${esc(asset)}
+          data-asset="${encodeURIComponent(a)}"
+        >
+          🧩 ${esc(a)}
         </button>
 
         <button
           class="mini"
-          title="Rename"
-          data-rename-asset="${encodeURIComponent(asset)}">
-          ✎
-        </button>
+          data-rename-asset="${encodeURIComponent(a)}"
+        >✎</button>
 
         <button
           class="mini"
-          title="Delete"
-          data-delete-asset="${encodeURIComponent(asset)}">
-          ×
-        </button>
-
+          data-delete-asset="${encodeURIComponent(a)}"
+        >×</button>
       </div>
     `)
     .join('');
 
-  tree.innerHTML = `
-    <b>Scripts</b>
-
-    ${[...folders]
-      .sort()
-      .map(folderHTML)
-      .join('')}
-
-    ${paths.map(fileHTML).join('')}
-
-    <hr>
-
-    <b>Assets</b>
-
-    ${assetHTML}
-
-    <hr>
-
-    <b>Folders</b>
-
-    <div class="treeitem">
-      <button
-        class="name"
-        id="sidebarNewFolder">
-        📁 New Folder
-      </button>
-    </div>
-  `;
-
-  $('sidebarNewFolder')?.addEventListener(
-    'click',
-    createFolder
-  );
+  $('tree').innerHTML =
+    '<b>Scripts</b>' +
+    [...folders].sort().map(folderHTML).join('') +
+    paths.map(fileHTML).join('') +
+    '<hr>' +
+    '<b>Assets</b>' +
+    assetHTML +
+    '<hr>' +
+    '<b>Folders</b>' +
+    ([...folders].sort().length
+      ? ''
+      : '<div class="tree-empty">No folders yet</div>');
 }
 
 function render() {
   renderTree();
 
-  if ($('projectName')) {
-    $('projectName').value = project.name;
-  }
+  $('projectName').value = project.name;
 
-  if (editor) {
-    editor.value = project.files[current] ?? '';
-  }
+  editor.value =
+    project.files[current] ?? '';
 
-  if ($('fileTitle')) {
-    $('fileTitle').textContent = current;
-  }
+  $('fileTitle').textContent = current;
 
   applySettings();
+
   diagnose();
 }
 
-function openFile(file) {
-  if (!project.files[file]) {
-    project.files[file] = '';
-  }
+function openFile(f) {
+  project.files[current] = editor.value;
 
-  if (editor && current) {
-    project.files[current] = editor.value;
-  }
-
-  current = file;
+  current = f;
 
   render();
 }
 
-function createFolder() {
-  const name = prompt(
-    'Folder name',
-    'scripts'
-  );
+$('tree').onclick = e => {
+  const d = e.target.dataset;
 
-  if (!name) return;
-
-  const clean = name
-    .trim()
-    .replace(/^\/+|\/+$/g, '');
-
-  if (!clean) return;
-
-  const firstScript = clean + '/main.sglx';
-
-  if (!project.files[firstScript]) {
-    project.files[firstScript] = '';
+  if (d.file) {
+    openFile(decodeURIComponent(d.file));
+    return;
   }
 
-  current = firstScript;
+  if (d.rename) {
+    const old =
+      decodeURIComponent(d.rename);
 
-  render();
-  save();
-}
+    const base =
+      old.split('/').at(-1);
 
-if ($('tree')) {
-  $('tree').addEventListener('click', event => {
-    const target = event.target.closest('[data-file],[data-rename],[data-delete],[data-move],[data-new-in-folder],[data-rename-folder],[data-delete-folder],[data-asset],[data-rename-asset],[data-delete-asset]');
+    const n =
+      prompt('Rename script', base);
 
-    if (!target) return;
+    if (n && n !== base) {
+      const to =
+        old.includes('/')
+          ? old.slice(0, old.lastIndexOf('/') + 1) + n
+          : n;
 
-    const data = target.dataset;
-
-    if (data.file) {
-      openFile(
-        decodeURIComponent(data.file)
-      );
-      return;
-    }
-
-    if (data.rename) {
-      const old = decodeURIComponent(data.rename);
-      const base = old.split('/').at(-1);
-
-      const name = prompt(
-        'Rename script',
-        base
-      );
-
-      if (!name || name === base) return;
-
-      const folder = old.includes('/')
-        ? old.slice(0, old.lastIndexOf('/') + 1)
-        : '';
-
-      const newPath = folder + name;
-
-      project.files[newPath] =
+      project.files[to] =
         project.files[old];
 
       delete project.files[old];
 
       if (current === old) {
-        current = newPath;
+        current = to;
       }
 
       render();
       save();
+    }
 
+    return;
+  }
+
+  if (d.delete) {
+    const f =
+      decodeURIComponent(d.delete);
+
+    if (Object.keys(project.files).length === 1) {
+      alert('Keep at least one script.');
       return;
     }
 
-    if (data.delete) {
-      const file = decodeURIComponent(data.delete);
+    if (confirm('Delete ' + f + '?')) {
+      delete project.files[f];
 
-      if (
-        Object.keys(project.files).length <= 1
-      ) {
-        alert(
-          'SingulaX projects must contain at least one script.'
-        );
-        return;
-      }
-
-      if (
-        !confirm(
-          'Delete ' + file + '?'
-        )
-      ) {
-        return;
-      }
-
-      delete project.files[file];
-
-      if (current === file) {
+      if (current === f) {
         current =
           Object.keys(project.files)[0];
       }
 
       render();
       save();
-
-      return;
     }
 
-    if (data.move) {
-      const file =
-        decodeURIComponent(data.move);
+    return;
+  }
 
-      const folder = prompt(
-        'Move script into folder.\n\nLeave blank to move it to the project root.',
+  if (d.move) {
+    const f =
+      decodeURIComponent(d.move);
+
+    const folder =
+      prompt(
+        'Move script into folder. Leave blank for root.',
         ''
       );
 
-      if (folder === null) return;
-
-      const clean = folder
-        .trim()
-        .replace(/^\/+|\/+$/g, '');
+    if (folder !== null) {
+      const clean =
+        folder
+          .trim()
+          .replace(/^\/+|\/+$/g, '');
 
       const name =
-        file.split('/').at(-1);
+        f.split('/').at(-1);
 
-      const newPath = clean
-        ? clean + '/' + name
-        : name;
+      const to =
+        clean
+          ? clean + '/' + name
+          : name;
 
-      if (newPath === file) return;
+      if (to !== f) {
+        project.files[to] =
+          project.files[f];
 
-      project.files[newPath] =
-        project.files[file];
+        delete project.files[f];
 
-      delete project.files[file];
+        if (current === f) {
+          current = to;
+        }
 
-      if (current === file) {
-        current = newPath;
+        render();
+        save();
       }
-
-      render();
-      save();
-
-      return;
     }
 
-    if (data.newInFolder) {
-      const folder =
-        decodeURIComponent(
-          data.newInFolder
-        );
+    return;
+  }
 
-      let name = prompt(
+  if (d.newInFolder) {
+    const folder =
+      decodeURIComponent(d.newInFolder);
+
+    let n =
+      prompt(
         'New script name',
         'script.sglx'
       );
 
-      if (!name) return;
-
-      if (!name.endsWith('.sglx')) {
-        name += '.sglx';
+    if (n) {
+      if (!n.endsWith('.sglx')) {
+        n += '.sglx';
       }
 
-      const path =
-        folder + '/' + name;
+      const to =
+        folder + '/' + n;
 
-      project.files[path] = '';
+      project.files[to] = '';
 
-      current = path;
+      openFile(to);
 
-      render();
       save();
-
-      return;
     }
 
-    if (data.renameFolder) {
-      const old =
-        decodeURIComponent(
-          data.renameFolder
-        );
+    return;
+  }
 
-      const base =
-        old.split('/').at(-1);
-
-      const name = prompt(
-        'Rename folder',
-        base
+  if (d.renameFolder) {
+    const old =
+      decodeURIComponent(
+        d.renameFolder
       );
 
-      if (!name || name === base) {
-        return;
-      }
+    const base =
+      old.split('/').at(-1);
 
+    const n =
+      prompt('Rename folder', base);
+
+    if (n && n !== base) {
       const parent =
         old.includes('/')
           ? old.slice(
@@ -562,242 +474,232 @@ if ($('tree')) {
             )
           : '';
 
-      const newPath =
-        parent + name;
+      const to = parent + n;
 
-      const updated = {};
-
-      for (
-        const file of Object.keys(
-          project.files
-        )
-      ) {
+      for (const k of Object.keys(project.files)) {
         if (
-          file === old ||
-          file.startsWith(old + '/')
+          k === old ||
+          k.startsWith(old + '/')
         ) {
-          const replacement =
-            newPath +
-            file.slice(old.length);
+          project.files[
+            to + k.slice(old.length)
+          ] = project.files[k];
 
-          updated[replacement] =
-            project.files[file];
-
-          delete project.files[file];
+          delete project.files[k];
         }
       }
 
-      Object.assign(
-        project.files,
-        updated
-      );
+      project.folders =
+        (project.folders || []).map(f =>
+          f === old ||
+          f.startsWith(old + '/')
+            ? to + f.slice(old.length)
+            : f
+        );
 
       if (
         current === old ||
         current.startsWith(old + '/')
       ) {
         current =
-          newPath +
-          current.slice(old.length);
+          to + current.slice(old.length);
       }
 
       render();
       save();
-
-      return;
     }
 
-    if (data.deleteFolder) {
-      const folder =
-        decodeURIComponent(
-          data.deleteFolder
-        );
+    return;
+  }
 
-      if (
-        !confirm(
-          'Delete folder and all scripts inside it?\n\n' +
-          folder
-        )
-      ) {
-        return;
-      }
+  if (d.deleteFolder) {
+    const f =
+      decodeURIComponent(
+        d.deleteFolder
+      );
 
-      for (
-        const file of Object.keys(
-          project.files
-        )
-      ) {
+    if (
+      confirm(
+        'Delete folder and its scripts: ' +
+        f +
+        '?'
+      )
+    ) {
+      for (const k of Object.keys(project.files)) {
         if (
-          file === folder ||
-          file.startsWith(folder + '/')
+          k === f ||
+          k.startsWith(f + '/')
         ) {
-          delete project.files[file];
+          delete project.files[k];
         }
       }
 
-      const remaining =
-        Object.keys(project.files);
-
-      if (!remaining.length) {
-        project.files['main.sglx'] =
-          'say("Welcome to SingulaX!")\n';
-      }
+      project.folders =
+        (project.folders || []).filter(
+          x =>
+            x !== f &&
+            !x.startsWith(f + '/')
+        );
 
       current =
-        remaining[0] ||
+        Object.keys(project.files)[0] ||
         'main.sglx';
 
       render();
       save();
-
-      return;
     }
 
-    if (data.asset) {
-      previewAsset(
-        decodeURIComponent(
-          data.asset
-        )
+    return;
+  }
+
+  if (d.asset) {
+    previewAsset(
+      decodeURIComponent(d.asset)
+    );
+
+    return;
+  }
+
+  if (d.renameAsset) {
+    const old =
+      decodeURIComponent(
+        d.renameAsset
       );
 
-      return;
-    }
+    const n =
+      prompt('Rename asset', old);
 
-    if (data.renameAsset) {
-      const old =
-        decodeURIComponent(
-          data.renameAsset
-        );
-
-      const name = prompt(
-        'Rename asset',
-        old
-      );
-
-      if (!name || name === old) {
-        return;
-      }
-
-      project.assets[name] =
+    if (n && n !== old) {
+      project.assets[n] =
         project.assets[old];
 
       delete project.assets[old];
 
       render();
       save();
-
-      return;
     }
 
-    if (data.deleteAsset) {
-      const asset =
-        decodeURIComponent(
-          data.deleteAsset
-        );
+    return;
+  }
 
-      if (
-        !confirm(
-          'Delete asset ' +
-          asset +
-          '?'
-        )
-      ) {
-        return;
-      }
-
-      delete project.assets[asset];
-
-      render();
-      save();
-    }
-  });
-}
-
-function wireBasicButtons() {
-  $('saveBtn')?.addEventListener(
-    'click',
-    save
-  );
-
-  $('clearConsole')?.addEventListener(
-    'click',
-    () => {
-      if (consoleEl) {
-        consoleEl.textContent = '';
-      }
-    }
-  );
-
-  $('newFileBtn')?.addEventListener(
-    'click',
-    () => {
-      let name = prompt(
-        'File name',
-        'script.sglx'
+  if (d.deleteAsset) {
+    const a =
+      decodeURIComponent(
+        d.deleteAsset
       );
 
-      if (!name) return;
-
-      if (!/\.[\w-]+$/.test(name)) {
-        name += '.sglx';
-      }
-
-      project.files[name] = '';
-
-      current = name;
+    if (
+      confirm('Delete ' + a + '?')
+    ) {
+      delete project.assets[a];
 
       render();
       save();
     }
-  );
+  }
+};
 
-  $('newFolderBtn')?.addEventListener(
-    'click',
-    createFolder
-  );
+$('saveBtn').onclick = save;
 
-  $('newBtn')?.addEventListener(
-    'click',
-    () => {
-      if (
-        !confirm(
-          'Create a new project?'
-        )
-      ) {
-        return;
+$('clearConsole').onclick = () => {
+  consoleEl.textContent = '';
+};
+
+$('newFileBtn').onclick = () => {
+  let n =
+    prompt(
+      'File name',
+      'script.sglx'
+    );
+
+  if (!n) return;
+
+  if (!/\.[\w-]+$/.test(n)) {
+    n += '.sglx';
+  }
+
+  if (!n.endsWith('.sglx')) {
+    alert(
+      'Scripts should use the .sglx extension.'
+    );
+
+    return;
+  }
+
+  project.files[n] = '';
+
+  openFile(n);
+
+  save();
+};
+
+$('newFolderBtn').onclick = () => {
+  const n =
+    prompt(
+      'Folder name',
+      'scripts'
+    );
+
+  if (!n) return;
+
+  const f =
+    n
+      .trim()
+      .replace(/^\/+|\/+$/g, '');
+
+  if (!f) return;
+
+  project.folders ??= [];
+
+  if (!project.folders.includes(f)) {
+    project.folders.push(f);
+  }
+
+  const path =
+    f + '/main.sglx';
+
+  project.files[path] ??= '';
+
+  current = path;
+
+  render();
+
+  save();
+};
+
+$('newBtn').onclick = () => {
+  if (
+    confirm(
+      'Create a new project?'
+    )
+  ) {
+    project = {
+      name: 'MyProject',
+      files: {
+        'main.sglx':
+          'say("Welcome to SingulaX!")\n'
+      },
+      assets: {},
+      folders: [],
+      settings: {
+        ...project.settings
       }
+    };
 
-      project = {
-        name: 'MyProject',
-        files: {
-          'main.sglx':
-            'say("Welcome to SingulaX!")\n'
-        },
-        assets: {},
-        folders: [],
-        settings: {
-          theme: 'midnight',
-          fontSize: 15,
-          autosave: true
-        }
-      };
+    current = 'main.sglx';
 
-      current = 'main.sglx';
+    render();
 
-      render();
-      save();
-    }
-  );
-}
+    save();
+  }
+};
 
 let latestFrame = [];
 let paintHandle = 0;
 
 function draw(frame = []) {
   latestFrame =
-    Array.isArray(frame)
-      ? frame.slice()
-      : [];
+    frame.slice();
 }
 
 function paintFrame() {
@@ -824,18 +726,14 @@ function paintFrame() {
 }
 
 function paintCanvas(frame = []) {
-  if (!canvas) return;
-
-  const ctx =
-    canvas.getContext('2d');
-
-  if (!ctx) return;
+  const c = canvas;
+  const ctx = c.getContext('2d');
 
   ctx.clearRect(
     0,
     0,
-    canvas.width,
-    canvas.height
+    c.width,
+    c.height
   );
 
   ctx.fillStyle = '#05060a';
@@ -843,33 +741,33 @@ function paintCanvas(frame = []) {
   ctx.fillRect(
     0,
     0,
-    canvas.width,
-    canvas.height
+    c.width,
+    c.height
   );
 
-  for (const item of frame) {
+  for (const x of frame) {
     ctx.fillStyle =
-      item.fill || 'white';
+      x.fill || 'white';
 
     ctx.strokeStyle =
-      item.fill || 'white';
+      x.fill || 'white';
 
-    if (item.type === 'rect') {
+    if (x.type === 'rect') {
       ctx.fillRect(
-        item.x,
-        item.y,
-        item.w,
-        item.h
+        x.x,
+        x.y,
+        x.w,
+        x.h
       );
     }
 
-    if (item.type === 'circle') {
+    if (x.type === 'circle') {
       ctx.beginPath();
 
       ctx.arc(
-        item.x,
-        item.y,
-        item.r,
+        x.x,
+        x.y,
+        x.r,
         0,
         Math.PI * 2
       );
@@ -877,71 +775,72 @@ function paintCanvas(frame = []) {
       ctx.fill();
     }
 
-    if (item.type === 'line') {
+    if (x.type === 'line') {
       ctx.lineWidth =
-        item.width || 2;
+        x.width || 2;
 
       ctx.beginPath();
 
       ctx.moveTo(
-        item.x1,
-        item.y1
+        x.x1,
+        x.y1
       );
 
       ctx.lineTo(
-        item.x2,
-        item.y2
+        x.x2,
+        x.y2
       );
 
       ctx.stroke();
     }
 
-    if (item.type === 'text') {
+    if (x.type === 'text') {
       ctx.font =
-        (item.size || 20) +
+        (x.size || 20) +
         'px sans-serif';
 
       ctx.fillText(
-        item.text,
-        item.x,
-        item.y
+        x.text,
+        x.x,
+        x.y
       );
     }
 
-    if (item.type === 'cube') {
-      drawCube(ctx, item);
+    if (x.type === 'cube') {
+      drawCube(ctx, x);
     }
 
-    if (item.type === 'image') {
+    if (x.type === 'image') {
       const url =
-        project.assets[item.asset];
+        project.assets[x.asset];
 
       if (url) {
         paintCanvas.images ??=
           new Map();
 
-        let image =
+        let im =
           paintCanvas.images.get(
             url
           );
 
-        if (!image) {
-          image = new Image();
-          image.src = url;
+        if (!im) {
+          im = new Image();
+
+          im.src = url;
 
           paintCanvas.images.set(
             url,
-            image
+            im
           );
         }
 
-        if (image.complete) {
+        if (im.complete) {
           ctx.drawImage(
-            image,
-            item.x,
-            item.y,
-            item.w || image.width,
-            item.h || image.height
+            im,
+            x.x,
+            x.y,
+            x.w || im.width,
+            x.h || im.height
           );
         }
       }
@@ -949,72 +848,71 @@ function paintCanvas(frame = []) {
   }
 }
 
-function drawCube(ctx, item) {
-  const size =
-    70 * (item.size || 1);
+function drawCube(ctx, x) {
+  const s =
+    70 * (x.size || 1);
 
   const cx =
-    400 +
-    (item.x || 0) * 60;
+    400 + x.x * 60;
 
   const cy =
     240 -
-    (item.z || 0) * 40 -
-    (item.y || 0) * 60;
+    x.z * 40 -
+    x.y * 60;
 
   ctx.beginPath();
 
   ctx.moveTo(
-    cx - size,
-    cy - size
+    cx - s,
+    cy - s
   );
 
   ctx.lineTo(
     cx,
-    cy - size * 0.55
+    cy - s * 0.55
   );
 
   ctx.lineTo(
-    cx + size,
-    cy - size
+    cx + s,
+    cy - s
   );
 
   ctx.lineTo(
-    cx + size,
+    cx + s,
     cy
   );
 
   ctx.lineTo(
     cx,
-    cy + size * 0.45
+    cy + s * 0.45
   );
 
   ctx.lineTo(
-    cx - size,
+    cx - s,
     cy
   );
 
   ctx.closePath();
 
   ctx.strokeStyle =
-    item.fill || '#7cf';
+    x.fill || '#7cf';
 
   ctx.stroke();
 
   ctx.beginPath();
 
   ctx.moveTo(
-    cx - size,
+    cx - s,
     cy
   );
 
   ctx.lineTo(
     cx,
-    cy + size * 0.45
+    cy + s * 0.45
   );
 
   ctx.lineTo(
-    cx + size,
+    cx + s,
     cy
   );
 
@@ -1022,28 +920,13 @@ function drawCube(ctx, item) {
 }
 
 async function run() {
-  if (
-    typeof SingulaxRuntime ===
-    'undefined'
-  ) {
-    alert(
-      'SingulaX runtime.js could not be loaded.'
-    );
-
-    return;
-  }
-
   save();
 
   stop();
 
-  if (consoleEl) {
-    consoleEl.textContent = '';
-  }
+  consoleEl.textContent = '';
 
-  if ($('diagnostics')) {
-    $('diagnostics').textContent = '';
-  }
+  $('diagnostics').textContent = '';
 
   latestFrame = [];
 
@@ -1053,46 +936,41 @@ async function run() {
 
       frame: draw,
 
-      input: async promptText => {
-        log(promptText);
+      input: async p => {
+        log(p);
 
         return await new Promise(
           resolve => {
             window._inputResolve =
               resolve;
 
-            $('stdin')?.focus();
+            $('stdin').focus();
           }
         );
       },
 
-      fileRead: async path =>
-        project.files[path] ??
-        project.assets[path] ??
+      fileRead: async p =>
+        project.files[p] ??
+        project.assets[p] ??
         '',
 
-      fileWrite: async (
-        path,
-        content
-      ) => {
-        project.files[path] =
-          String(content);
+      fileWrite: async (p, c) => {
+        project.files[p] =
+          String(c);
 
         renderTree();
+
         save();
 
         return true;
       },
 
-      playAudio,
+      playAudio: p =>
+        playAudio(p),
 
-      mode3d: value => {
-        if ($('previewMode')) {
-          $('previewMode').value =
-            value
-              ? '3d'
-              : '2d';
-        }
+      mode3d: v => {
+        $('previewMode').value =
+          v ? '3d' : '2d';
       }
     });
 
@@ -1117,17 +995,25 @@ async function run() {
 
     log('[finished]');
 
-  } catch (error) {
-    showError(error);
-
-  } finally {
     if (paintHandle) {
       cancelAnimationFrame(
         paintHandle
       );
-
-      paintHandle = 0;
     }
+
+    paintHandle = 0;
+
+    runtime = null;
+  } catch (e) {
+    showError(e);
+
+    if (paintHandle) {
+      cancelAnimationFrame(
+        paintHandle
+      );
+    }
+
+    paintHandle = 0;
 
     runtime = null;
   }
@@ -1136,241 +1022,1900 @@ async function run() {
 function stop() {
   if (runtime) {
     runtime.running = false;
-    runtime = null;
-  }
 
-  if (paintHandle) {
-    cancelAnimationFrame(
-      paintHandle
-    );
+    runtime = null;
+
+    if (paintHandle) {
+      cancelAnimationFrame(
+        paintHandle
+      );
+    }
 
     paintHandle = 0;
-  }
 
-  paintCanvas(
-    latestFrame
-  );
+    paintCanvas(
+      latestFrame
+    );
 
-  log('[stopped]');
-}
-
-function wireRunStop() {
-  const runButton =
-    $('runBtn');
-
-  const stopButton =
-    $('stopBtn');
-
-  if (runButton) {
-    runButton.onclick = run;
-  }
-
-  if (stopButton) {
-    stopButton.onclick = stop;
+    log('[stopped]');
   }
 }
 
-if ($('stdin')) {
-  $('stdin').addEventListener(
-    'keydown',
-    event => {
-      if (
-        event.key === 'Enter' &&
-        window._inputResolve
-      ) {
-        const value =
-          event.target.value;
+// Run and Stop buttons.
+$('runBtn').addEventListener(
+  'click',
+  run
+);
 
-        event.target.value = '';
+$('stopBtn').addEventListener(
+  'click',
+  stop
+);
 
-        const resolve =
-          window._inputResolve;
+// Live input.
+$('stdin').addEventListener(
+  'keydown',
+  e => {
+    if (
+      e.key === 'Enter' &&
+      window._inputResolve
+    ) {
+      const value =
+        e.target.value;
 
-        window._inputResolve =
-          null;
+      e.target.value = '';
 
-        resolve(value);
-      }
+      const resolve =
+        window._inputResolve;
+
+      window._inputResolve = null;
+
+      resolve(value);
     }
-  );
-}
+  }
+);
 
 window.addEventListener(
   'keydown',
-  event => {
-    keys.add(event.key);
+  e => {
+    keys.add(e.key);
 
     runtime?.setInput({
-      keys: [event.key],
-      pressed: [event.key]
+      keys: [e.key],
+      pressed: [e.key]
     });
   }
 );
 
 window.addEventListener(
   'keyup',
-  event => {
-    keys.delete(event.key);
+  e => {
+    keys.delete(e.key);
 
     runtime?.setInput({
-      up: [event.key]
+      up: [e.key]
     });
   }
 );
 
-function readGamepads() {
-  try {
-    return navigator
-      .getGamepads?.()
-      ?.filter(Boolean)
-      .map(gamepad => ({
-        id: gamepad.id,
-        index: gamepad.index,
-        buttons:
-          gamepad.buttons.map(
-            button => ({
-              pressed:
-                button.pressed,
-              value:
-                button.value
-            })
-          ),
-        axes:
-          [...gamepad.axes]
-      })) || [];
-  } catch {
-    return [];
-  }
-}
-
-function pointerPosition(event) {
-  if (!canvas) {
-    return {
-      x: 0,
-      y: 0
-    };
-  }
-
-  const rect =
+function pointerPos(e) {
+  const r =
     canvas.getBoundingClientRect();
 
   return {
     x:
-      (event.clientX -
-        rect.left) *
-      (canvas.width /
-        rect.width),
+      (e.clientX - r.left) *
+      canvas.width /
+      r.width,
 
     y:
-      (event.clientY -
-        rect.top) *
-      (canvas.height /
-        rect.height)
+      (e.clientY - r.top) *
+      canvas.height /
+      r.height
   };
 }
 
-if (canvas) {
-  canvas.addEventListener(
-    'pointermove',
-    event => {
-      const p =
-        pointerPosition(event);
+canvas.addEventListener(
+  'pointermove',
+  e => {
+    mouse =
+      pointerPos(e);
 
-      mouse.x = p.x;
-      mouse.y = p.y;
+    runtime?.setInput({
+      mouse
+    });
+  }
+);
 
-      if (event.pointerType === 'touch') {
-        touch.x = p.x;
-        touch.y = p.y;
-      }
+canvas.addEventListener(
+  'pointerdown',
+  e => {
+    mouse =
+      pointerPos(e);
+
+    buttons.add('left');
+
+    runtime?.setInput({
+      buttons: ['left'],
+      clicked: ['left'],
+      mouse
+    });
+
+    canvas.setPointerCapture?.(
+      e.pointerId
+    );
+  }
+);
+
+canvas.addEventListener(
+  'pointerup',
+  e => {
+    buttons.delete('left');
+
+    runtime?.setInput({
+      buttonup: ['left']
+    });
+  }
+);
+
+canvas.addEventListener(
+  'touchstart',
+  e => {
+    const t =
+      e.touches[0];
+
+    if (!t) return;
+
+    touch = {
+      ...pointerPos(t),
+      active: true
+    };
+
+    runtime?.setInput({
+      touch,
+      touchStart: true
+    });
+  },
+  {
+    passive: true
+  }
+);
+
+canvas.addEventListener(
+  'touchmove',
+  e => {
+    const t =
+      e.touches[0];
+
+    if (t) {
+      touch = {
+        ...pointerPos(t),
+        active: true
+      };
 
       runtime?.setInput({
-        mouse,
         touch
       });
+    }
+  },
+  {
+    passive: true
+  }
+);
+
+canvas.addEventListener(
+  'touchend',
+  () => {
+    touch.active = false;
+
+    runtime?.setInput({
+      touch,
+      touchEnd: true
+    });
+  },
+  {
+    passive: true
+  }
+);
+
+function readGamepads() {
+  const out = {};
+
+  for (
+    const g of navigator.getGamepads?.() || []
+  ) {
+    if (g) {
+      out[g.index] = {
+        buttons:
+          g.buttons.map(
+            b => b.pressed
+          ),
+        axes: g.axes
+      };
+    }
+  }
+
+  return out;
+}
+
+window.addEventListener(
+  'gamepadconnected',
+  () => {
+    runtime?.setInput({
+      gamepads:
+        readGamepads()
+    });
+  }
+);
+
+window.addEventListener(
+  'gamepaddisconnected',
+  () => {
+    runtime?.setInput({
+      gamepads:
+        readGamepads()
+    });
+  }
+);
+
+$('touchPad').onclick = e => {
+  const dir =
+    e.target.dataset.touch;
+
+  if (!dir) return;
+
+  const map = {
+    up: 'ArrowUp',
+    down: 'ArrowDown',
+    left: 'ArrowLeft',
+    right: 'ArrowRight'
+  };
+
+  const key =
+    map[dir];
+
+  runtime?.setInput({
+    keys: [key],
+    pressed: [key]
+  });
+
+  setTimeout(
+    () => {
+      runtime?.setInput({
+        up: [key]
+      });
+    },
+    80
+  );
+};
+
+// Blocks.
+
+function parseBlocks() {
+  blocks = [];
+
+  for (
+    const line of editor.value.split(/\r?\n/)
+  ) {
+    const s =
+      line.trim();
+
+    if (
+      !s ||
+      s.startsWith('#') ||
+      s.startsWith('--') ||
+      s.startsWith('//')
+    ) {
+      continue;
+    }
+
+    let m;
+
+    if (/^say\(/i.test(s)) {
+      blocks.push({
+        type: 'say',
+        value:
+          s.replace(
+            /^say\((.*)\)$/i,
+            '$1'
+          )
+      });
+    } else if (
+      m =
+        /^(?:local|var|let)\s+(\w+)\s*=\s*(.*)$/
+          .exec(s)
+    ) {
+      blocks.push({
+        type: 'var',
+        name: m[1],
+        value: m[2]
+      });
+    } else if (
+      m =
+        /^if\s+(.+?)\s+then$/i.exec(s)
+    ) {
+      blocks.push({
+        type: 'if',
+        cond: m[1],
+        depth: 0
+      });
+    } else if (
+      m =
+        /^elseif\s+(.+?)\s+then$/i.exec(s)
+    ) {
+      blocks.push({
+        type: 'elseif',
+        cond: m[1]
+      });
+    } else if (
+      /^else$/i.test(s)
+    ) {
+      blocks.push({
+        type: 'else'
+      });
+    } else if (
+      m =
+        /^while\s+(.+?)\s+do$/i.exec(s)
+    ) {
+      blocks.push({
+        type: 'while',
+        cond: m[1]
+      });
+    } else if (
+      /^forever/i.test(s)
+    ) {
+      blocks.push({
+        type: 'forever'
+      });
+    } else if (
+      m =
+        /^repeat\.until\s*\((.*)\)$/i.exec(s)
+    ) {
+      const a =
+        splitArgs(m[1]);
+
+      blocks.push({
+        type: 'repeatUntil',
+        task: a[0] || 'task',
+        state: a[1] || 'done'
+      });
+    } else if (
+      m =
+        /^repeat\.until\.statement\s*\((.*)\)$/i.exec(s)
+    ) {
+      const a =
+        splitArgs(m[1]);
+
+      blocks.push({
+        type:
+          'repeatUntilStatement',
+
+        statement:
+          a[0] || 'condition',
+
+        state:
+          a[1] || 'true'
+      });
+    } else if (
+      m =
+        /^repeat\s+(.+?)\s+times$/i.exec(s)
+    ) {
+      blocks.push({
+        type: 'repeat',
+        count: m[1]
+      });
+    } else if (
+      /^wait\(/i.test(s)
+    ) {
+      blocks.push({
+        type: 'wait',
+        value:
+          s.replace(
+            /^wait\((.*)\)$/i,
+            '$1'
+          )
+      });
+    } else if (
+      /^random\(/i.test(s)
+    ) {
+      blocks.push({
+        type: 'random',
+        value:
+          s.replace(
+            /^random\((.*)\)$/i,
+            '$1'
+          )
+      });
+    } else {
+      blocks.push({
+        type: 'code',
+        line: s
+      });
+    }
+  }
+}
+
+function splitArgs(s) {
+  const result = [];
+
+  let current = '';
+  let depth = 0;
+  let quote = null;
+
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+
+    if (
+      quote
+    ) {
+      current += c;
+
+      if (
+        c === quote &&
+        s[i - 1] !== '\\'
+      ) {
+        quote = null;
+      }
+
+      continue;
+    }
+
+    if (
+      c === '"' ||
+      c === "'"
+    ) {
+      quote = c;
+      current += c;
+      continue;
+    }
+
+    if (
+      c === '('
+    ) {
+      depth++;
+      current += c;
+      continue;
+    }
+
+    if (
+      c === ')'
+    ) {
+      depth--;
+      current += c;
+      continue;
+    }
+
+    if (
+      c === ',' &&
+      depth === 0
+    ) {
+      result.push(
+        current.trim()
+      );
+
+      current = '';
+
+      continue;
+    }
+
+    current += c;
+  }
+
+  if (current.trim()) {
+    result.push(
+      current.trim()
+    );
+  }
+
+  return result;
+}
+
+function renderBlocks() {
+  const box =
+    $('blocks');
+
+  box.innerHTML = '';
+
+  blocks.forEach(
+    (b, i) => {
+      const d =
+        document.createElement(
+          'div'
+        );
+
+      d.className =
+        'block ' +
+        (
+          [
+            'if',
+            'while',
+            'forever',
+            'repeat',
+            'repeatUntil',
+            'repeatUntilStatement'
+          ].includes(b.type)
+            ? 'loop'
+            : ''
+        );
+
+      let body = '';
+
+      if (
+        b.type === 'say'
+      ) {
+        body = `
+          <div class="row">
+            <b>say</b>
+            <input value="${esc(b.value)}">
+          </div>
+        `;
+      } else if (
+        b.type === 'var'
+      ) {
+        body = `
+          <div class="row">
+            <b>set local</b>
+            <input value="${esc(b.name)}">
+            <b>to</b>
+            <input value="${esc(b.value)}">
+          </div>
+        `;
+      } else if (
+        [
+          'if',
+          'elseif',
+          'while'
+        ].includes(b.type)
+      ) {
+        body = `
+          <div class="row">
+            <b>${b.type}</b>
+            <input value="${esc(
+              b.cond || 'true'
+            )}">
+            ${
+              b.type !== 'elseif'
+                ? '<b>then</b>'
+                : ''
+            }
+          </div>
+        `;
+      } else if (
+        b.type ===
+        'repeatUntilStatement'
+      ) {
+        body = `
+          <div class="row">
+            <b>
+              repeat.until.statement
+            </b>
+
+            <input value="${esc(
+              b.statement || 'true'
+            )}">
+
+            <b>,</b>
+
+            <input value="${esc(
+              b.state || 'true'
+            )}">
+          </div>
+        `;
+      } else if (
+        b.type === 'repeatUntil'
+      ) {
+        body = `
+          <div class="row">
+            <b>repeat.until</b>
+
+            <input value="${esc(
+              b.task || 'task'
+            )}">
+
+            <b>,</b>
+
+            <input value="${esc(
+              b.state || 'done'
+            )}">
+          </div>
+        `;
+      } else if (
+        b.type === 'repeat'
+      ) {
+        body = `
+          <div class="row">
+            <b>repeat</b>
+            <input value="${esc(
+              b.count || 5
+            )}">
+            <b>times</b>
+          </div>
+        `;
+      } else if (
+        b.type === 'wait'
+      ) {
+        body = `
+          <div class="row">
+            <b>wait</b>
+            <input value="${esc(
+              b.value || 1
+            )}">
+            <b>seconds</b>
+          </div>
+        `;
+      } else if (
+        b.type === 'random'
+      ) {
+        body = `
+          <div class="row">
+            <b>random</b>
+            <input value="${esc(
+              b.value || '0, 10'
+            )}">
+          </div>
+        `;
+      } else {
+        body = `
+          <div class="row">
+            <b>${b.type}</b>
+            <input value="${esc(
+              b.line || ''
+            )}">
+          </div>
+        `;
+      }
+
+      d.innerHTML =
+        body +
+        `
+          <button
+            class="del"
+            data-del="${i}"
+          >×</button>
+        `;
+
+      d.querySelectorAll(
+        'input'
+      ).forEach(
+        (x, j) => {
+          x.oninput = () => {
+            if (
+              b.type === 'say'
+            ) {
+              b.value = x.value;
+            } else if (
+              b.type === 'var'
+            ) {
+              if (j === 0) {
+                b.name =
+                  x.value;
+              } else {
+                b.value =
+                  x.value;
+              }
+            } else if (
+              b.type ===
+              'repeatUntil'
+            ) {
+              if (j === 0) {
+                b.task =
+                  x.value;
+              } else {
+                b.state =
+                  x.value;
+              }
+            } else if (
+              b.type ===
+              'repeatUntilStatement'
+            ) {
+              if (j === 0) {
+                b.statement =
+                  x.value;
+              } else {
+                b.state =
+                  x.value;
+              }
+            } else if (
+              b.cond !== undefined
+            ) {
+              b.cond =
+                x.value;
+            } else if (
+              b.value !== undefined
+            ) {
+              b.value =
+                x.value;
+            } else {
+              b.line =
+                x.value;
+            }
+          };
+        }
+      );
+
+      box.appendChild(d);
     }
   );
 
-  canvas.addEventListener(
-    'pointerdown',
-    event => {
-      const p =
-        pointerPosition(event);
+  box.onclick = e => {
+    if (
+      e.target.dataset.del
+    ) {
+      blocks.splice(
+        +e.target.dataset.del,
+        1
+      );
 
-      mouse.x = p.x;
-      mouse.y = p.y;
-
-      mouse.down = true;
-
-      if (
-        event.pointerType ===
-        'touch'
-      ) {
-        touch.x = p.x;
-        touch.y = p.y;
-        touch.active = true;
-      }
-
-      runtime?.setInput({
-        mouse,
-        touch
-      });
+      renderBlocks();
     }
-  );
+  };
+}
 
-  canvas.addEventListener(
-    'pointerup',
-    event => {
-      mouse.down = false;
+function blocksToCode() {
+  return (
+    blocks
+      .map(b => {
+        if (
+          b.type === 'say'
+        ) {
+          return `say(${
+            b.value || '"Hello!"'
+          })`;
+        }
 
-      if (
-        event.pointerType ===
-        'touch'
-      ) {
-        touch.active = false;
-      }
+        if (
+          b.type === 'var'
+        ) {
+          return `local ${
+            b.name || 'x'
+          } = ${
+            b.value || '0'
+          }`;
+        }
 
-      runtime?.setInput({
-        mouse,
-        touch
-      });
-    }
+        if (
+          b.type === 'repeatUntil'
+        ) {
+          return `repeat.until(${
+            b.task || 'task'
+          }, ${
+            b.state || 'done'
+          })`;
+        }
+
+        if (
+          b.type ===
+          'repeatUntilStatement'
+        ) {
+          return `repeat.until.statement(${
+            b.statement || 'condition'
+          }, ${
+            b.state || 'true'
+          })`;
+        }
+
+        if (
+          b.type === 'if'
+        ) {
+          return `if ${
+            b.cond || 'true'
+          } then`;
+        }
+
+        if (
+          b.type === 'elseif'
+        ) {
+          return `elseif ${
+            b.cond || 'true'
+          } then`;
+        }
+
+        if (
+          b.type === 'else'
+        ) {
+          return 'else';
+        }
+
+        if (
+          b.type === 'while'
+        ) {
+          return `while ${
+            b.cond || 'true'
+          } do`;
+        }
+
+        if (
+          b.type === 'forever'
+        ) {
+          return 'forever do';
+        }
+
+        if (
+          b.type === 'repeat'
+        ) {
+          return `repeat ${
+            b.count || 5
+          } times`;
+        }
+
+        if (
+          b.type === 'wait'
+        ) {
+          return `wait(${
+            b.value || 1
+          })`;
+        }
+
+        if (
+          b.type === 'random'
+        ) {
+          return `say(random(${
+            b.value || '0, 10'
+          }))`;
+        }
+
+        return b.line || '';
+      })
+      .join('\n') +
+    '\n' +
+    (
+      blocks.some(
+        b =>
+          [
+            'if',
+            'while',
+            'forever',
+            'repeat',
+            'repeatUntil',
+            'repeatUntilStatement'
+          ].includes(b.type)
+      )
+        ? 'end\n'
+        : ''
+    )
   );
 }
 
-function showError(error) {
-  const message =
-    error?.message ||
-    String(error);
+$('modeBtn').onclick = () => {
+  if (mode === 'code') {
+    project.files[current] =
+      editor.value;
+
+    parseBlocks();
+
+    renderBlocks();
+
+    mode = 'blocks';
+
+    editor.parentElement.parentElement.hidden =
+      true;
+
+    $('blocksPane').hidden =
+      false;
+
+    $('modeBtn').textContent =
+      '⌨ Code';
+  } else {
+    editor.value =
+      blocksToCode();
+
+    project.files[current] =
+      editor.value;
+
+    mode = 'code';
+
+    editor.parentElement.parentElement.hidden =
+      false;
+
+    $('blocksPane').hidden =
+      true;
+
+    $('modeBtn').textContent =
+      '🧩 Blocks';
+
+    diagnose();
+  }
+};
+
+document
+  .querySelectorAll('[data-block]')
+  .forEach(
+    b => {
+      b.onclick = () => {
+        blocks.push({
+          type:
+            b.dataset.block
+        });
+
+        renderBlocks();
+      };
+    }
+  );
+
+// IMPORT / EXPORT
+
+async function importFiles(files) {
+  for (const f of files) {
+    if (
+      /\.zip$/i.test(f.name)
+    ) {
+      await importZipFile(f);
+      continue;
+    }
+
+    const isAsset =
+      !f.name.endsWith('.sglx') &&
+      !f.name.endsWith('.sglxproj');
+
+    if (isAsset) {
+      project.assets[f.name] =
+        await readData(f);
+    } else if (
+      f.name.endsWith('.sglxproj')
+    ) {
+      try {
+        const imported =
+          JSON.parse(
+            await f.text()
+          );
+
+        project =
+          imported.project ||
+          imported;
+
+        project.files ??= {};
+        project.assets ??= {};
+        project.folders ??= [];
+        project.settings ??=
+          {
+            theme: 'midnight',
+            fontSize: 15,
+            autosave: true
+          };
+      } catch (e) {
+        alert(
+          'Invalid .sglxproj file: ' +
+          e.message
+        );
+      }
+    } else {
+      project.files[f.name] =
+        await f.text();
+    }
+  }
+
+  current =
+    Object.keys(project.files)[0] ||
+    'main.sglx';
+
+  render();
+
+  save();
 
   log(
-    '[error] ' +
-    message
-  );
-
-  if ($('diagnostics')) {
-    $('diagnostics').innerHTML =
-      `<div>● ${esc(message)}</div>`;
-  }
-
-  console.error(
-    'SingulaX error:',
-    error
+    'Imported ' +
+    files.length +
+    ' file(s).'
   );
 }
 
-function diagnose() {
-  if (!$('diagnostics') || !editor) {
-    return;
+function readData(f) {
+  return new Promise(
+    (resolve, reject) => {
+      const r =
+        new FileReader();
+
+      r.onload = () =>
+        resolve(
+          String(r.result)
+        );
+
+      r.onerror = reject;
+
+      r.readAsDataURL(f);
+    }
+  );
+}
+
+// Import button.
+$('importBtn').onclick = () => {
+  $('importFile').value = '';
+  $('importFile').click();
+};
+
+$('importFile').onchange = e => {
+  importFiles(
+    [...e.target.files]
+  );
+};
+
+// Add asset button.
+$('addAssetBtn').onclick = () => {
+  $('assetFile').value = '';
+  $('assetFile').click();
+};
+
+$('assetFile').onchange = e => {
+  importFiles(
+    [...e.target.files]
+  );
+};
+
+// Extract ZIP into project.
+async function importZipFile(file) {
+  try {
+    const entries =
+      await readZip(
+        await file.arrayBuffer()
+      );
+
+    let imported = 0;
+
+    for (const entry of entries) {
+      const path =
+        entry.name
+          .replace(/^\.\//, '')
+          .replace(/\\/g, '/');
+
+      if (
+        !path ||
+        path.endsWith('/')
+      ) {
+        continue;
+      }
+
+      const bytes =
+        entry.data;
+
+      if (
+        path ===
+          'project.sglxproj' ||
+        path ===
+          'project.json'
+      ) {
+        try {
+          const text =
+            new TextDecoder().decode(
+              bytes
+            );
+
+          const obj =
+            JSON.parse(text);
+
+          if (obj.project) {
+            project =
+              obj.project;
+
+            project.files ??= {};
+            project.assets ??= {};
+            project.folders ??= [];
+
+            imported++;
+
+            continue;
+          }
+
+          if (obj.files) {
+            project = {
+              ...project,
+              ...obj
+            };
+
+            project.files ??= {};
+            project.assets ??= {};
+            project.folders ??= [];
+
+            imported++;
+
+            continue;
+          }
+        } catch {
+        }
+      }
+
+      if (
+        path.startsWith(
+          'scripts/'
+        ) &&
+        path
+          .toLowerCase()
+          .endsWith('.sglx')
+      ) {
+        project.files[
+          path.slice(8)
+        ] =
+          new TextDecoder().decode(
+            bytes
+          );
+
+        imported++;
+
+        continue;
+      }
+
+      if (
+        path
+          .toLowerCase()
+          .endsWith('.sglx')
+      ) {
+        project.files[path] =
+          new TextDecoder().decode(
+            bytes
+          );
+
+        imported++;
+
+        continue;
+      }
+
+      if (
+        path.startsWith(
+          'assets/'
+        )
+      ) {
+        project.assets[
+          path.slice(7)
+        ] =
+          bytesToDataUrl(
+            bytes,
+            guessMime(path)
+          );
+
+        imported++;
+
+        continue;
+      }
+
+      project.assets[path] =
+        bytesToDataUrl(
+          bytes,
+          guessMime(path)
+        );
+
+      imported++;
+    }
+
+    current =
+      Object.keys(project.files)[0] ||
+      'main.sglx';
+
+    render();
+
+    save();
+
+    log(
+      'Extracted ' +
+      imported +
+      ' file(s) from ' +
+      file.name +
+      '.'
+    );
+  } catch (e) {
+    alert(
+      'Could not extract ZIP: ' +
+      e.message
+    );
+
+    log(
+      'ZIP error: ' +
+      e.message
+    );
+  }
+}
+
+function bytesToDataUrl(
+  bytes,
+  mime = 'application/octet-stream'
+) {
+  let s = '';
+
+  const chunk = 0x8000;
+
+  for (
+    let i = 0;
+    i < bytes.length;
+    i += chunk
+  ) {
+    s += String.fromCharCode(
+      ...bytes.subarray(
+        i,
+        i + chunk
+      )
+    );
   }
 
-  const source =
+  return (
+    'data:' +
+    mime +
+    ';base64,' +
+    btoa(s)
+  );
+}
+
+function guessMime(name) {
+  const ext =
+    name
+      .toLowerCase()
+      .split('.')
+      .pop();
+
+  return (
+    {
+      png: 'image/png',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      svg: 'image/svg+xml',
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      ogg: 'audio/ogg',
+      m4a: 'audio/mp4',
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      txt: 'text/plain',
+      md: 'text/markdown',
+      json: 'application/json',
+      html: 'text/html',
+      css: 'text/css',
+      js: 'text/javascript'
+    }[ext] ||
+    'application/octet-stream'
+  );
+}
+
+// ZIP creation.
+
+function crc32(bytes) {
+  let table =
+    crc32.table;
+
+  if (!table) {
+    table =
+      crc32.table = [];
+
+    for (
+      let n = 0;
+      n < 256;
+      n++
+    ) {
+      let c = n;
+
+      for (
+        let k = 0;
+        k < 8;
+        k++
+      ) {
+        c =
+          c & 1
+            ? 0xedb88320 ^
+              (c >>> 1)
+            : c >>> 1;
+      }
+
+      table[n] =
+        c >>> 0;
+    }
+  }
+
+  let c =
+    0xffffffff;
+
+  for (
+    const b of bytes
+  ) {
+    c =
+      table[
+        (c ^ b) & 255
+      ] ^
+      (c >>> 8);
+  }
+
+  return (
+    c ^
+    0xffffffff
+  ) >>> 0;
+}
+
+function u16(v) {
+  const a =
+    new Uint8Array(2);
+
+  new DataView(
+    a.buffer
+  ).setUint16(
+    0,
+    v,
+    true
+  );
+
+  return a;
+}
+
+function u32(v) {
+  const a =
+    new Uint8Array(4);
+
+  new DataView(
+    a.buffer
+  ).setUint32(
+    0,
+    v >>> 0,
+    true
+  );
+
+  return a;
+}
+
+function concatBytes(parts) {
+  const n =
+    parts.reduce(
+      (a, b) =>
+        a + b.length,
+      0
+    );
+
+  const out =
+    new Uint8Array(n);
+
+  let p = 0;
+
+  for (const b of parts) {
+    out.set(
+      b,
+      p
+    );
+
+    p +=
+      b.length;
+  }
+
+  return out;
+}
+
+function zipStore(entries) {
+  const enc =
+    new TextEncoder();
+
+  const local = [];
+  const central = [];
+
+  let offset = 0;
+
+  for (
+    const e of entries
+  ) {
+    const name =
+      enc.encode(
+        e.name
+      );
+
+    const data =
+      e.data;
+
+    const crc =
+      crc32(data);
+
+    const head =
+      concatBytes([
+        u32(0x04034b50),
+        u16(20),
+        u16(0),
+        u16(0),
+        u16(0),
+        u16(0),
+        u32(crc),
+        u32(data.length),
+        u32(data.length),
+        u16(name.length),
+        u16(0),
+        name,
+        data
+      ]);
+
+    local.push(head);
+
+    central.push({
+      name,
+      crc,
+      size: data.length,
+      offset
+    });
+
+    offset +=
+      head.length;
+  }
+
+  const cd = [];
+
+  let cdSize = 0;
+
+  for (
+    const e of central
+  ) {
+    const h =
+      concatBytes([
+        u32(0x02014b50),
+        u16(20),
+        u16(20),
+        u16(0),
+        u16(0),
+        u16(0),
+        u16(0),
+        u32(e.crc),
+        u32(e.size),
+        u32(e.size),
+        u16(e.name.length),
+        u16(0),
+        u16(0),
+        u16(0),
+        u16(0),
+        u32(0),
+        u32(e.offset),
+        e.name
+      ]);
+
+    cd.push(h);
+
+    cdSize +=
+      h.length;
+  }
+
+  const end =
+    concatBytes([
+      u32(0x06054b50),
+      u16(0),
+      u16(0),
+      u16(central.length),
+      u16(central.length),
+      u32(cdSize),
+      u32(offset),
+      u16(0)
+    ]);
+
+  return concatBytes([
+    ...local,
+    ...cd,
+    end
+  ]);
+}
+
+async function dataUrlBytes(url) {
+  const b64 =
+    url.split(',')[1] ||
+    '';
+
+  const bin =
+    atob(b64);
+
+  const out =
+    new Uint8Array(
+      bin.length
+    );
+
+  for (
+    let i = 0;
+    i < bin.length;
+    i++
+  ) {
+    out[i] =
+      bin.charCodeAt(i);
+  }
+
+  return out;
+}
+
+async function exportProject() {
+  const choice =
+    prompt(
+      'Export format:\n' +
+      '1 = SingulaX project (.sglxproj)\n' +
+      '2 = Single script (.sglx)\n' +
+      '3 = Standalone HTML game\n' +
+      '4 = Project JSON backup\n' +
+      '5 = Full project ZIP',
+      '5'
+    );
+
+  if (choice === '1') {
+    save();
+
+    download(
+      JSON.stringify(
+        project,
+        null,
+        2
+      ),
+      project.name +
+        '.sglxproj',
+      'application/json'
+    );
+  } else if (
+    choice === '2'
+  ) {
+    save();
+
+    download(
+      project.files[current] ||
+        '',
+      current,
+      'text/plain'
+    );
+  } else if (
+    choice === '3'
+  ) {
+    save();
+
+    const code =
+      project.files[current] ||
+      '';
+
+    const html =
+      '<!doctype html>' +
+      '<meta charset="utf-8">' +
+      '<title>' +
+      esc(project.name) +
+      '</title>' +
+      '<style>' +
+      'body{margin:0;background:#000}' +
+      'canvas{width:100vw;height:100vh}' +
+      '</style>' +
+      '<canvas id="c" width="800" height="450"></canvas>' +
+      '<script>' +
+      standaloneRuntime() +
+      '<\\/script>';
+
+    download(
+      html,
+      project.name +
+        '.html',
+      'text/html'
+    );
+  } else if (
+    choice === '4'
+  ) {
+    save();
+
+    download(
+      JSON.stringify(
+        {
+          format:
+            'singulax-project',
+          version: 2,
+          project
+        },
+        null,
+        2
+      ),
+      project.name +
+        '.json',
+      'application/json'
+    );
+  } else if (
+    choice === '5'
+  ) {
+    await exportZip();
+  }
+}
+
+async function exportZip() {
+  save();
+
+  const entries = [];
+
+  const enc =
+    new TextEncoder();
+
+  const meta = {
+    format:
+      'singulax-project',
+    version: 2,
+    project: {
+      name:
+        project.name,
+      settings:
+        project.settings,
+      folders:
+        project.folders || []
+    }
+  };
+
+  entries.push({
+    name:
+      'project.sglxproj',
+
+    data:
+      enc.encode(
+        JSON.stringify(
+          meta
+        )
+      )
+  });
+
+  for (
+    const [
+      name,
+      code
+    ] of Object.entries(
+      project.files
+    )
+  ) {
+    entries.push({
+      name:
+        'scripts/' +
+        name,
+
+      data:
+        enc.encode(
+          String(code)
+        )
+    });
+  }
+
+  for (
+    const [
+      name,
+      url
+    ] of Object.entries(
+      project.assets
+    )
+  ) {
+    let data;
+
+    try {
+      data =
+        await dataUrlBytes(
+          url
+        );
+    } catch {
+      data =
+        enc.encode(
+          String(url)
+        );
+    }
+
+    entries.push({
+      name:
+        'assets/' +
+        name,
+
+      data
+    });
+  }
+
+  const bytes =
+    zipStore(
+      entries
+    );
+
+  download(
+    bytes,
+    project.name +
+      '.zip',
+    'application/zip'
+  );
+}
+
+// ZIP extraction.
+async function readZip(buffer) {
+  const bytes =
+    new Uint8Array(
+      buffer
+    );
+
+  const view =
+    new DataView(
+      buffer
+    );
+
+  const out = [];
+
+  let p = 0;
+
+  while (
+    p + 4 <=
+    bytes.length
+  ) {
+    const sig =
+      view.getUint32(
+        p,
+        true
+      );
+
+    if (
+      sig ===
+      0x04034b50
+    ) {
+      const method =
+        view.getUint16(
+          p + 8,
+          true
+        );
+
+      const compSize =
+        view.getUint32(
+          p + 18,
+          true
+        );
+
+      const nameLen =
+        view.getUint16(
+          p + 26,
+          true
+        );
+
+      const extraLen =
+        view.getUint16(
+          p + 28,
+          true
+        );
+
+      const name =
+        new TextDecoder().decode(
+          bytes.subarray(
+            p + 30,
+            p +
+              30 +
+              nameLen
+          )
+        );
+
+      const start =
+        p +
+        30 +
+        nameLen +
+        extraLen;
+
+      const comp =
+        bytes.subarray(
+          start,
+          start +
+            compSize
+        );
+
+      let data;
+
+      if (
+        method === 0
+      ) {
+        data =
+          comp.slice();
+      } else if (
+        method === 8
+      ) {
+        if (
+          typeof DecompressionStream !==
+          'function'
+        ) {
+          throw new Error(
+            'This browser does not support deflated ZIP extraction.'
+          );
+        }
+
+        const ds =
+          new DecompressionStream(
+            'deflate-raw'
+          );
+
+        data =
+          new Uint8Array(
+            await new Response(
+              new Blob([
+                comp
+              ])
+                .stream()
+                .pipeThrough(
+                  ds
+                )
+            ).arrayBuffer()
+          );
+      } else {
+        throw new Error(
+          'Unsupported ZIP compression method: ' +
+          method
+        );
+      }
+
+      out.push({
+        name,
+        data
+      });
+
+      p =
+        start +
+        compSize;
+
+      continue;
+    }
+
+    if (
+      sig ===
+        0x02014b50 ||
+      sig ===
+        0x06054b50
+    ) {
+      break;
+    }
+
+    throw new Error(
+      'Invalid ZIP file'
+    );
+  }
+
+  return out;
+}
+
+function download(
+  data,
+  name,
+  type
+) {
+  const a =
+    document.createElement(
+      'a'
+    );
+
+  a.href =
+    URL.createObjectURL(
+      new Blob(
+        [data],
+        { type }
+      )
+    );
+
+  a.download =
+    name;
+
+  document.body.appendChild(
+    a
+  );
+
+  a.click();
+
+  a.remove();
+
+  setTimeout(
+    () =>
+      URL.revokeObjectURL(
+        a.href
+      ),
+    1000
+  );
+}
+
+function standaloneRuntime() {
+  return `
+    console.log(
+      ${JSON.stringify(
+        project.name
+      )}
+    );
+  `;
+}
+
+$('exportBtn').onclick =
+  exportProject;
+
+// Diagnostics.
+
+function diagnose() {
+  const src =
     editor.value;
 
-  const lines =
-    source.split(/\r?\n/);
+  const ds = [];
 
-  const diagnostics = [];
+  const clean =
+    src.replace(
+      /\/\/[\s\S]*?\/\//g,
+      m =>
+        m
+          .split('\n')
+          .map(() => '')
+          .join('\n')
+    );
+
+  const lines =
+    clean.split(/\r?\n/);
 
   let depth = 0;
 
@@ -1379,232 +2924,390 @@ function diagnose() {
     i < lines.length;
     i++
   ) {
-    const raw =
-      lines[i];
-
-    const line =
-      raw.trim();
-
-    if (!line) continue;
+    const s =
+      lines[i].trim();
 
     if (
-      line.startsWith('//')
+      !s ||
+      s.startsWith('#') ||
+      s.startsWith('--')
     ) {
       continue;
     }
 
     if (
-      /^(if|while|forever|for|function|repeat(?:\.until(?:\.statement)?)?)\b/.test(
-        line
+      /^(if|while|forever|repeat\s*(?:\(|.+\s+times)|for\s+.+\s+do|function\s+)/i.test(
+        s
       )
     ) {
       depth++;
     }
 
     if (
-      line === 'end'
+      /^end\b/i.test(s)
     ) {
       depth--;
 
       if (depth < 0) {
-        diagnostics.push(
-          `Line ${i + 1}: unexpected end`
-        );
+        ds.push({
+          line:
+            i + 1,
+          msg:
+            'Unexpected end'
+        });
 
         depth = 0;
       }
     }
 
     if (
-      /\botherwise\b/.test(
-        line
-      )
+      /^(elseif|else)\b/i.test(
+        s
+      ) &&
+      depth === 0
     ) {
-      diagnostics.push(
-        `Line ${i + 1}: "otherwise" is not SingulaX syntax. Use "else".`
-      );
+      ds.push({
+        line:
+          i + 1,
+        msg:
+          'Unexpected else/elseif'
+      });
+    }
+
+    if (
+      /^(if|elseif)\b/i.test(
+        s
+      ) &&
+      !/then$/i.test(s)
+    ) {
+      ds.push({
+        line:
+          i + 1,
+        msg:
+          'Conditional needs then'
+      });
+    }
+
+    if (
+      /^while\b/i.test(s) &&
+      !/do$/i.test(s)
+    ) {
+      ds.push({
+        line:
+          i + 1,
+        msg:
+          'while needs do'
+      });
+    }
+
+    if (
+      /^repeat\s*\(/i.test(s) &&
+      !/\)$/i.test(s)
+    ) {
+      ds.push({
+        line:
+          i + 1,
+        msg:
+          'repeat needs closing )'
+      });
+    }
+
+    if (
+      /^repeat\.until(?:\.statement)?\s*\(/i.test(
+        s
+      ) &&
+      !/\)$/i.test(s)
+    ) {
+      ds.push({
+        line:
+          i + 1,
+        msg:
+          'repeat.until needs closing )'
+      });
+    }
+
+    if (
+      /^repeat\s+.+$/i.test(s) &&
+      !/^repeat\.until/i.test(s) &&
+      !/times$/i.test(s) &&
+      !/^repeat\s*\(/i.test(s)
+    ) {
+      ds.push({
+        line:
+          i + 1,
+        msg:
+          'repeat needs times or repeat(count)'
+      });
+    }
+
+    if (
+      /^(wait|random|random_int|draw_rect|draw_circle|draw_text)\b/i.test(
+        s
+      ) &&
+      !s.includes('(')
+    ) {
+      ds.push({
+        line:
+          i + 1,
+        msg:
+          'Function call needs parentheses'
+      });
     }
   }
 
   if (depth > 0) {
-    diagnostics.push(
-      'A block is missing an "end".'
-    );
+    ds.push({
+      line:
+        lines.length,
+      msg:
+        `Missing ${depth} end${
+          depth > 1
+            ? 's'
+            : ''
+        }`
+    });
   }
 
-  if (diagnostics.length) {
-    $('diagnostics').innerHTML =
-      diagnostics
-        .map(
-          d =>
-            `<div>● ${esc(d)}</div>`
+  $('diagnostics').innerHTML =
+    ds.length
+      ? ds
+          .map(
+            d =>
+              `<div>● Line ${d.line}: ${esc(
+                d.msg
+              )}</div>`
+          )
+          .join('')
+      : '<span class="diagOk">✓ No basic syntax errors detected</span>';
+
+  $('diagCount').textContent =
+    ds.length
+      ? `⚠ ${ds.length}`
+      : '✓';
+
+  $('gutter').innerHTML =
+    lines
+      .map(
+        (_, i) =>
+          `<div>${i + 1}</div>`
+      )
+      .join('');
+
+  return ds;
+}
+
+function showError(e) {
+  const m =
+    String(
+      e.message || e
+    );
+
+  const match =
+    m.match(
+      /line\s+(\d+)(?:,\s*column\s+(\d+))?/i
+    );
+
+  $('diagnostics').innerHTML =
+    `<div>● ${esc(m)}</div>`;
+
+  if (match) {
+    const line =
+      +match[1];
+
+    const lines =
+      editor.value.split(
+        /\r?\n/
+      );
+
+    let pos = 0;
+
+    for (
+      let i = 0;
+      i < line - 1;
+      i++
+    ) {
+      pos +=
+        lines[i].length +
+        1;
+    }
+
+    editor.focus();
+
+    editor.setSelectionRange(
+      pos,
+      pos +
+        (
+          lines[line - 1]
+            ?.length || 0
         )
-        .join('');
-  } else {
-    $('diagnostics').textContent =
-      '';
+    );
   }
 }
 
-if (editor) {
-  editor.addEventListener(
-    'input',
-    () => {
+// Editor.
+
+editor.addEventListener(
+  'input',
+  () => {
+    if (
+      project.settings.autosave
+    ) {
+      project.files[current] =
+        editor.value;
+
+      localStorage.setItem(
+        'singulax-project',
+        JSON.stringify(
+          project
+        )
+      );
+    }
+
+    diagnose();
+
+    showCompletions();
+  }
+);
+
+editor.addEventListener(
+  'scroll',
+  () => {
+    $('gutter').scrollTop =
+      editor.scrollTop;
+  }
+);
+
+editor.addEventListener(
+  'keydown',
+  e => {
+    if (
+      e.key === 'Tab'
+    ) {
       if (
-        project.settings.autosave
+        !$('suggestions').hidden
       ) {
-        project.files[current] =
-          editor.value;
+        acceptCompletion();
 
-        localStorage.setItem(
-          'singulax-project',
-          JSON.stringify(project)
-        );
-      }
-
-      diagnose();
-      showCompletions();
-    }
-  );
-
-  editor.addEventListener(
-    'scroll',
-    () => {
-      if ($('gutter')) {
-        $('gutter').scrollTop =
-          editor.scrollTop;
-      }
-    }
-  );
-
-  editor.addEventListener(
-    'keydown',
-    event => {
-      if (event.key === 'Tab') {
-        if (
-          !$('suggestions')?.hidden
-        ) {
-          acceptCompletion();
-          event.preventDefault();
-          return;
-        }
-
-        event.preventDefault();
-
-        const a =
-          editor.selectionStart;
-
-        const b =
-          editor.selectionEnd;
-
-        editor.setRangeText(
-          '  ',
-          a,
-          b,
-          'end'
-        );
+        e.preventDefault();
 
         return;
       }
 
-      if (
-        event.key === 'Enter'
-      ) {
-        if (
-          !$('suggestions')?.hidden
-        ) {
-          acceptCompletion();
-          event.preventDefault();
-          return;
-        }
+      e.preventDefault();
 
-        setTimeout(
-          diagnose,
-          0
-        );
-      }
+      const a =
+        editor.selectionStart;
 
-      if (
-        event.key === 'ArrowDown' &&
-        !$('suggestions')?.hidden
-      ) {
-        moveCompletion(1);
-        event.preventDefault();
-      }
+      const b =
+        editor.selectionEnd;
 
-      if (
-        event.key === 'ArrowUp' &&
-        !$('suggestions')?.hidden
-      ) {
-        moveCompletion(-1);
-        event.preventDefault();
-      }
+      editor.setRangeText(
+        '  ',
+        a,
+        b,
+        'end'
+      );
 
-      if (
-        event.key === 'Escape'
-      ) {
-        hideCompletions();
-      }
-
-      if (
-        (event.ctrlKey ||
-          event.metaKey) &&
-        event.code ===
-          'Space'
-      ) {
-        event.preventDefault();
-        showCompletions(true);
-      }
+      return;
     }
-  );
-}
 
-if ($('settingsBtn')) {
-  $('settingsBtn').onclick =
-    () => $('settings')?.showModal();
-}
+    if (
+      e.key === 'Enter'
+    ) {
+      if (
+        !$('suggestions').hidden
+      ) {
+        acceptCompletion();
 
-if ($('closeSettings')) {
-  $('closeSettings').onclick =
-    () => {
-      $('settings')?.close();
-      applySettings();
-      save();
-    };
-}
+        e.preventDefault();
 
-if ($('theme')) {
-  $('theme').onchange =
-    applySettings;
-}
+        return;
+      }
 
-if ($('fontSize')) {
-  $('fontSize').oninput =
-    applySettings;
-}
+      setTimeout(
+        diagnose,
+        0
+      );
+    }
 
-if ($('autosave')) {
-  $('autosave').onchange =
-    save;
-}
+    if (
+      e.key === 'ArrowDown' &&
+      !$('suggestions').hidden
+    ) {
+      moveCompletion(1);
+
+      e.preventDefault();
+    }
+
+    if (
+      e.key === 'ArrowUp' &&
+      !$('suggestions').hidden
+    ) {
+      moveCompletion(-1);
+
+      e.preventDefault();
+    }
+
+    if (
+      e.key === 'Escape'
+    ) {
+      hideCompletions();
+    }
+
+    if (
+      (e.ctrlKey ||
+        e.metaKey) &&
+      e.code === 'Space'
+    ) {
+      e.preventDefault();
+
+      showCompletions(true);
+    }
+  }
+);
+
+// Settings.
+
+$('settingsBtn').onclick =
+  () =>
+    $('settings').showModal();
+
+$('closeSettings').onclick =
+  () => {
+    $('settings').close();
+
+    applySettings();
+
+    save();
+  };
+
+$('theme').onchange =
+  applySettings;
+
+$('fontSize').oninput =
+  applySettings;
+
+$('autosave').onchange =
+  save;
 
 function applySettings() {
-  const settings =
-    project.settings || {};
+  const st =
+    project.settings ||
+    {};
 
   document.documentElement.style.setProperty(
     '--code-size',
-    (settings.fontSize || 15) +
+    (st.fontSize || 15) +
       'px'
   );
 
-  if ($('theme')) {
-    document.body.dataset.theme =
-      $('theme').value ||
-      settings.theme ||
-      'midnight';
-  }
+  document.body.dataset.theme =
+    $('theme')?.value ||
+    st.theme ||
+    'midnight';
 }
+
+// Autocomplete.
 
 let completionItems = [];
 let completionIndex = 0;
@@ -1637,12 +3340,11 @@ function completionContext() {
 function showCompletions(
   force = false
 ) {
-  if (!editor) return;
-
   const {
     word,
     member
-  } = completionContext();
+  } =
+    completionContext();
 
   if (
     !force &&
@@ -1650,6 +3352,7 @@ function showCompletions(
     !member
   ) {
     hideCompletions();
+
     return;
   }
 
@@ -1691,7 +3394,7 @@ function showCompletions(
   let pool = [];
 
   if (member) {
-    const query =
+    const q =
       member[2].toLowerCase();
 
     pool = [
@@ -1712,34 +3415,34 @@ function showCompletions(
       'play',
       'stop'
     ].filter(
-      item =>
-        item.startsWith(query)
+      x =>
+        x.startsWith(q)
     );
-
   } else {
-    const names = [
-      ...new Set([
-        ...keywords,
-        ...builtins,
-        ...Object.keys(
-          project.files
-        ).map(
-          name =>
-            name.replace(
-              /\.sglx$/,
-              ''
-            )
-        ),
-        ...Object.keys(
-          project.assets
-        )
-      ])
-    ];
+    const names =
+      [
+        ...new Set([
+          ...keywords,
+          ...builtins,
+          ...Object.keys(
+            project.files
+          ).map(
+            x =>
+              x.replace(
+                /\.sglx$/,
+                ''
+              )
+          ),
+          ...Object.keys(
+            project.assets
+          )
+        ])
+      ];
 
     pool =
       names.filter(
-        name =>
-          name
+        x =>
+          x
             .toLowerCase()
             .startsWith(
               word.toLowerCase()
@@ -1754,8 +3457,8 @@ function showCompletions(
       pool = [
         word.toLowerCase(),
         ...pool.filter(
-          item =>
-            item.toLowerCase() !==
+          x =>
+            x.toLowerCase() !==
             word.toLowerCase()
         )
       ];
@@ -1763,7 +3466,10 @@ function showCompletions(
   }
 
   completionItems =
-    pool.slice(0, 12);
+    pool.slice(
+      0,
+      12
+    );
 
   completionIndex = 0;
 
@@ -1771,10 +3477,10 @@ function showCompletions(
     $('suggestions');
 
   if (
-    !box ||
     !completionItems.length
   ) {
     hideCompletions();
+
     return;
   }
 
@@ -1783,34 +3489,29 @@ function showCompletions(
   box.innerHTML =
     completionItems
       .map(
-        (item, index) =>
-          `
-          <button
-            class="completion ${
-              index === 0
-                ? 'selected'
-                : ''
-            }"
-            data-sug-index="${index}">
-            <b>${esc(item)}</b>
-          </button>
-          `
+        (x, i) =>
+          `<button class="completion ${
+            i === 0
+              ? 'selected'
+              : ''
+          }" data-sug-index="${i}"><b>${esc(
+            x
+          )}</b></button>`
       )
       .join('');
 
   box.onclick =
-    event => {
-      const button =
-        event.target.closest(
+    e => {
+      const b =
+        e.target.closest(
           '[data-sug-index]'
         );
 
-      if (!button) return;
+      if (!b) return;
 
       completionIndex =
         Number(
-          button.dataset
-            .sugIndex
+          b.dataset.sugIndex
         );
 
       acceptCompletion();
@@ -1823,8 +3524,6 @@ function positionCompletions() {
   const box =
     $('suggestions');
 
-  if (!box) return;
-
   box.style.left =
     '58px';
 
@@ -1834,8 +3533,7 @@ function positionCompletions() {
 
 function acceptCompletion() {
   if (
-    !completionItems.length ||
-    !editor
+    !completionItems.length
   ) {
     return;
   }
@@ -1895,8 +3593,11 @@ function acceptCompletion() {
     snippets[chosen] ||
       chosen,
 
-    end - prefixLength,
+    end -
+      prefixLength,
+
     end,
+
     'end'
   );
 
@@ -1927,28 +3628,25 @@ function moveCompletion(delta) {
       '.completion'
     )
     .forEach(
-      (button, index) => {
-        button.classList.toggle(
+      (b, i) =>
+        b.classList.toggle(
           'selected',
-          index ===
+          i ===
             completionIndex
-        );
-      }
+        )
     );
 }
 
 function hideCompletions() {
-  if ($('suggestions')) {
-    $('suggestions').hidden =
-      true;
-  }
+  $('suggestions').hidden =
+    true;
 
   completionItems = [];
 }
 
-async function previewAsset(
-  name
-) {
+// Assets.
+
+async function previewAsset(name) {
   const url =
     project.assets[name];
 
@@ -1957,154 +3655,120 @@ async function previewAsset(
       'data:image/'
     )
   ) {
-    const windowRef =
+    const w =
       window.open();
 
-    if (!windowRef) return;
-
-    windowRef.document.write(
-      `<img src="${url}" style="max-width:100%">`
-    );
-
+    if (w) {
+      w.document.write(
+        `<img src="${url}" style="max-width:100%">`
+      );
+    }
   } else if (
     url?.startsWith(
       'data:audio/'
     )
   ) {
-    const windowRef =
+    const w =
       window.open();
 
-    if (!windowRef) return;
-
-    windowRef.document.write(
-      `<audio controls autoplay src="${url}"></audio>`
-    );
-
+    if (w) {
+      w.document.write(
+        `<audio controls autoplay src="${url}"></audio>`
+      );
+    }
   } else if (
     url?.startsWith(
       'data:video/'
     )
   ) {
-    const windowRef =
+    const w =
       window.open();
 
-    if (!windowRef) return;
-
-    windowRef.document.write(
-      `<video controls autoplay style="max-width:100%" src="${url}"></video>`
-    );
-
+    if (w) {
+      w.document.write(
+        `<video controls autoplay style="max-width:100%" src="${url}"></video>`
+      );
+    }
   } else {
     alert(name);
   }
 }
 
 function playAudio(name) {
-  const url =
+  const u =
     project.assets[name] ||
     name;
 
-  if (!url) return;
+  if (u) {
+    const a =
+      new Audio(u);
 
-  const audio =
-    new Audio(url);
-
-  audio.play().catch(
-    () => {}
-  );
+    a.play().catch(
+      () => {}
+    );
+  }
 }
 
-// ------------------------------
-// HELP
-// ------------------------------
+// Help and examples.
 
 function ensureHelp() {
   if (!$('helpBtn')) {
-    const button =
+    const b =
       document.createElement(
         'button'
       );
 
-    button.id =
+    b.id =
       'helpBtn';
 
-    button.textContent =
+    b.textContent =
       '? Help';
 
-    button.title =
+    b.title =
       'Open SingulaX examples';
 
     document
-      .querySelector('header')
-      ?.appendChild(
-        button
-      );
+      .querySelector(
+        'header'
+      )
+      ?.appendChild(b);
 
-    button.onclick =
+    b.onclick =
       openHelp;
   }
 
   if (!$('helpDialog')) {
-    const dialog =
+    const d =
       document.createElement(
         'dialog'
       );
 
-    dialog.id =
+    d.id =
       'helpDialog';
 
-    dialog.style.cssText =
-      `
-      width:min(900px,94vw);
-      max-height:88vh;
-      overflow:auto;
-      `;
+    d.style.cssText =
+      'width:min(900px,94vw);max-height:88vh;overflow:auto';
 
-    dialog.innerHTML =
-      `
-      <h2>
-        SingulaX Help & Examples
-      </h2>
+    d.innerHTML =
+      '<h2>SingulaX Help & Examples</h2>' +
+      '<p>These examples use actual SingulaX syntax supported by the current browser runtime. Comments use <code>// ... //</code>.</p>' +
+      '<div id="exampleList">Loading examples...</div>' +
+      '<button id="closeHelp">Close</button>';
 
-      <p>
-        These examples use
-        SingulaX syntax.
-        Comments use
-        <code>// ... //</code>.
-      </p>
-
-      <div id="exampleList">
-        Loading examples...
-      </div>
-
-      <button id="closeHelp">
-        Close
-      </button>
-      `;
-
-    document.body.appendChild(
-      dialog
-    );
+    document.body.appendChild(d);
 
     $('closeHelp').onclick =
-      () => dialog.close();
+      () => d.close();
   }
 }
 
 async function openHelp() {
   ensureHelp();
 
-  const dialog =
-    $('helpDialog');
-
   const box =
     $('exampleList');
 
-  if (!dialog || !box) {
-    return;
-  }
-
-  dialog.showModal();
+  $('helpDialog').showModal();
 
   box.textContent =
     'Loading examples...';
@@ -2148,31 +3812,25 @@ async function openHelp() {
       );
 
     pre.style.cssText =
-      `
-      white-space:pre-wrap;
-      background:#070910;
-      padding:12px;
-      border-radius:8px;
-      overflow:auto;
-      `;
+      'white-space:pre-wrap;background:#070910;padding:12px;border-radius:8px;overflow:auto';
 
     try {
       let text =
         await fetch(
           '../examples/' +
-          encodeURIComponent(
-            name
-          )
+            encodeURIComponent(
+              name
+            )
         ).then(
-          response => {
-            if (!response.ok) {
+          r => {
+            if (!r.ok) {
               throw new Error(
                 'HTTP ' +
-                response.status
+                  r.status
               );
             }
 
-            return response.text();
+            return r.text();
           }
         );
 
@@ -2183,11 +3841,10 @@ async function openHelp() {
 
       pre.textContent =
         text;
-
-    } catch (error) {
+    } catch (e) {
       pre.textContent =
         'Could not load this example: ' +
-        error.message;
+        e.message;
     }
 
     section.append(
@@ -2201,9 +3858,7 @@ async function openHelp() {
   }
 }
 
-function cleanExampleComments(
-  text
-) {
+function cleanExampleComments(text) {
   return String(text)
     .replace(
       /^\s*#\s?(.*)$/gm,
@@ -2212,16 +3867,12 @@ function cleanExampleComments(
     .replace(
       /\s+#\s?(.*)$/gm,
       ' // $1 //'
-    )
-    .replace(
-      /\botherwise\b/g,
-      'else'
     );
 }
 
-// ------------------------------
-// STUDIO TABS
-// ------------------------------
+ensureHelp();
+
+// Studio tabs.
 
 const studioTabs = [
   'code',
@@ -2229,28 +3880,26 @@ const studioTabs = [
   'preview'
 ];
 
-function setStudioTab(
-  name
-) {
+function setStudioTab(name) {
   studioTabs.forEach(
-    panel => {
-      const element =
-        $('window-' + panel);
+    n => {
+      const el =
+        $('window-' + n);
 
-      if (element) {
-        element.classList.toggle(
+      if (el) {
+        el.classList.toggle(
           'active-window',
-          panel === name
+          n === name
         );
       }
 
-      const button =
-        $('tab-' + panel);
+      const b =
+        $('tab-' + n);
 
-      if (button) {
-        button.classList.toggle(
+      if (b) {
+        b.classList.toggle(
           'active',
-          panel === name
+          n === name
         );
       }
     }
@@ -2262,34 +3911,28 @@ function setStudioTab(
 
 function initStudioTabs() {
   studioTabs.forEach(
-    name => {
-      const button =
-        $('tab-' + name);
-
-      if (!button) return;
-
-      button.onclick =
+    n =>
+      $(
+        'tab-' + n
+      )?.addEventListener(
+        'click',
         () =>
-          setStudioTab(name);
-    }
+          setStudioTab(n)
+      )
   );
 
-  const multitask =
-    $('multitaskBtn');
-
-  if (multitask) {
-    multitask.onclick =
+  $('multitaskBtn')
+    ?.addEventListener(
+      'click',
       () =>
         document.body.classList.toggle(
           'multitask'
-        );
-  }
+        )
+    );
 
-  const reset =
-    $('resetLayoutBtn');
-
-  if (reset) {
-    reset.onclick =
+  $('resetLayoutBtn')
+    ?.addEventListener(
+      'click',
       () => {
         document.body.classList.remove(
           'multitask'
@@ -2298,108 +3941,47 @@ function initStudioTabs() {
         setStudioTab(
           'code'
         );
-      };
-  }
-
-  setStudioTab(
-    'code'
-  );
-}
-
-// ------------------------------
-// PROJECT LOADING
-// ------------------------------
-
-function normalizeProject(
-  value
-) {
-  let p =
-    value &&
-    typeof value ===
-      'object'
-      ? value
-      : {};
-
-  p.name =
-    typeof p.name ===
-      'string' &&
-    p.name
-      ? p.name
-      : 'MyProject';
-
-  p.files =
-    p.files &&
-    typeof p.files ===
-      'object'
-      ? p.files
-      : {
-          'main.sglx':
-            'say("Welcome to SingulaX!")\n'
-        };
-
-  p.assets =
-    p.assets &&
-    typeof p.assets ===
-      'object'
-      ? p.assets
-      : {};
-
-  p.folders =
-    Array.isArray(
-      p.folders
-    )
-      ? p.folders
-      : [];
-
-  p.settings =
-    p.settings &&
-    typeof p.settings ===
-      'object'
-      ? p.settings
-      : {
-          theme: 'midnight',
-          fontSize: 15,
-          autosave: true
-        };
-
-  if (
-    !Object.keys(
-      p.files
-    ).length
-  ) {
-    p.files['main.sglx'] =
-      'say("Welcome to SingulaX!")\n';
-  }
-
-  return p;
-}
-
-function startStudio() {
-  try {
-    const saved =
-      localStorage.getItem(
-        'singulax-project'
-      );
-
-    if (saved) {
-      try {
-        project =
-          normalizeProject(
-            JSON.parse(
-              saved
-            )
-          );
-      } catch {
-        project =
-          normalizeProject(
-            null
-          );
       }
-    } else {
-      project =
-        normalizeProject(
-          project
-        );
+    );
+
+  setStudioTab('code');
+}
+
+initStudioTabs();
+
+// Load saved project.
+
+const old =
+  localStorage.getItem(
+    'singulax-project'
+  );
+
+if (old) {
+  try {
+    project =
+      JSON.parse(old);
+
+    project.files ??= {};
+
+    project.assets ??= {};
+
+    project.folders ??= [];
+
+    project.settings ??= {
+      theme: 'midnight',
+      fontSize: 15,
+      autosave: true
+    };
+
+    if (
+      !Object.keys(
+        project.files
+      ).length
+    ) {
+      project.files[
+        'main.sglx'
+      ] =
+        'say("Welcome to SingulaX!")\n';
     }
 
     current =
@@ -2407,86 +3989,51 @@ function startStudio() {
         project.files
       )[0] ||
       'main.sglx';
+  } catch {
+    project = {
+      name: 'MyProject',
+      files: {
+        'main.sglx':
+          'say("Welcome to SingulaX!")\n'
+      },
+      assets: {},
+      folders: [],
+      settings: {
+        theme: 'midnight',
+        fontSize: 15,
+        autosave: true
+      }
+    };
 
-    if ($('projectName')) {
-      $('projectName').value =
-        project.name;
-    }
-
-    if ($('theme')) {
-      $('theme').value =
-        project.settings.theme ||
-        'midnight';
-    }
-
-    if ($('fontSize')) {
-      $('fontSize').value =
-        project.settings.fontSize ||
-        15;
-    }
-
-    if ($('autosave')) {
-      $('autosave').checked =
-        project.settings.autosave !==
-        false;
-    }
-
-    render();
-
-    wireBasicButtons();
-    wireRunStop();
-    ensureHelp();
-    initStudioTabs();
-
-  } catch (error) {
-    console.error(
-      'SingulaX startup error:',
-      error
-    );
-
-    const diagnostics =
-      $('diagnostics');
-
-    if (diagnostics) {
-      diagnostics.innerHTML =
-        `<div>● Studio startup error: ${esc(
-          error.message ||
-            error
-        )}</div>`;
-    }
-  }
-
-  if (
-    'serviceWorker' in
-    navigator
-  ) {
-    navigator.serviceWorker
-      .register(
-        'sw.js?v=8'
-      )
-      .catch(
-        error =>
-          console.warn(
-            'Service worker:',
-            error
-          )
-      );
+    current =
+      'main.sglx';
   }
 }
 
-// Start only after the HTML exists.
+$('theme').value =
+  project.settings?.theme ||
+  'midnight';
 
+$('fontSize').value =
+  project.settings?.fontSize ||
+  15;
+
+$('autosave').checked =
+  project.settings?.autosave !==
+  false;
+
+render();
+
+// Service worker.
 if (
-  document.readyState ===
-  'loading'
+  'serviceWorker' in
+  navigator
 ) {
-  document.addEventListener(
-    'DOMContentLoaded',
-    startStudio,
-    {
-      once: true
-    }
-  );
-} else {
-  startStudio();
+  navigator.serviceWorker
+    .register(
+      'sw.js?v=8'
+    )
+    .catch(
+      () => {}
+    );
 }
