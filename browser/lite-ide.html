@@ -1,2994 +1,464 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-        <meta name="theme-color" content="#090b14">
-        <style>
-            * {
-                box-sizing: border-box
-            }
-
-            body {
-                margin: 0;
-                background: #080a12;
-                color: #edf2ff;
-                font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-                height: 100vh;
-                overflow: hidden
-            }
-
-            header {
-                min-height: 58px;
-                display: flex;
-                gap: 7px;
-                align-items: center;
-                padding: 7px 9px;
-                background: #101321;
-                border-bottom: 1px solid #292e44;
-                flex-wrap: wrap
-            }
-
-            .brand {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                margin-right: auto;
-                font-weight: 900;
-                font-size: 18px
-            }
-
-            .brand img {
-                width: 38px;
-                height: 38px;
-                border-radius: 9px
-            }
-
-            .brand small {
-                font-weight: 500;
-                opacity: .55;
-                font-size: 11px
-            }
-
-            .brand span {
-                background: linear-gradient(90deg,#45f7ff,#a27aff,#ec3cff);
-                background-clip: text;
-                color: transparent
-            }
-
-            button,input,select,textarea {
-                font: inherit
-            }
-
-            button,select {
-                background: #171c2d;
-                color: #edf2ff;
-                border: 1px solid #343b58;
-                border-radius: 8px;
-                padding: 7px 10px
-            }
-
-            button:hover {
-                background: #222943
-            }
-
-            #projectName {
-                width: 145px;
-                background: #0a0d17;
-                color: #fff;
-                border: 1px solid #343b58;
-                border-radius: 8px;
-                padding: 8px
-            }
-
-            main {
-                display: grid;
-                grid-template-columns: 230px 1fr;
-                height: calc(100vh - 58px)
-            }
-
-            aside {
-                padding: 11px;
-                border-right: 1px solid #292e44;
-                overflow: auto;
-                background: #0c0f19
-            }
-
-            .sidehead {
-                display: flex;
-                justify-content: space-between;
-                align-items: center
-            }
-
-            .sidehead h3 {
-                margin: 4px 0 8px
-            }
-
-            .wide {
-                width: 100%;
-                margin-top: 8px
-            }
-
-            .sidehint {
-                opacity: .6;
-                font-size: 12px;
-                line-height: 1.45
-            }
-
-            .treeitem {
-                display: flex;
-                gap: 5px;
-                width: 100%;
-                text-align: left;
-                margin: 3px 0;
-                align-items: center
-            }
-
-            .treeitem .name {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                flex: 1
-            }
-
-            .treeitem.active {
-                background: #29345b
-            }
-
-            .treeitem .mini {
-                padding: 3px 6px;
-                font-size: 11px
-            }
-
-            .work {
-                min-width: 0;
-                display: grid;
-                grid-template-rows: minmax(0,1fr) minmax(0,225px)
-            }
-
-            .editorWrap {
-                min-height: 0;
-                display: flex;
-                flex-direction: column
-            }
-
-            .tabs {
-                height: 33px;
-                padding: 7px 12px;
-                background: #0e1220;
-                border-bottom: 1px solid #292e44;
-                font: 12px ui-monospace,monospace;
-                display: flex;
-                justify-content: space-between
-            }
-
-            .codeShell {
-                position: relative;
-                display: flex;
-                min-height: 0;
-                flex: 1
-            }
-
-            .codeShell textarea {
-                flex: 1;
-                width: 100%;
-                height: 100%;
-                resize: none;
-                background: #070910;
-                color: #dce5ff;
-                border: 0;
-                outline: 0;
-                padding: 15px 18px;
-                font: var(--code-size,15px)/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;
-                tab-size: 2
-            }
-
-            .codeShell textarea.errorLine {
-                background: rgba(255,50,80,.08)
-            }
-
-            #gutter {
-                width: 46px;
-                background: #0a0c14;
-                color: #59617b;
-                text-align: right;
-                padding: 15px 8px 15px 0;
-                font: var(--code-size,15px)/1.55 ui-monospace,monospace;
-                user-select: none;
-                overflow: hidden
-            }
-
-            #diagnostics {
-                max-height: 66px;
-                overflow: auto;
-                background: #120b12;
-                border-top: 1px solid #42233a;
-                color: #ff8099;
-                font: 12px ui-monospace,monospace;
-                padding: 5px 10px
-            }
-
-            .diagOk {
-                color: #71e7a1
-            }
-
-            .bottom {
-                display: grid;
-                grid-template-columns: 1fr 1.2fr;
-                border-top: 1px solid #292e44;
-                gap: 1px;
-                background: #292e44
-            }
-
-            .panel {
-                background: #0b0e17;
-                padding: 9px;
-                min-width: 0;
-                overflow: auto
-            }
-
-            .panelHead {
-                display: flex;
-                justify-content: space-between;
-                align-items: center
-            }
-
-            .panel h3 {
-                margin: 0 0 7px;
-                font-size: 13px
-            }
-
-            .panel pre {
-                height: 104px;
-                overflow: auto;
-                white-space: pre-wrap;
-                margin: 0;
-                font: 12px/1.45 ui-monospace,monospace
-            }
-
-            .panel input {
-                width: 100%;
-                background: #111628;
-                color: #fff;
-                border: 1px solid #343b58;
-                padding: 7px;
-                border-radius: 6px;
-                margin-top: 7px
-            }
-
-            .previewPanel canvas {
-                width: 100%;
-                height: calc(100% - 25px);
-                min-height: 130px;
-                object-fit: contain;
-                background: #000;
-                outline: none;
-                border: 1px solid #252a3e
-            }
-
-            .blockbar {
-                padding: 8px;
-                border-bottom: 1px solid #292e44;
-                display: flex;
-                gap: 5px;
-                flex-wrap: wrap;
-                background: #0e1220
-            }
-
-            .blockbar button {
-                font-size: 12px
-            }
-
-            .block {
-                margin: 8px 10px;
-                padding: 10px;
-                background: #18213b;
-                border: 1px solid #43517b;
-                border-radius: 10px;
-                width: min(650px,calc(100% - 20px));
-                box-shadow: 0 3px 12px #0004
-            }
-
-            .block.if {
-                background: #24204a
-            }
-
-            .block.loop {
-                background: #183c48
-            }
-
-            .block .row {
-                display: flex;
-                gap: 6px;
-                align-items: center;
-                flex-wrap: wrap
-            }
-
-            .block input {
-                max-width: 180px;
-                background: #090d17;
-                color: #fff;
-                border: 1px solid #455276;
-                border-radius: 6px;
-                padding: 5px
-            }
-
-            .block .body {
-                margin: 8px 0 0 18px;
-                padding-left: 10px;
-                border-left: 3px solid #596a9e
-            }
-
-            .block .del {
-                float: right;
-                padding: 3px 6px
-            }
-
-            #suggestions {
-                position: absolute;
-                z-index: 4;
-                background: #11182a;
-                border: 1px solid #4b5e91;
-                border-radius: 8px;
-                box-shadow: 0 8px 30px #0008;
-                max-width: 260px;
-                overflow: hidden
-            }
-
-            .suggestions button {
-                display: block;
-                width: 100%;
-                text-align: left;
-                border: 0;
-                border-radius: 0
-            }
-
-            .suggestions b {
-                color: #8fd7ff
-            }
-
-            .touchPad {
-                display: none;
-                position: absolute
-            }
-
-            .previewPanel {
-                position: relative
-            }
-
-            .touchPad {
-                right: 18px;
-                bottom: 18px
-            }
-
-            .touchPad button {
-                width: 44px;
-                height: 40px;
-                margin: 2px;
-                opacity: .8
-            }
-
-            .touchPad>button {
-                display: block;
-                margin: auto
-            }
-
-            @media(max-width: 800px) {
-                main {
-                    grid-template-columns:1fr
-                }
-
-                aside {
-                    display: none
-                }
-
-                .work {
-                    grid-template-rows: minmax(0,1fr) 270px
-                }
-
-                .bottom {
-                    grid-template-columns: 1fr
-                }
-
-                .consolePanel {
-                    display: none
-                }
-
-                .previewPanel canvas {
-                    height: 210px
-                }
-
-                .touchPad {
-                    display: block
-                }
-
-                .brand {
-                    margin-right: 0;
-                    width: auto
-                }
-
-                header {
-                    gap: 4px
-                }
-
-                header button {
-                    padding: 6px 8px
-                }
-
-                #projectName {
-                    width: 110px
-                }
-            }
-
-            dialog {
-                background: #101321;
-                color: #fff;
-                border: 1px solid #3a4262;
-                border-radius: 14px;
-                padding: 20px;
-                min-width: 280px
-            }
-
-            dialog label {
-                display: block;
-                margin: 14px 0
-            }
-
-            dialog::backdrop {
-                background: #0009
-            }
-
-            body[data-theme="nebula"] {
-                background: #0c0617
-            }
-
-            body[data-theme="nebula"] header,body[data-theme="nebula"] aside {
-                background: #160d25
-            }
-
-            body[data-theme="light"] {
-                background: #eef2f8;
-                color: #182033
-            }
-
-            body[data-theme="light"] header,body[data-theme="light"] aside,body[data-theme="light"] .panel,body[data-theme="light"] .editorWrap {
-                background: #f7f9fc;
-                color: #182033
-            }
-
-            body[data-theme="light"] #editor {
-                background: #fff;
-                color: #172033
-            }
-
-            body[data-theme="light"] #gutter {
-                background: #eef1f6;
-                color: #778098
-            }
-
-            #suggestions {
-                z-index: 20;
-                background: #11182a;
-                border: 1px solid #4b5e91;
-                border-radius: 8px;
-                box-shadow: 0 8px 30px #0008;
-                max-width: 320px;
-                min-width: 180px;
-                overflow: hidden
-            }
-
-            #suggestions button {
-                display: block;
-                width: 100%;
-                text-align: left;
-                border: 0;
-                border-radius: 0
-            }
-
-            #suggestions button.selected,#suggestions button:hover {
-                background: #26365e
-            }
-
-            .folder {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                padding-top: 3px;
-                padding-bottom: 3px;
-                color: #b9c7ee;
-                font-size: 12px
-            }
-
-            .folder span {
-                flex: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap
-            }
-
-            .treeitem .name {
-                background: transparent;
-                border-color: transparent
-            }
-
-            /* SingulaX Studio responsive tabs + multitasking */
-            .studioTabs {
-                height: 42px;
-                display: flex;
-                gap: 6px;
-                align-items: center;
-                padding: 6px 9px;
-                background: #0e1220;
-                border-bottom: 1px solid #292e44;
-                overflow-x: auto;
-                flex: 0 0 auto
-            }
-
-            .studioTab {
-                white-space: nowrap;
-                padding: 7px 11px
-            }
-
-            .studioTab.active {
-                background: #2b3964;
-                border-color: #6076b2
-            }
-
-            .work {
-                display: flex!important;
-                flex-direction: column;
-                min-height: 0
-            }
-
-            .window {
-                min-width: 0;
-                min-height: 0
-            }
-
-            .editorWrap.window {
-                flex: 1
-            }
-
-            .bottom.windows {
-                display: contents
-            }
-
-            .bottom.windows>.window {
-                position: relative;
-                flex: 1;
-                resize: both;
-                overflow: auto;
-                min-width: 240px;
-                min-height: 160px
-            }
-
-            .bottom.windows>.window .panel {
-                height: 100%
-            }
-
-            body:not(.multitask) .window:not(.active-window) {
-                display: none
-            }
-
-            .multitask .window {
-                display: flex!important;
-                flex-direction: column
-            }
-
-            .multitask .editorWrap {
-                flex: 1 1 55%;
-                min-height: 220px
-            }
-
-            .multitask .windows {
-                display: flex;
-                flex: 1;
-                min-height: 0;
-                gap: 6px;
-                padding: 6px;
-                background: #090c15
-            }
-
-            .multitask .windows>.window {
-                background: #0b0e17;
-                border: 1px solid #292e44;
-                border-radius: 8px
-            }
-
-            .multitask .windows>.window {
-                flex: 1 1 0
-            }
-
-            .multitask .bottom.windows>.window .panelHead {
-                flex: 0 0 auto
-            }
-
-            .multitask .previewPanel canvas {
-                height: calc(100% - 35px)
-            }
-
-            @media(max-width: 800px) {
-                .studioTabs {
-                    height:44px
-                }
-
-                .multitask .editorWrap {
-                    min-height: 260px
-                }
-
-                .multitask .windows {
-                    flex-direction: column
-                }
-
-                .multitask .windows>.window {
-                    min-height: 180px
-                }
-
-                .multitask .consolePanel {
-                    display: flex
-                }
-
-                .multitask .previewPanel {
-                    display: flex
-                }
-
-                .window {
-                    resize: none
-                }
-            }
-
-            /* Mobile viewport + easier scrolling */
-            html,body {
-                width: 100%;
-                height: 100%;
-                height: 100dvh;
-                max-width: 100%;
-                margin: 0;
-                overflow: hidden
-            }
-
-            body {
-                -webkit-text-size-adjust: 100%;
-                overscroll-behavior: none
-            }
-
-            header {
-                height: 58px;
-                min-height: 58px;
-                max-height: 58px;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                overflow-y: hidden;
-                white-space: nowrap;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: auto;
-                scrollbar-color: #596a9e #111628;
-                padding-left: max(9px,env(safe-area-inset-left));
-                padding-right: max(9px,env(safe-area-inset-right))
-            }
-
-            header>* {
-                flex: 0 0 auto
-            }
-
-            header::-webkit-scrollbar,aside::-webkit-scrollbar,.panel::-webkit-scrollbar,#diagnostics::-webkit-scrollbar,.studioTabs::-webkit-scrollbar,.codeShell textarea::-webkit-scrollbar {
-                width: 10px;
-                height: 10px
-            }
-
-            header::-webkit-scrollbar-track,aside::-webkit-scrollbar-track,.panel::-webkit-scrollbar-track,#diagnostics::-webkit-scrollbar-track,.studioTabs::-webkit-scrollbar-track,.codeShell textarea::-webkit-scrollbar-track {
-                background: #111628
-            }
-
-            header::-webkit-scrollbar-thumb,aside::-webkit-scrollbar-thumb,.panel::-webkit-scrollbar-thumb,#diagnostics::-webkit-scrollbar-thumb,.studioTabs::-webkit-scrollbar-thumb,.codeShell textarea::-webkit-scrollbar-thumb {
-                background: #596a9e;
-                border-radius: 999px;
-                border: 2px solid #111628
-            }
-
-            main {
-                height: calc(100dvh - 58px);
-                min-height: 0;
-                max-height: calc(100dvh - 58px);
-                overflow: hidden
-            }
-
-            aside,.work,.editorWrap,.bottom,.bottom.windows,.window,.panel,.codeShell,.studioTabs {
-                min-height: 0
-            }
-
-            aside,.panel,.studioTabs,.codeShell textarea,#diagnostics {
-                scrollbar-width: auto;
-                scrollbar-color: #596a9e #111628;
-                -webkit-overflow-scrolling: touch
-            }
-
-            .work {
-                height: 100%;
-                overflow: hidden
-            }
-
-            .editorWrap.window {
-                overflow: hidden
-            }
-
-            .codeShell textarea {
-                overflow: auto;
-                overscroll-behavior: contain
-            }
-
-            .studioTabs {
-                scrollbar-width: auto;
-                -webkit-overflow-scrolling: touch;
-                touch-action: pan-x
-            }
-
-            .bottom.windows>.window {
-                overflow: hidden
-            }
-
-            .bottom.windows>.window .panel {
-                overflow: auto;
-                -webkit-overflow-scrolling: touch;
-                overscroll-behavior: contain
-            }
-
-            .previewPanel {
-                overflow: hidden!important
-            }
-
-            .previewPanel canvas {
-                max-width: 100%;
-                max-height: 100%;
-                touch-action: none
-            }
-
-            @media(max-width: 800px) {
-                header {
-                    padding-top:env(safe-area-inset-top);
-                    height: calc(58px + env(safe-area-inset-top));
-                    min-height: calc(58px + env(safe-area-inset-top));
-                    max-height: calc(58px + env(safe-area-inset-top))
-                }
-
-                main {
-                    height: calc(100dvh - 58px - env(safe-area-inset-top));
-                    max-height: calc(100dvh - 58px - env(safe-area-inset-top))
-                }
-
-                .brand {
-                    font-size: 16px
-                }
-
-                .brand img {
-                    width: 34px;
-                    height: 34px
-                }
-
-                .studioTabs {
-                    flex: 0 0 44px;
-                    padding-bottom: 5px
-                }
-
-                .studioTab {
-                    min-height: 34px;
-                    padding: 7px 10px
-                }
-
-                .codeShell textarea {
-                    font-size: max(14px,var(--code-size,15px));
-                    line-height: 1.5;
-                    padding: 12px 12px
-                }
-
-                #gutter {
-                    width: 40px;
-                    padding-top: 12px;
-                    padding-right: 7px
-                }
-
-                #diagnostics {
-                    max-height: 72px;
-                    min-height: 0
-                }
-
-                .multitask .editorWrap {
-                    min-height: 0;
-                    flex: 1 1 50%
-                }
-
-                .multitask .windows {
-                    min-height: 0;
-                    flex: 1 1 50%;
-                    overflow: hidden;
-                    padding: 4px
-                }
-
-                .multitask .windows>.window {
-                    min-height: 0;
-                    flex: 1 1 0
-                }
-
-                .multitask .windows>.window .panel {
-                    min-height: 0
-                }
-
-                .multitask .previewPanel canvas {
-                    height: calc(100% - 38px);
-                    min-height: 0
-                }
-            }
-
-            @media(max-width: 430px) {
-                header {
-                    gap:4px
-                }
-
-                header button {
-                    padding: 6px 8px;
-                    font-size: 12px
-                }
-
-                #projectName {
-                    width: 100px
-                }
-
-                .brand small {
-                    display: none
-                }
-
-                .studioTabs {
-                    gap: 4px;
-                    padding-left: 6px;
-                    padding-right: 6px
-                }
-
-                .studioTab {
-                    font-size: 12px;
-                    padding: 6px 9px
-                }
-
-                .multitask .windows {
-                    gap: 4px
-                }
-            }
-        </style>
-        <title>SingulaX Studio Lite</title>
-    </head>
-    <body>
-        <header>
-            <div class="brand">
-                <img src="data:image/png;base64,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AIAQAgBACAEAIAQAgBACAEAIA4AoAQAgBACAEAyPPADngBzwBFoKCgqOAG4AtwCO4A9wA3AETAFuALcAZgBuARJgATAEIAMYBAvAI88AjAGYBHUAIAoAwIAQAgCgBAHqAGoAagCgBqAPUAIAoAQBgQA1AFACAEAeoAagCgBAACAPUAUAIAQB6gBqAEAUABAHqAKAEAIB7twA5oAc0ABAFADcAW4AbgADADcFA5oKigC3ADcARaABaAR5oAi0AXNAAmAQLQA3ACAG4AtwBQBiAEADAFACAOAEAIAoAQBwAgBAFAHAAQAMAUAIAxACAEAUAIA4AbgCgBAHACAEAWoAxACAG4AoAQAgHrDQA3ADcAOaAHNAFuAG4AbgBuABaAR5oAc0AXPADmgEWeAR54AbgAWgCLQBEwBQBiAG4AbgCgBAHADcAW4AQAgDgBuAKAEAcANwBbgBACAOALcAIAQBgwA3ADcAUAIA4AbgCgBAGIAbgC3ACAGoAxADcAUAIAQBwD0BoAuaAPmgC5oAF4BHngD5oAc0AOaAQLwA5oAi0AW4AbgC3ADcAIAoAQAgBACAEANwAgBACAEAIAQAgBACAEAIAQAgBACAEAIAQAgBACAEAIAQAgBACAEAIAQAgBACAEAIAQAgBACAEAs54Ac8AOeAHPAEWgCgBACAG4AtwB7gC3AFuAEAIAagBACAEANQAgBACAEAIAQAgBACAEAIAQAgBACAEAIAQAgBACAEAIA4AoAQAgBACAEAIAagDgCgBACAEAIAQAgBACAEAIA9wA3ADcANwA3AAwAgCgBAGIAQAgCgD1AAQAgCgBAHACAKAEABAGIAQBQAgDEAIAEwBQAgDEAUAIAQAEAeoAQBQA1AHqAEAUAIAQBwAgCgBAGBACAEAUAIA4AQBQAgDEAIAoAQAgBACAEAIA4AQBQAgD1ADcANwBQBwAgBAFAAQBiAAgBuAKAMCAEAIAbgCgDEAIAGAKAOAEAIAoAQAEAYgAIAoAQBiAEAUAIACAMQAgC3ACAGoA4AtwA1AAQBiAG4AGAKAOAEAUAIAQBwBQAgBAHAFACAEAIA4AoAQAgDgBAFACAOAEAUAIAQBwBQAgBACAOAKAEAIA4AoAQAgBAHACAKAEAIA4AoAQAgDgCgBACAEAcAUAIAQBwAgCgBAGIAQBQAgBAHACAKAEAcAUAIAQAgDgCgBAGIAQAgCgBACAOAKAEAcAUAIAQAgBACAEAIACAEAIAQAgBACAEAIAQAgDgCgBACAEAIAQAgBAHAFACAEAYgBAFACAEAIAQAgBACAEAcAeoAQA1ADUANQA1ADUANQA1ADUANQA1AAiAGoAcsANQA1ADUANQA1AAiAGoAagBqAGoAagBqAGoAagBqAGoAagBqAGoAagBqAEANQA1ADUANQA1ADUANQA1ADUANQA1ADUANQA1ADUANQA1ADUANQA1ADUANQA1ADUANQA1ADUFD/9k=">
-                <span>SingulaX</span>
-                <small>Studio Lite</small>
-            </div>
-            <input id="projectName" value="MyProject" aria-label="Project name">
-            <button id="newBtn">New</button>
-            <button id="saveBtn">Save</button>
-            <button id="runBtn">▶ Run</button>
-            <button id="stopBtn">■ Stop</button>
-            <button id="exportBtn">Export</button>
-            <button id="importBtn">Import</button>
-            <button id="settingsBtn">⚙</button>
-            <button id="modeBtn">🧩 Blocks</button>
-            <input id="importFile" type="file" multiple hidden>
-            <input id="assetFile" type="file" multiple hidden>
-        </header>
-        <main>
-            <aside>
-                <div class="sidehead">
-                    <h3>Project</h3>
-                    <button id="addAssetBtn">＋ Asset</button>
-                </div>
-                <div id="tree"></div>
-                <button id="newFileBtn" class="wide">＋ .sglx file</button>
-                <button id="newFolderBtn" class="wide">＋ Folder</button>
-                <hr>
-                <div class="sidehint">Offline-first • Code + Scratch-style Blocks • 2D + 3D</div>
-            </aside>
-            <section class="work">
-                <div class="studioTabs">
-                    <button id="tab-code" class="studioTab">Code</button>
-                    <button id="tab-console" class="studioTab">Console</button>
-                    <button id="tab-preview" class="studioTab">Preview</button>
-                    <button id="multitaskBtn" class="studioTab">⊞ Multitask</button>
-                    <button id="resetLayoutBtn" class="studioTab">Reset</button>
-                </div>
-                <div id="window-code" class="editorWrap window">
-                    <div class="tabs">
-                        <span id="fileTitle">main.sglx</span>
-                        <span id="diagCount"></span>
-                    </div>
-                    <div class="codeShell">
-                        <div id="gutter"></div>
-                        <textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
-                        <div id="suggestions" hidden></div>
-                    </div>
-                    <div id="diagnostics"></div>
-                </div>
-                <div id="blocksPane" hidden>
-                    <div class="blockbar">
-                        <button data-block="say">say</button>
-                        <button data-block="var">variable</button>
-                        <button data-block="if">if</button>
-                        <button data-block="elseif">elseif</button>
-                        <button data-block="else">else</button>
-                        <button data-block="while">while</button>
-                        <button data-block="forever">forever</button>
-                        <button data-block="repeat">repeat</button>
-                        <button data-block="for">for</button>
-                        <button data-block="function">function</button>
-                        <button data-block="wait">wait</button>
-                        <button data-block="random">random</button>
-                    </div>
-                    <div id="blocks"></div>
-                </div>
-                <div class="bottom windows">
-                    <div id="window-console" class="panel consolePanel window">
-                        <div class="panelHead">
-                            <h3>Console</h3>
-                            <div>
-                                <button id="clearConsole">Clear</button>
-                            </div>
-                        </div>
-                        <pre id="console"></pre>
-                        <input id="stdin" placeholder="Live input: type here and press Enter">
-                    </div>
-                    <div id="window-preview" class="panel previewPanel window">
-                        <div class="panelHead">
-                            <h3>Game Preview</h3>
-                            <select id="previewMode">
-                                <option value="2d">2D</option>
-                                <option value="3d">3D</option>
-                            </select>
-                        </div>
-                        <canvas id="game" width="800" height="450" tabindex="0"></canvas>
-                        <div id="touchPad">
-                            <button data-touch="up">▲</button>
-                            <div>
-                                <button data-touch="left">◀</button>
-                                <button data-touch="down">▼</button>
-                                <button data-touch="right">▶</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-        <dialog id="settings">
-            <h2>SingulaX Studio Lite Settings</h2>
-            <label>
-                Theme 
-                <select id="theme">
-                    <option value="midnight">Midnight</option>
-                    <option value="nebula">Nebula</option>
-                    <option value="light">Light</option>
-                </select>
-            </label>
-            <label>
-                Font size <input id="fontSize" type="range" min="12" max="22" value="15">
-            </label>
-            <label>
-                <input id="autosave" type="checkbox" checked>Auto-save locally
-            </label>
-            <button id="closeSettings">Close</button>
-        </dialog>
-        <script>
-            /* SingulaX browser/Node runtime. Dependency-free ES module. */
-            const sleep = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
-            function splitArgs(s) {
-                const out = [];
-                let start = 0
-                  , depth = 0
-                  , quote = null
-                  , esc = false;
-                for (let i = 0; i < s.length; i++) {
-                    const c = s[i];
-                    if (esc) {
-                        esc = false;
-                        continue
-                    }
-                    if (c === '\\' && quote) {
-                        esc = true;
-                        continue
-                    }
-                    if (quote) {
-                        if (c === quote)
-                            quote = null;
-                        continue
-                    }
-                    if (c === '"' || c === "'") {
-                        quote = c;
-                        continue
-                    }
-                    if ('([{'.includes(c))
-                        depth++;
-                    else if (')]}'.includes(c))
-                        depth--;
-                    else if (c === ',' && depth === 0) {
-                        out.push(s.slice(start, i).trim());
-                        start = i + 1
-                    }
-                }
-                if (s.slice(start).trim() || s.trim() === '')
-                    out.push(s.slice(start).trim());
-                return out.filter(Boolean)
-            }
-            function lineError(n, msg, col=1) {
-                const e = new Error(`line ${n}, column ${col}: ${msg}`);
-                e.line = n;
-                e.column = col;
-                return e
-            }
-            function stripDoubleSlashComments(src) {
-                let out = ''
-                  , inStr = null
-                  , esc = false
-                  , inComment = false;
-                for (let i = 0; i < src.length; i++) {
-                    const c = src[i]
-                      , n = src[i + 1];
-                    if (inComment) {
-                        if (c === '/' && n === '/') {
-                            inComment = false;
-                            i++;
-                            out += '  ';
-                        } else if (c === '\n')
-                            out += '\n';
-                        else
-                            out += ' ';
-                        continue
-                    }
-                    if (inStr) {
-                        out += c;
-                        if (esc)
-                            esc = false;
-                        else if (c === '\\')
-                            esc = true;
-                        else if (c === inStr)
-                            inStr = null;
-                        continue
-                    }
-                    if ((c === '\"' || c === "'") && !inComment) {
-                        inStr = c;
-                        out += c;
-                        continue
-                    }
-                    if (c === '/' && n === '/') {
-                        inComment = true;
-                        i++;
-                        out += '  ';
-                        continue
-                    }
-                    out += c;
-                }
-                return out;
-            }
-            class SingulaxRuntime {
-                constructor(host={}) {
-                    this.host = host;
-                    this.env = Object.create(null);
-                    this.running = false;
-                    this.keys = new Set();
-                    this.buttons = new Set();
-                    this.mouse = {
-                        x: 0,
-                        y: 0
-                    };
-                    this.touch = {
-                        x: 0,
-                        y: 0,
-                        active: false
-                    };
-                    this.gamepads = {};
-                    this.clicked = new Set();
-                    this.frame = [];
-                    this.assets = Object.create(null);
-                    this.scopeStack = [];
-                    this.output = [];
-                    this.clock = 0;
-                    const E = this.env;
-                    E.say = (...a) => this.say(a.map(v => this.format(v)).join(' '));
-                    E.print = E.say;
-                    E.log = E.say;
-                    E.input = async p => this.host.input ? this.host.input(String(p ?? '')) : globalThis.prompt?.(String(p ?? '')) ?? '';
-                    E.key_down = k => this.keys.has(String(k));
-                    E.key_pressed = k => {
-                        const s = String(k);
-                        const v = this.clicked.has('key:' + s);
-                        this.clicked.delete('key:' + s);
-                        return v
-                    }
-                    ;
-                    E.mouse_down = b => this.buttons.has(String(b || 'left'));
-                    E.mouse_clicked = b => {
-                        const s = 'mouse:' + String(b || 'left');
-                        const v = this.clicked.has(s);
-                        this.clicked.delete(s);
-                        return v
-                    }
-                    ;
-                    E.mouse_x = () => this.mouse.x;
-                    E.mouse_y = () => this.mouse.y;
-                    E.touching = () => this.touch.active;
-                    E.touch_x = () => this.touch.x;
-                    E.touch_y = () => this.touch.y;
-                    E.touch_started = () => this.clicked.has('touch:start');
-                    E.touch_ended = () => this.clicked.has('touch:end');
-                    E.gamepad_connected = i => !!this.gamepads[i || 0];
-                    E.gamepad_button = (i, b) => !!this.gamepads[i || 0]?.buttons?.[b];
-                    E.gamepad_axis = (i, a) => this.gamepads[i || 0]?.axes?.[a] || 0;
-                    E.clear_screen = () => {
-                        this.frame = [];
-                        this.emitFrame()
-                    }
-                    ;
-                    E.draw_rect = (x, y, w, h, fill='white') => {
-                        this.frame.push({
-                            type: 'rect',
-                            x: +x,
-                            y: +y,
-                            w: +w,
-                            h: +h,
-                            fill
-                        });
-                        this.emitFrame()
-                    }
-                    ;
-                    E.draw_circle = (x, y, r, fill='white') => {
-                        this.frame.push({
-                            type: 'circle',
-                            x: +x,
-                            y: +y,
-                            r: +r,
-                            fill
-                        });
-                        this.emitFrame()
-                    }
-                    ;
-                    E.draw_text = (text, x, y, size=20, fill='white') => {
-                        this.frame.push({
-                            type: 'text',
-                            text: String(text),
-                            x: +x,
-                            y: +y,
-                            size: +size,
-                            fill
-                        });
-                        this.emitFrame()
-                    }
-                    ;
-                    E.draw_line = (x1, y1, x2, y2, width=2, fill='white') => {
-                        this.frame.push({
-                            type: 'line',
-                            x1: +x1,
-                            y1: +y1,
-                            x2: +x2,
-                            y2: +y2,
-                            width: +width,
-                            fill
-                        });
-                        this.emitFrame()
-                    }
-                    ;
-                    E.draw_image = (asset, x, y, w, h) => {
-                        this.frame.push({
-                            type: 'image',
-                            asset: String(asset),
-                            x: +x,
-                            y: +y,
-                            w: +w,
-                            h: +h
-                        });
-                        this.emitFrame()
-                    }
-                    ;
-                    E.draw_cube = (x, y, z, size=1, fill='white') => {
-                        this.frame.push({
-                            type: 'cube',
-                            x: +x,
-                            y: +y,
-                            z: +z,
-                            size: +size,
-                            fill
-                        });
-                        this.emitFrame()
-                    }
-                    ;
-                    E.set_3d = v => {
-                        this.host.mode3d?.(!!v)
-                    }
-                    ;
-                    E.wait = seconds => sleep((+seconds || 0) * 1000);
-                    E.wait_ms = ms => sleep(+ms || 0);
-                    E.file_read = async p => this.host.fileRead ? this.host.fileRead(String(p)) : '';
-                    E.file_write = async (p, c) => this.host.fileWrite ? this.host.fileWrite(String(p), String(c)) : false;
-                    E.asset = (p) => this.assets[String(p)] ?? null;
-                    E.asset_url = E.asset;
-                    E.play_audio = (p, loop=false) => this.host.playAudio?.(String(p), !!loop);
-                    E.stop_audio = p => this.host.stopAudio?.(p ? String(p) : null);
-                    E.to_json = v => JSON.stringify(v);
-                    E.from_json = s => JSON.parse(s);
-                    E.type_of = v => typeof v;
-                    E.exists = v => v !== undefined && v !== null;
-                    E.random = (a=1, b=null) => {
-                        if (b === null) {
-                            b = a;
-                            a = 0
-                        }
-                        return Math.random() * (+b - +a) + +a
-                    }
-                    ;
-                    E.random_int = (a=0, b=1) => Math.floor(E.random(a, b + 1));
-                    E.random_choice = a => a?.length ? a[Math.floor(Math.random() * a.length)] : null;
-                    E.abs = Math.abs;
-                    E.floor = Math.floor;
-                    E.ceil = Math.ceil;
-                    E.round = Math.round;
-                    E.sqrt = Math.sqrt;
-                    E.pow = Math.pow;
-                    E.sin = Math.sin;
-                    E.cos = Math.cos;
-                    E.tan = Math.tan;
-                    E.asin = Math.asin;
-                    E.acos = Math.acos;
-                    E.atan = Math.atan;
-                    E.atan2 = Math.atan2;
-                    E.min = Math.min;
-                    E.max = Math.max;
-                    E.clamp = (v, a, b) => Math.min(Math.max(v, a), b);
-                    E.lerp = (a, b, t) => a + (b - a) * t;
-                    E.pi = Math.PI;
-                    E.e = Math.E;
-                    E.tau = Math.PI * 2;
-                    E.deg = (r) => r * 180 / Math.PI;
-                    E.rad = (d) => d * Math.PI / 180;
-                    // Lists and data helpers
-                    E.list = (...items) => items;
-                    E.push = (list, value) => {
-                        if (!Array.isArray(list))
-                            throw Error('push requires a list');
-                        list.push(value);
-                        return list.length
-                    }
-                    ;
-                    E.pop = list => Array.isArray(list) ? list.pop() : null;
-                    E.list_add = E.push;
-                    E.list_remove = (list, index) => Array.isArray(list) ? list.splice(Number(index), 1)[0] : null;
-                    E.list_get = (list, index) => Array.isArray(list) ? list[Number(index)] : null;
-                    E.list_set = (list, index, value) => {
-                        if (!Array.isArray(list))
-                            throw Error('list_set requires a list');
-                        list[Number(index)] = value;
-                        return value
-                    }
-                    ;
-                    const dataStore = new Map();
-                    const dataApi = (initial) => {
-                        const obj = {};
-                        if (initial && typeof initial === 'object' && !Array.isArray(initial))
-                            Object.assign(obj, initial);
-                        return obj
-                    }
-                    ;
-                    dataApi.store = (key, value) => {
-                        dataStore.set(String(key), value);
-                        return value
-                    }
-                    ;
-                    dataApi.find = key => dataStore.get(String(key));
-                    dataApi.has = key => dataStore.has(String(key));
-                    dataApi.clear = () => {
-                        dataStore.clear();
-                        return true
-                    }
-                    ;
-                    E.data = dataApi;
-                    E.find = (collection, needle) => {
-                        if (Array.isArray(collection))
-                            return collection.find(v => typeof needle === 'function' ? needle(v) : v === needle);
-                        if (collection && typeof collection === 'object')
-                            return Object.keys(collection).find(k => collection[k] === needle);
-                        return null
-                    }
-                    ;
-                    E.get = (target, key, fallback=null) => {
-                        if (target == null)
-                            return fallback;
-                        const v = target[key];
-                        return v === undefined ? fallback : v
-                    }
-                    ;
-                    this.lastAnswer = null;
-                    this.lastResult = null;
-                    E.answer = () => this.lastAnswer;
-                    E.result = v => {
-                        this.lastResult = v;
-                        return v
-                    }
-                    ;
-                    E.ask = async (promptText='') => {
-                        const v = await (this.host.input ? this.host.input(String(promptText)) : Promise.resolve(''));
-                        this.lastAnswer = v;
-                        return v
-                    }
-                    ;
-                    E.string = v => String(v);
-                    E.number = v => Number(v);
-                    E.boolean = v => !!v;
-                    E.length = v => v?.length ?? 0;
-                    E.concat = (...a) => a.join('');
-                    E.time = () => performance.now() / 1000;
-                    E.seconds = E.time;
-                }
-                format(v) {
-                    if (typeof v === 'string')
-                        return v;
-                    try {
-                        return JSON.stringify(v)
-                    } catch {
-                        return String(v)
-                    }
-                }
-                say(s) {
-                    this.output.push(String(s));
-                    this.host.output?.(String(s))
-                }
-                emitFrame() {
-                    this.host.frame?.(this.frame.slice())
-                }
-                setInput(i={}) {
-                    for (const k of i.keys || [])
-                        this.keys.add(String(k));
-                    for (const k of i.up || [])
-                        this.keys.delete(String(k));
-                    for (const k of i.pressed || [])
-                        this.clicked.add('key:' + String(k));
-                    if (i.mouse)
-                        this.mouse = i.mouse;
-                    for (const b of i.buttons || [])
-                        this.buttons.add(String(b));
-                    for (const b of i.buttonup || [])
-                        this.buttons.delete(String(b));
-                    for (const b of i.clicked || [])
-                        this.clicked.add('mouse:' + String(b));
-                    if (i.touch)
-                        this.touch = i.touch;
-                    if (i.touchStart)
-                        this.clicked.add('touch:start');
-                    if (i.touchEnd)
-                        this.clicked.add('touch:end');
-                    if (i.gamepads)
-                        this.gamepads = i.gamepads
-                }
-                async run(source, options={}) {
-                    this.running = true;
-                    this.output = [];
-                    this.frame = [];
-                    try {
-                        const program = this.parse(source);
-                        return await this.exec(program, this.env)
-                    } catch (e) {
-                        this.host.error?.(e);
-                        this.say('Error: ' + e.message);
-                        throw e
-                    } finally {
-                        this.running = false
-                    }
-                }
-                async runProject(project, {entry=null}={}) {
-                    this.running = true;
-                    this.assets = project.assets || {};
-                    const names = Object.keys(project.files || {}).filter(n => n.endsWith('.sglx'));
-                    const chosen = entry ? names.filter(n => n === entry) : names;
-                    let source = '';
-                    for (const n of chosen)
-                        source += `\n# FILE ${n}\n${project.files[n]}\n`;
-                    return this.run(source)
-                }
-                parse(src) {
-                    const raw = stripDoubleSlashComments(String(src).replace(/\r/g, '')).split('\n');
-                    const lines = raw.map( (s, i) => ({
-                        s: s.trim(),
-                        n: i + 1,
-                        raw: s
-                    })).filter(x => x.s && !x.s.startsWith('#') && !x.s.startsWith('--'));
-                    const root = [];
-                    const stack = [root]
-                      , frames = [];
-                    for (const l of lines) {
-                        const s = l.s;
-                        let m;
-                        if (/^end\b/i.test(s)) {
-                            if (stack.length === 1)
-                                throw lineError(l.n, 'unexpected end');
-                            stack.pop();
-                            if (frames.length)
-                                frames.pop();
-                            continue
-                        }
-                        if (/^(?:else|elseif|otherwise\s+if|otherwise)\b/i.test(s)) {
-                            const f = frames.at(-1);
-                            if (!f || f.type !== 'if')
-                                throw lineError(l.n, 'unexpected else/elseif');
-                            stack.pop();
-                            let kind = 'else'
-                              , cond = null;
-                            if (/^(?:elseif|otherwise\s+if)/i.test(s)) {
-                                kind = 'elseif';
-                                cond = s.replace(/^(?:elseif|otherwise\s+if)\s+/i, '').replace(/\s+then$/i, '').trim()
-                            } else if (!/^else\b/i.test(s) && !/^otherwise\b/i.test(s))
-                                throw lineError(l.n, 'invalid conditional branch');
-                            const b = {
-                                kind,
-                                cond,
-                                body: []
-                            };
-                            f.branches.push(b);
-                            stack.push(b.body);
-                            continue
-                        }
-                        if (m = /^if\s+(.+?)\s+then$/i.exec(s)) {
-                            const n = {
-                                type: 'if',
-                                line: l.n,
-                                branches: [{
-                                    kind: 'if',
-                                    cond: m[1],
-                                    body: []
-                                }]
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.branches[0].body);
-                            continue
-                        }
-                        if (m = /^while\s+(.+?)\s+do$/i.exec(s)) {
-                            const n = {
-                                type: 'while',
-                                line: l.n,
-                                cond: m[1],
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (/^forever(?:\s+do)?$/i.test(s)) {
-                            const n = {
-                                type: 'forever',
-                                line: l.n,
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (m = /^repeat\s*\((.*)\)$/i.exec(s)) {
-                            const n = {
-                                type: 'repeat',
-                                line: l.n,
-                                count: m[1],
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (m = /^repeat\s+(.+?)\s+times$/i.exec(s)) {
-                            const n = {
-                                type: 'repeat',
-                                line: l.n,
-                                count: m[1],
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (m = /^repeat\.until\.statement\s*\((.*)\)$/i.exec(s)) {
-                            const args = splitArgs(m[1]);
-                            if (args.length !== 2)
-                                throw lineError(l.n, 'repeat.until.statement(statement, state) requires exactly 2 arguments');
-                            const n = {
-                                type: 'repeatUntilStatement',
-                                line: l.n,
-                                args,
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (m = /^repeat\.until\s*\((.*)\)$/i.exec(s)) {
-                            const args = splitArgs(m[1]);
-                            if (args.length !== 2)
-                                throw lineError(l.n, 'repeat.until(task, state) requires exactly 2 arguments');
-                            const n = {
-                                type: 'repeatUntil',
-                                line: l.n,
-                                args,
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (m = /^wait\.until\s*\((.*)\)$/i.exec(s)) {
-                            stack.at(-1).push({
-                                type: 'waitUntil',
-                                line: l.n,
-                                args: splitArgs(m[1])
-                            });
-                            continue
-                        }
-                        if (m = /^for\s+([A-Za-z_]\w*)\s*=\s*(.+?)\s+do$/i.exec(s)) {
-                            const parts = splitArgs(m[2]);
-                            if (parts.length < 2)
-                                throw lineError(l.n, 'for requires start and end');
-                            const n = {
-                                type: 'for',
-                                line: l.n,
-                                name: m[1],
-                                parts,
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (m = /^(?:for\s+)?each\s+([A-Za-z_]\w*)\s+in\s+(.+?)\s+do$/i.exec(s)) {
-                            const n = {
-                                type: 'foreach',
-                                line: l.n,
-                                name: m[1],
-                                expr: m[2],
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (m = /^(?:function|func)\s+([A-Za-z_]\w*)\s*\((.*?)\)$/i.exec(s)) {
-                            const n = {
-                                type: 'function',
-                                line: l.n,
-                                name: m[1],
-                                args: splitArgs(m[2]),
-                                body: []
-                            };
-                            stack.at(-1).push(n);
-                            frames.push(n);
-                            stack.push(n.body);
-                            continue
-                        }
-                        if (/^else\s*$/i.test(s))
-                            throw lineError(l.n, 'else must follow if');
-                        stack.at(-1).push({
-                            type: 'line',
-                            s,
-                            line: l.n
-                        });
-                    }
-                    if (stack.length !== 1) {
-                        const f = frames.at(-1);
-                        throw lineError(f?.line || lines.at(-1)?.n || 1, 'missing end')
-                    }
-                    return root;
-                }
-                expr(text, scope) {
-                    let s = String(text).trim();
-                    s = s.replace(/\btypeof\s*\(/g, 'type_of(');
-                    s = s.replace(/\btrue\b/gi, 'true').replace(/\bfalse\b/gi, 'false').replace(/\bnil\b/gi, 'null').replace(/~=|!=/g, '!==').replace(/(?<![=!<>])=(?!=)/g, '===').replace(/\band\b/gi, '&&').replace(/\bor\b/gi, '||').replace(/\bnot\b/gi, '!').replace(/\.\./g, '+');
-                    s = s.replace(/\b([A-Za-z_]\w*)\s*\{/g, '$1[');
-                    // gentle compatibility
-                    const reserved = new Set(['await', 'break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'function', 'if', 'import', 'in', 'instanceof', 'let', 'new', 'return', 'super', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield']);
-                    const names = new Set()
-                      , pairs = [];
-                    for (let o = scope; o && o !== Object.prototype; o = Object.getPrototypeOf(o))
-                        for (const k of Object.keys(o)) {
-                            if (names.has(k) || !/^[A-Za-z_$][\w$]*$/.test(k) || reserved.has(k))
-                                continue;
-                            names.add(k);
-                            pairs.push([k, scope[k]])
-                        }
-                    const keys = pairs.map(p => p[0])
-                      , vals = pairs.map(p => p[1]);
-                    try {
-                        return Function(...keys, 'Math', 'return (' + s + ');')(...vals, Math)
-                    } catch (e) {
-                        if (Object.prototype.hasOwnProperty.call(scope, s))
-                            return scope[s];
-                        if (/^['"`].*['"`]$/.test(s))
-                            return s.slice(1, -1);
-                        throw e
-                    }
-                }
-                evalArgs(s, scope) {
-                    return splitArgs(s).map(a => this.expr(a, scope))
-                }
-                async line(s, scope, lineNo) {
-                    let m;
-                    if (/^break$/i.test(s))
-                        throw {
-                            __break: true
-                        };
-                    if (/^continue$/i.test(s))
-                        throw {
-                            __continue: true
-                        };
-                    if (m = /^(?:local|var|let)\s+([A-Za-z_]\w*)\s*(?:=\s*(.*))?$/i.exec(s)) {
-                        scope[m[1]] = m[2] === undefined ? null : this.expr(m[2], scope);
-                        return scope[m[1]]
-                    }
-                    if (m = /^([A-Za-z_]\w*)\s*=\s*ask\s*\((.*)\)$/i.exec(s)) {
-                        const n = m[1]
-                          , v = await this.env.ask(...this.evalArgs(m[2], scope));
-                        scope[n] = v;
-                        this.lastAnswer = v;
-                        return v
-                    }
-                    if (m = /^([A-Za-z_]\w*)\s*=\s*(?:result)\s*\((.*)\)$/i.exec(s)) {
-                        const n = m[1]
-                          , v = this.env.result(...this.evalArgs(m[2], scope));
-                        scope[n] = v;
-                        return v
-                    }
-                    if (m = /^([A-Za-z_]\w*)\s*([+\-*/%]?=)\s*(.*)$/i.exec(s)) {
-                        const n = m[1]
-                          , op = m[2]
-                          , v = this.expr(m[3], scope);
-                        let owner = scope;
-                        while (owner && !Object.prototype.hasOwnProperty.call(owner, n))
-                            owner = Object.getPrototypeOf(owner);
-                        owner = owner || scope;
-                        if (op === '=')
-                            owner[n] = v;
-                        else
-                            owner[n] = this.expr(`${n} ${op[0]} (${m[3]})`, scope);
-                        return owner[n]
-                    }
-                    if (m = /^([A-Za-z_]\w*)\.([A-Za-z_]\w*)\s*([+\-*/%]?=)\s*(.*)$/i.exec(s)) {
-                        const o = scope[m[1]];
-                        if (!o)
-                            throw lineError(lineNo, 'unknown object ' + m[1]);
-                        const op = m[3]
-                          , v = this.expr(m[4], scope);
-                        if (op === '=')
-                            o[m[2]] = v;
-                        else
-                            o[m[2]] = this.expr(`(${JSON.stringify(o[m[2]])}) ${op[0]} (${m[4]})`, scope);
-                        return
-                    }
-                    if (m = /^(?:say|print|log)\s*\((.*)\)$/i.exec(s)) {
-                        const args = this.evalArgs(m[1], scope);
-                        this.env.say(...args);
-                        return args.at(-1)
-                    }
-                    if (m = /^return(?:\s+(.+))?$/i.exec(s))
-                        throw {
-                            __return: true,
-                            value: m[1] === undefined ? null : this.expr(m[1], scope)
-                        };
-                    if (m = /^wait\s*\((.*)\)$/i.exec(s)) {
-                        await this.env.wait(this.expr(m[1], scope));
-                        return
-                    }
-                    if (m = /^([A-Za-z_]\w*)\s*\((.*)\)$/i.exec(s)) {
-                        const fn = scope[m[1]] ?? this.env[m[1]];
-                        if (typeof fn !== 'function')
-                            throw lineError(lineNo, 'unknown function ' + m[1]);
-                        const r = fn(...this.evalArgs(m[2], scope));
-                        if (r?.then)
-                            return await r;
-                        return r
-                    }
-                    if (m = /^([A-Za-z_]\w*)\.([A-Za-z_]\w*)\s*\((.*)\)$/i.exec(s)) {
-                        const o = scope[m[1]] ?? this.env[m[1]]
-                          , fn = o?.[m[2]];
-                        if (typeof fn !== 'function')
-                            throw lineError(lineNo, `unknown method ${m[2]}`);
-                        const r = fn.apply(o, this.evalArgs(m[3], scope));
-                        if (r?.then)
-                            return await r;
-                        return r
-                    }
-                    try {
-                        this.expr(s, scope)
-                    } catch (e) {
-                        throw lineError(lineNo, e.message || 'invalid expression')
-                    }
-                }
-                async resolveUntil(args, scope) {
-                    const taskText = String(args[0] ?? '').trim();
-                    let value;
-                    try {
-                        value = this.expr(taskText, scope);
-                    } catch {
-                        value = scope[taskText] ?? taskText;
-                    }
-                    if (typeof value === 'function')
-                        value = await value();
-                    else if (value && typeof value === 'object' && 'state' in value)
-                        value = value.state;
-                    return value;
-                }
-                async resolveUntilStatement(args, scope, lineNo) {
-                    const statement = String(args[0] ?? '').trim();
-                    if (!statement)
-                        throw lineError(lineNo, 'repeat.until.statement requires a statement');
-                    try {
-                        return await this.expr(statement, scope)
-                    } catch (exprError) {
-                        return await this.line(statement, scope, lineNo)
-                    }
-                }
-                matchesState(value, target) {
-                    const t = String(target ?? '').replace(/^['\"]|['\"]$/g, '');
-                    if (t.toLowerCase() === 'true')
-                        return !!value;
-                    if (t.toLowerCase() === 'false')
-                        return !value;
-                    return String(value) === t || value === target || (value === true && t.toLowerCase() === 'done');
-                }
-                async until(args, scope) {
-                    let guard = 0;
-                    while (this.running) {
-                        const value = await this.resolveUntil(args, scope);
-                        if (this.matchesState(value, args[1]))
-                            return value;
-                        if (++guard > 60000)
-                            throw Error('until condition exceeded safety limit');
-                        await sleep(16);
-                    }
-                    return null;
-                }
-                async exec(nodes, scope=this.env) {
-                    for (const n of nodes) {
-                        if (!this.running)
-                            break;
-                        if (n.type === 'line') {
-                            await this.line(n.s, scope, n.line);
-                            this.emitFrame();
-                            continue
-                        }
-                        if (n.type === 'function') {
-                            scope[n.name] = async (...args) => {
-                                const child = Object.create(scope);
-                                n.args.forEach( (a, i) => child[a] = args[i]);
-                                try {
-                                    return await this.exec(n.body, child)
-                                } catch (e) {
-                                    if (e?.__return)
-                                        return e.value;
-                                    throw e
-                                }
-                            }
-                            ;
-                            continue
-                        }
-                        if (n.type === 'if') {
-                            for (const b of n.branches) {
-                                if (b.kind === 'else' || this.expr(b.cond, scope)) {
-                                    await this.exec(b.body, scope);
-                                    break
-                                }
-                            }
-                            continue
-                        }
-                        if (n.type === 'while') {
-                            let guard = 0;
-                            while (this.running && this.expr(n.cond, scope)) {
-                                if (++guard > 100000)
-                                    throw lineError(n.line, 'while loop limit exceeded');
-                                try {
-                                    await this.exec(n.body, scope)
-                                } catch (e) {
-                                    if (e?.__break)
-                                        break;
-                                    if (e?.__continue)
-                                        continue;
-                                    throw e
-                                }
-                                await sleep(0)
-                            }
-                            continue
-                        }
-                        if (n.type === 'forever') {
-                            while (this.running) {
-                                try {
-                                    await this.exec(n.body, scope)
-                                } catch (e) {
-                                    if (e?.__break)
-                                        break;
-                                    if (!e?.__continue)
-                                        throw e
-                                }
-                                await sleep(16)
-                            }
-                            continue
-                        }
-                        if (n.type === 'repeat') {
-                            const c = Math.max(0, Math.floor(Number(this.expr(n.count, scope)) || 0));
-                            for (let i = 0; i < c && this.running; i++) {
-                                try {
-                                    await this.exec(n.body, scope)
-                                } catch (e) {
-                                    if (e?.__break)
-                                        break;
-                                    if (e?.__continue)
-                                        continue;
-                                    throw e
-                                }
-                                await sleep(0)
-                            }
-                            continue
-                        }
-                        if (n.type === 'repeatUntil') {
-                            let guard = 0;
-                            while (this.running) {
-                                const v = await this.resolveUntil(n.args, scope);
-                                if (this.matchesState(v, n.args[1]))
-                                    break;
-                                try {
-                                    await this.exec(n.body, scope)
-                                } catch (e) {
-                                    if (e?.__break)
-                                        break;
-                                    if (e?.__continue) {} else
-                                        throw e
-                                }
-                                if (++guard > 60000)
-                                    throw lineError(n.line, 'repeat.until exceeded safety limit');
-                                await sleep(16)
-                            }
-                            continue
-                        }
-                        if (n.type === 'repeatUntilStatement') {
-                            let guard = 0;
-                            while (this.running) {
-                                const v = await this.resolveUntilStatement(n.args, scope, n.line);
-                                if (this.matchesState(v, n.args[1]))
-                                    break;
-                                try {
-                                    await this.exec(n.body, scope)
-                                } catch (e) {
-                                    if (e?.__break)
-                                        break;
-                                    if (e?.__continue) {} else
-                                        throw e
-                                }
-                                if (++guard > 60000)
-                                    throw lineError(n.line, 'repeat.until.statement exceeded safety limit');
-                                await sleep(16)
-                            }
-                            continue
-                        }
-                        if (n.type === 'waitUntil') {
-                            await this.until(n.args, scope);
-                            continue
-                        }
-                        if (n.type === 'for') {
-                            let a = Number(this.expr(n.parts[0], scope)) || 0
-                              , b = Number(this.expr(n.parts[1], scope)) || 0
-                              , step = n.parts[2] !== undefined ? Number(this.expr(n.parts[2], scope)) : (a <= b ? 1 : -1);
-                            if (!step)
-                                throw lineError(n.line, 'for step cannot be zero');
-                            for (let i = a; this.running && (step > 0 ? i <= b : i >= b); i += step) {
-                                scope[n.name] = i;
-                                try {
-                                    await this.exec(n.body, scope)
-                                } catch (e) {
-                                    if (e?.__break)
-                                        break;
-                                    if (e?.__continue)
-                                        continue;
-                                    throw e
-                                }
-                            }
-                            continue
-                        }
-                        if (n.type === 'foreach') {
-                            const v = this.expr(n.expr, scope);
-                            for (const item of v ?? []) {
-                                scope[n.name] = item;
-                                try {
-                                    await this.exec(n.body, scope)
-                                } catch (e) {
-                                    if (e?.__break)
-                                        break;
-                                    if (e?.__continue)
-                                        continue;
-                                    throw e
-                                }
-                            }
-                            continue
-                        }
-                    }
-                }
-            }
-
-            // Browser bridge: expose the runtime without requiring an ES module import.
-            if (typeof globalThis !== "undefined")
-                globalThis.SingulaxRuntime = SingulaxRuntime;
-        </script>
-        <script>
-            // SingulaX browser runtime is loaded by index.html before this file.
-            const $ = id => document.getElementById(id)
-              , editor = $('editor')
-              , consoleEl = $('console')
-              , canvas = $('game');
-            let project = {
-                name: 'MyProject',
-                files: {
-                    'main.sglx': '# Welcome to SingulaX\nlocal score = 0\nforever do\n  clear_screen()\n  draw_text("Score: " .. score, 24, 38, 24, "white")\n  if key_down("ArrowRight") then\n    score += 1\n  end\n  wait(0.016)\nend\n'
-                },
-                assets: {},
-                settings: {
-                    theme: 'midnight',
-                    fontSize: 15,
-                    autosave: true
-                }
-            };
-            let current = 'main.sglx'
-              , mode = 'code'
-              , runtime = null
-              , blocks = [];
-            const keys = new Set()
-              , buttons = new Set();
-            let mouse = {
-                x: 0,
-                y: 0
-            }
-              , touch = {
-                x: 0,
-                y: 0,
-                active: false
-            };
-            const keywords = ['if', 'then', 'elseif', 'else', 'end', 'while', 'do', 'forever', 'for', 'each', 'in', 'repeat', 'times', 'repeat.until', 'repeat.until.statement', 'wait', 'wait.until', 'ask', 'answer', 'result', 'get', 'find', 'list', 'push', 'pop', 'data', 'data.store', 'data.find', 'function', 'local', 'var', 'let', 'return', 'break', 'continue'];
-            const builtins = ['say', 'print', 'input', 'random', 'random_int', 'random_choice', 'abs', 'floor', 'ceil', 'round', 'sqrt', 'pow', 'sin', 'cos', 'tan', 'min', 'max', 'clamp', 'lerp', 'length', 'to_json', 'from_json', 'draw_rect', 'draw_circle', 'draw_line', 'draw_text', 'draw_image', 'draw_cube', 'clear_screen', 'key_down', 'key_pressed', 'mouse_down', 'mouse_clicked', 'mouse_x', 'mouse_y', 'touching', 'touch_x', 'touch_y', 'gamepad_connected', 'gamepad_button', 'gamepad_axis', 'asset', 'asset_url', 'play_audio', 'stop_audio', 'ask', 'answer', 'result', 'get', 'find', 'list', 'push', 'pop'];
-            function log(s) {
-                consoleEl.textContent += (consoleEl.textContent ? '\n' : '') + s;
-                consoleEl.scrollTop = consoleEl.scrollHeight
-            }
-            function esc(s='') {
-                return String(s).replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-            }
-            function save() {
-                project.files[current] = editor.value;
-                project.name = $('projectName').value || 'MyProject';
-                project.settings = {
-                    theme: $('theme')?.value || project.settings.theme,
-                    fontSize: +($('fontSize')?.value || project.settings.fontSize),
-                    autosave: $('autosave')?.checked ?? project.settings.autosave
-                };
-                localStorage.setItem('singulax-project', JSON.stringify(project));
-                if (project.settings.autosave)
-                    log('Saved locally.')
-            }
-            function renderTree() {
-                const paths = Object.keys(project.files).sort()
-                  , folders = new Set();
-                for (const f of paths) {
-                    const parts = f.split('/');
-                    for (let i = 1; i < parts.length; i++)
-                        folders.add(parts.slice(0, i).join('/'))
-                }
-                const fh = f => `<div class="folder" style="padding-left:${8 + f.split('/').length * 12}px"><span>📁 ${esc(f.split('/').at(-1))}</span><button class="mini" data-new-in-folder="${encodeURIComponent(f)}">＋</button><button class="mini" data-rename-folder="${encodeURIComponent(f)}">✎</button><button class="mini" data-delete-folder="${encodeURIComponent(f)}">×</button></div>`;
-                const ff = f => {
-                    const d = f.split('/').length - 1
-                      , n = f.split('/').at(-1);
-                    return `<div class="treeitem ${f === current ? 'active' : ''}" style="padding-left:${8 + d * 18}px"><button class="name" data-file="${encodeURIComponent(f)}">📄 ${esc(n)}</button><button class="mini" data-move="${encodeURIComponent(f)}">↗</button><button class="mini" data-rename="${encodeURIComponent(f)}">✎</button><button class="mini" data-delete="${encodeURIComponent(f)}">×</button></div>`
-                }
-                ;
-                const aa = Object.keys(project.assets).map(a => `<div class="treeitem"><button class="name" data-asset="${encodeURIComponent(a)}">🧩 ${esc(a)}</button><button class="mini" data-rename-asset="${encodeURIComponent(a)}">✎</button><button class="mini" data-delete-asset="${encodeURIComponent(a)}">×</button></div>`).join('');
-                $('tree').innerHTML = '<b>Scripts</b>' + [...folders].sort().map(fh).join('') + paths.map(ff).join('') + '<hr><b>Assets</b>' + aa
-            }
-            function render() {
-                renderTree();
-                $('projectName').value = project.name;
-                editor.value = project.files[current] ?? '';
-                $('fileTitle').textContent = current;
-                applySettings();
-                diagnose()
-            }
-            function openFile(f) {
-                project.files[current] = editor.value;
-                current = f;
-                render()
-            }
-            $('tree').onclick = e => {
-                const d = e.target.dataset;
-                if (d.file) {
-                    openFile(decodeURIComponent(d.file));
-                    return
-                }
-                if (d.rename) {
-                    const old = decodeURIComponent(d.rename)
-                      , base = old.split('/').at(-1)
-                      , n = prompt('Rename script', base);
-                    if (n && n !== base) {
-                        const to = old.includes('/') ? old.slice(0, old.lastIndexOf('/') + 1) + n : n;
-                        project.files[to] = project.files[old];
-                        delete project.files[old];
-                        if (current === old)
-                            current = to;
-                        render();
-                        save()
-                    }
-                }
-                if (d.delete) {
-                    const f = decodeURIComponent(d.delete);
-                    if (Object.keys(project.files).length === 1)
-                        return alert('Keep at least one script.');
-                    if (confirm('Delete ' + f + '?')) {
-                        delete project.files[f];
-                        if (current === f)
-                            current = Object.keys(project.files)[0];
-                        render();
-                        save()
-                    }
-                }
-                if (d.move) {
-                    const f = decodeURIComponent(d.move)
-                      , folder = prompt('Move script into folder (blank for root)', '');
-                    if (folder !== null) {
-                        const clean = folder.trim().replace(/^\/+|\/+$/g, '')
-                          , name = f.split('/').at(-1)
-                          , to = clean ? clean + '/' + name : name;
-                        if (to !== f) {
-                            project.files[to] = project.files[f];
-                            delete project.files[f];
-                            if (current === f)
-                                current = to;
-                            render();
-                            save()
-                        }
-                    }
-                }
-                if (d.newInFolder) {
-                    const folder = decodeURIComponent(d.newInFolder)
-                      , n = prompt('New script name', 'script.sglx');
-                    if (n) {
-                        let to = folder + '/' + n;
-                        if (!to.endsWith('.sglx'))
-                            to += '.sglx';
-                        project.files[to] = '';
-                        openFile(to);
-                        save()
-                    }
-                }
-                if (d.renameFolder) {
-                    const old = decodeURIComponent(d.renameFolder)
-                      , base = old.split('/').at(-1)
-                      , n = prompt('Rename folder', base);
-                    if (n && n !== base) {
-                        const parent = old.includes('/') ? old.slice(0, old.lastIndexOf('/') + 1) : ''
-                          , to = parent + n;
-                        for (const k of Object.keys(project.files))
-                            if (k === old || k.startsWith(old + '/')) {
-                                project.files[to + k.slice(old.length)] = project.files[k];
-                                delete project.files[k]
-                            }
-                        if (current === old || current.startsWith(old + '/'))
-                            current = to + current.slice(old.length);
-                        render();
-                        save()
-                    }
-                }
-                if (d.deleteFolder) {
-                    const f = decodeURIComponent(d.deleteFolder);
-                    if (confirm('Delete folder and its scripts: ' + f + '?')) {
-                        for (const k of Object.keys(project.files))
-                            if (k === f || k.startsWith(f + '/'))
-                                delete project.files[k];
-                        current = Object.keys(project.files)[0] || 'main.sglx';
-                        render();
-                        save()
-                    }
-                }
-                if (d.asset) {
-                    previewAsset(decodeURIComponent(d.asset))
-                }
-                if (d.renameAsset) {
-                    const old = decodeURIComponent(d.renameAsset)
-                      , n = prompt('Rename asset', old);
-                    if (n && n !== old) {
-                        project.assets[n] = project.assets[old];
-                        delete project.assets[old];
-                        render();
-                        save()
-                    }
-                }
-                if (d.deleteAsset) {
-                    const a = decodeURIComponent(d.deleteAsset);
-                    if (confirm('Delete ' + a + '?')) {
-                        delete project.assets[a];
-                        render();
-                        save()
-                    }
-                }
-            }
-            ;
-            $('saveBtn').onclick = save;
-            $('clearConsole').onclick = () => consoleEl.textContent = '';
-            $('newFileBtn').onclick = () => {
-                let n = prompt('File name', 'script.sglx');
-                if (!n)
-                    return;
-                if (!/\.[\w-]+$/.test(n))
-                    n += '.sglx';
-                if (n.endsWith('.sglx') === false)
-                    alert('Scripts should use .sglx');
-                project.files[n] = '';
-                openFile(n);
-                save()
-            }
-            ;
-            $('newFolderBtn').onclick = () => {
-                const n = prompt('Folder name', 'scripts');
-                if (!n)
-                    return;
-                const f = n.trim().replace(/^\/+|\/+$/g, '');
-                if (!f)
-                    return;
-                const path = f + '/main.sglx';
-                project.files[path] ??= '';
-                current = path;
-                render();
-                save()
-            }
-            ;
-            $('newBtn').onclick = () => {
-                if (confirm('Create a new project?')) {
-                    project = {
-                        name: 'MyProject',
-                        files: {
-                            'main.sglx': 'say("Hello from SingulaX!")\n'
-                        },
-                        assets: {},
-                        settings: {
-                            ...project.settings
-                        }
-                    };
-                    current = 'main.sglx';
-                    render();
-                    save()
-                }
-            }
-            ;
-            let latestFrame = []
-              , paintHandle = 0;
-            function draw(frame=[]) {
-                latestFrame = frame.slice()
-            }
-            function paintFrame() {
-                if (paintHandle)
-                    cancelAnimationFrame(paintHandle);
-                const tick = () => {
-                    if (!runtime) {
-                        paintHandle = 0;
-                        return
-                    }
-                    paintCanvas(latestFrame);
-                    paintHandle = requestAnimationFrame(tick)
-                }
-                ;
-                paintHandle = requestAnimationFrame(tick)
-            }
-            function paintCanvas(frame=[]) {
-                const c = canvas
-                  , ctx = c.getContext('2d');
-                ctx.clearRect(0, 0, c.width, c.height);
-                ctx.fillStyle = '#05060a';
-                ctx.fillRect(0, 0, c.width, c.height);
-                for (const x of frame) {
-                    ctx.fillStyle = x.fill || 'white';
-                    ctx.strokeStyle = x.fill || 'white';
-                    if (x.type === 'rect')
-                        ctx.fillRect(x.x, x.y, x.w, x.h);
-                    if (x.type === 'circle') {
-                        ctx.beginPath();
-                        ctx.arc(x.x, x.y, x.r, 0, Math.PI * 2);
-                        ctx.fill()
-                    }
-                    if (x.type === 'line') {
-                        ctx.lineWidth = x.width || 2;
-                        ctx.beginPath();
-                        ctx.moveTo(x.x1, x.y1);
-                        ctx.lineTo(x.x2, x.y2);
-                        ctx.stroke()
-                    }
-                    if (x.type === 'text') {
-                        ctx.font = (x.size || 20) + 'px sans-serif';
-                        ctx.fillText(x.text, x.x, x.y)
-                    }
-                    if (x.type === 'cube')
-                        drawCube(ctx, x);
-                    if (x.type === 'image') {
-                        const url = project.assets[x.asset];
-                        if (url) {
-                            paintCanvas.images ??= new Map();
-                            let im = paintCanvas.images.get(url);
-                            if (!im) {
-                                im = new Image();
-                                im.src = url;
-                                paintCanvas.images.set(url, im)
-                            }
-                            if (im.complete)
-                                ctx.drawImage(im, x.x, x.y, x.w || im.width, x.h || im.height)
-                        }
-                    }
-                }
-            }
-            function drawCube(ctx, x) {
-                const s = 70 * (x.size || 1)
-                  , cx = 400 + x.x * 60
-                  , cy = 240 - x.z * 40 - x.y * 60;
-                ctx.beginPath();
-                ctx.moveTo(cx - s, cy - s);
-                ctx.lineTo(cx, cy - s * .55);
-                ctx.lineTo(cx + s, cy - s);
-                ctx.lineTo(cx + s, cy);
-                ctx.lineTo(cx, cy + s * .45);
-                ctx.lineTo(cx - s, cy);
-                ctx.closePath();
-                ctx.strokeStyle = x.fill || '#7cf';
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(cx - s, cy);
-                ctx.lineTo(cx, cy + s * .45);
-                ctx.lineTo(cx + s, cy);
-                ctx.stroke()
-            }
-            async function run() {
-                save();
-                stop();
-                consoleEl.textContent = '';
-                $('diagnostics').textContent = '';
-                latestFrame = [];
-                runtime = new SingulaxRuntime({
-                    output: log,
-                    frame: draw,
-                    input: async p => {
-                        log(p);
-                        return await new Promise(resolve => {
-                            window._inputResolve = resolve;
-                            $('stdin').focus()
-                        }
-                        )
-                    }
-                    ,
-                    fileRead: async p => project.files[p] ?? project.assets[p] ?? '',
-                    fileWrite: async (p, c) => {
-                        project.files[p] = String(c);
-                        renderTree();
-                        save();
-                        return true
-                    }
-                    ,
-                    playAudio: p => playAudio(p),
-                    mode3d: v => {
-                        $('previewMode').value = v ? '3d' : '2d'
-                    }
-                });
-                runtime.setInput({
-                    keys: [...keys],
-                    buttons: [...buttons],
-                    mouse,
-                    touch,
-                    gamepads: readGamepads()
-                });
-                paintFrame();
-                try {
-                    await runtime.runProject(project);
-                    paintCanvas(latestFrame);
-                    log('[finished]');
-                    if (paintHandle)
-                        cancelAnimationFrame(paintHandle);
-                    paintHandle = 0;
-                    runtime = null
-                } catch (e) {
-                    showError(e);
-                    if (paintHandle)
-                        cancelAnimationFrame(paintHandle);
-                    paintHandle = 0;
-                    runtime = null
-                }
-            }
-            function stop() {
-                if (runtime) {
-                    runtime.running = false;
-                    runtime = null;
-                    if (paintHandle)
-                        cancelAnimationFrame(paintHandle);
-                    paintHandle = 0;
-                    paintCanvas(latestFrame);
-                    log('[stopped]')
-                }
-            }
-            $('stdin').addEventListener('keydown', e => {
-                if (e.key === 'Enter' && window._inputResolve) {
-                    const v = e.target.value;
-                    e.target.value = '';
-                    const r = window._inputResolve;
-                    window._inputResolve = null;
-                    r(v)
-                }
-            }
-            );
-            window.addEventListener('keydown', e => {
-                keys.add(e.key);
-                runtime?.setInput({
-                    keys: [e.key],
-                    pressed: [e.key]
-                });
-            }
-            );
-            window.addEventListener('keyup', e => {
-                keys.delete(e.key);
-                runtime?.setInput({
-                    up: [e.key]
-                })
-            }
-            );
-            function pointerPos(e) {
-                const r = canvas.getBoundingClientRect();
-                return {
-                    x: (e.clientX - r.left) * canvas.width / r.width,
-                    y: (e.clientY - r.top) * canvas.height / r.height
-                }
-            }
-            canvas.addEventListener('pointermove', e => {
-                mouse = pointerPos(e);
-                runtime?.setInput({
-                    mouse
-                })
-            }
-            );
-            canvas.addEventListener('pointerdown', e => {
-                mouse = pointerPos(e);
-                buttons.add('left');
-                runtime?.setInput({
-                    buttons: ['left'],
-                    clicked: ['left'],
-                    mouse
-                });
-                canvas.setPointerCapture?.(e.pointerId)
-            }
-            );
-            canvas.addEventListener('pointerup', e => {
-                buttons.delete('left');
-                runtime?.setInput({
-                    buttonup: ['left']
-                })
-            }
-            );
-            canvas.addEventListener('touchstart', e => {
-                const t = e.touches[0];
-                if (!t)
-                    return;
-                touch = {
-                    ...pointerPos(t),
-                    active: true
-                };
-                runtime?.setInput({
-                    touch,
-                    touchStart: true
-                })
-            }
-            , {
-                passive: true
-            });
-            canvas.addEventListener('touchmove', e => {
-                const t = e.touches[0];
-                if (t) {
-                    touch = {
-                        ...pointerPos(t),
-                        active: true
-                    };
-                    runtime?.setInput({
-                        touch
-                    })
-                }
-            }
-            , {
-                passive: true
-            });
-            canvas.addEventListener('touchend', () => {
-                touch.active = false;
-                runtime?.setInput({
-                    touch,
-                    touchEnd: true
-                })
-            }
-            , {
-                passive: true
-            });
-            function readGamepads() {
-                const out = {};
-                for (const g of navigator.getGamepads?.() || []) {
-                    if (g)
-                        out[g.index] = {
-                            buttons: g.buttons.map(b => b.pressed),
-                            axes: g.axes
-                        }
-                }
-                return out
-            }
-            window.addEventListener('gamepadconnected', () => runtime?.setInput({
-                gamepads: readGamepads()
-            }));
-            window.addEventListener('gamepaddisconnected', () => runtime?.setInput({
-                gamepads: readGamepads()
-            }));
-            $('touchPad').onclick = e => {
-                const dir = e.target.dataset.touch;
-                if (!dir)
-                    return;
-                const map = {
-                    up: 'ArrowUp',
-                    down: 'ArrowDown',
-                    left: 'ArrowLeft',
-                    right: 'ArrowRight'
-                };
-                runtime?.setInput({
-                    keys: [map[dir]],
-                    pressed: [map[dir]]
-                });
-                setTimeout( () => runtime?.setInput({
-                    up: [map[dir]]
-                }), 80)
-            }
-            ;
-            function parseBlocks() {
-                blocks = [];
-                for (const line of editor.value.split(/\r?\n/)) {
-                    const s = line.trim();
-                    if (!s || s.startsWith('#') || s.startsWith('--') || s.startsWith('//'))
-                        continue;
-                    let m;
-                    if (/^say\(/i.test(s))
-                        blocks.push({
-                            type: 'say',
-                            value: s.replace(/^say\((.*)\)$/i, '$1')
-                        });
-                    else if (m = /^(?:local|var|let)\s+(\w+)\s*=\s*(.*)$/.exec(s))
-                        blocks.push({
-                            type: 'var',
-                            name: m[1],
-                            value: m[2]
-                        });
-                    else if (m = /^if\s+(.+?)\s+then$/i.exec(s))
-                        blocks.push({
-                            type: 'if',
-                            cond: m[1],
-                            depth: 0
-                        });
-                    else if (m = /^elseif\s+(.+?)\s+then$/i.exec(s))
-                        blocks.push({
-                            type: 'elseif',
-                            cond: m[1]
-                        });
-                    else if (/^else$/i.test(s))
-                        blocks.push({
-                            type: 'else'
-                        });
-                    else if (m = /^while\s+(.+?)\s+do$/i.exec(s))
-                        blocks.push({
-                            type: 'while',
-                            cond: m[1]
-                        });
-                    else if (/^forever/i.test(s))
-                        blocks.push({
-                            type: 'forever'
-                        });
-                    else if (m = /^repeat\.until\s*\((.*)\)$/i.exec(s)) {
-                        const a = splitArgs(m[1]);
-                        blocks.push({
-                            type: 'repeatUntil',
-                            task: a[0] || 'task',
-                            state: a[1] || 'done'
-                        });
-                    } else if (m = /^repeat\s+(.+?)\s+times$/i.exec(s))
-                        blocks.push({
-                            type: 'repeat',
-                            count: m[1]
-                        });
-                    else if (/^wait\(/i.test(s))
-                        blocks.push({
-                            type: 'wait',
-                            value: s.replace(/^wait\((.*)\)$/i, '$1')
-                        });
-                    else if (/^random\(/i.test(s))
-                        blocks.push({
-                            type: 'random',
-                            value: s.replace(/^random\((.*)\)$/i, '$1')
-                        });
-                    else
-                        blocks.push({
-                            type: 'code',
-                            line: s
-                        })
-                }
-            }
-            function renderBlocks() {
-                const box = $('blocks');
-                box.innerHTML = '';
-                blocks.forEach( (b, i) => {
-                    const d = document.createElement('div');
-                    d.className = 'block ' + (['if', 'while', 'forever', 'repeat', 'repeatUntil', 'repeatUntilStatement'].includes(b.type) ? 'loop' : '');
-                    let body = '';
-                    if (b.type === 'say')
-                        body = `<div class="row"><b>say</b><input value="${esc(b.value)}"></div>`;
-                    else if (b.type === 'var')
-                        body = `<div class="row"><b>set local</b><input value="${esc(b.name)}"><b>to</b><input value="${esc(b.value)}"></div>`;
-                    else if (['if', 'elseif', 'while'].includes(b.type))
-                        body = `<div class="row"><b>${b.type}</b><input value="${esc(b.cond || 'true')}">${b.type !== 'elseif' ? '<b>then</b>' : ''}</div>`;
-                    else if (b.type === 'repeatUntilStatement')
-                        body = `<div class="row"><b>repeat.until.statement</b><input value="${esc(b.statement || 'true')}"><b>,</b><input value="${esc(b.state || 'true')}"></div>`;
-                    else if (b.type === 'repeatUntil')
-                        body = `<div class="row"><b>repeat.until</b><input value="${esc(b.task || 'task')}"><b>,</b><input value="${esc(b.state || 'done')}"></div>`;
-                    else if (b.type === 'repeat')
-                        body = `<div class="row"><b>repeat</b><input value="${esc(b.count || 5)}"><b>times</b></div>`;
-                    else if (b.type === 'wait')
-                        body = `<div class="row"><b>wait</b><input value="${esc(b.value || 1)}"><b>seconds</b></div>`;
-                    else if (b.type === 'random')
-                        body = `<div class="row"><b>random</b><input value="${esc(b.value || '0, 10')}"></div>`;
-                    else
-                        body = `<div class="row"><b>${b.type}</b><input value="${esc(b.line || '')}"></div>`;
-                    d.innerHTML = body + `<button class="del" data-del="${i}">×</button>`;
-                    d.querySelectorAll('input').forEach( (x, j) => x.oninput = () => {
-                        if (b.type === 'say')
-                            b.value = x.value;
-                        else if (b.type === 'var')
-                            j === 0 ? b.name = x.value : b.value = x.value;
-                        else if (b.type === 'repeatUntil')
-                            j === 0 ? b.task = x.value : b.state = x.value;
-                        else if (b.cond !== undefined)
-                            b.cond = x.value;
-                        else if (b.value !== undefined)
-                            b.value = x.value;
-                        else
-                            b.line = x.value
-                    }
-                    );
-                    box.appendChild(d)
-                }
-                );
-                box.onclick = e => {
-                    if (e.target.dataset.del) {
-                        blocks.splice(+e.target.dataset.del, 1);
-                        renderBlocks()
-                    }
-                }
-            }
-            function blocksToCode() {
-                return blocks.map(b => {
-                    if (b.type === 'say')
-                        return `say(${b.value || '"Hello!"'})`;
-                    if (b.type === 'var')
-                        return `local ${b.name || 'x'} = ${b.value || '0'}`;
-                    if (b.type === 'repeatUntil')
-                        return `repeat.until(${b.task || 'task'}, ${b.state || 'done'})`;
-                    if (b.type === 'if')
-                        return `if ${b.cond || 'true'} then`;
-                    if (b.type === 'elseif')
-                        return `elseif ${b.cond || 'true'} then`;
-                    if (b.type === 'else')
-                        return 'else';
-                    if (b.type === 'while')
-                        return `while ${b.cond || 'true'} do`;
-                    if (b.type === 'forever')
-                        return 'forever do';
-                    if (b.type === 'repeat')
-                        return `repeat ${b.count || 5} times`;
-                    if (b.type === 'wait')
-                        return `wait(${b.value || 1})`;
-                    if (b.type === 'random')
-                        return `say(random(${b.value || '0, 10'}))`;
-                    return b.line || ''
-                }
-                ).join('\n') + '\n' + (blocks.some(b => ['if', 'while', 'forever', 'repeat', 'repeatUntil', 'repeatUntilStatement'].includes(b.type)) ? 'end\n' : '')
-            }
-            $('modeBtn').onclick = () => {
-                if (mode === 'code') {
-                    project.files[current] = editor.value;
-                    parseBlocks();
-                    renderBlocks();
-                    mode = 'blocks';
-                    $('editor').parentElement.parentElement.hidden = true;
-                    $('blocksPane').hidden = false;
-                    $('modeBtn').textContent = '⌨ Code'
-                } else {
-                    editor.value = blocksToCode();
-                    project.files[current] = editor.value;
-                    mode = 'code';
-                    $('editor').parentElement.parentElement.hidden = false;
-                    $('blocksPane').hidden = true;
-                    $('modeBtn').textContent = '🧩 Blocks';
-                    diagnose()
-                }
-            }
-            ;
-            document.querySelectorAll('[data-block]').forEach(b => b.onclick = () => {
-                blocks.push({
-                    type: b.dataset.block
-                });
-                renderBlocks()
-            }
-            );
-            async function importFiles(files) {
-                for (const f of files) {
-                    const isAsset = !f.name.endsWith('.sglx') && !f.name.endsWith('.sglxproj');
-                    if (isAsset) {
-                        project.assets[f.name] = await readData(f)
-                    } else
-                        project.files[f.name] = await f.text()
-                }
-                current = Object.keys(project.files)[0] || 'main.sglx';
-                render();
-                save();
-                log('Imported ' + files.length + ' file(s).')
-            }
-            function readData(f) {
-                return new Promise( (res, rej) => {
-                    const r = new FileReader();
-                    r.onload = () => res(String(r.result));
-                    r.onerror = rej;
-                    r.readAsDataURL(f)
-                }
-                )
-            }
-            $('importBtn').onclick = () => $('importFile').click();
-            $('importFile').onchange = e => importFiles([...e.target.files]);
-            $('addAssetBtn').onclick = () => $('assetFile').click();
-            $('assetFile').onchange = e => importFiles([...e.target.files]);
-            function exportProject() {
-                const choice = prompt('Export format:\n1 = SingulaX project (.sglxproj)\n2 = Single script (.sglx)\n3 = Standalone HTML game\n4 = Project JSON backup', '1');
-                if (choice === '1') {
-                    download(JSON.stringify(project, null, 2), project.name + '.sglxproj', 'application/json')
-                } else if (choice === '2') {
-                    download(project.files[current] || '', current, 'text/plain')
-                } else if (choice === '3') {
-                    const code = project.files[current] || '';
-                    const html = `<!doctype html><meta charset="utf-8"><title>${esc(project.name)}</title><style>body{margin:0;background:#000}canvas{width:100vw;height:100vh}</style><canvas id="c" width="800" height="450"></canvas><script type="module">${standaloneRuntime()}<\/script>`;
-                    download(html, project.name + '.html', 'text/html')
-                } else
-                    download(JSON.stringify({
-                        format: 'singulax-project',
-                        version: 1,
-                        project
-                    }, null, 2), project.name + '.json', 'application/json')
-            }
-            function download(data, name, type) {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([data],{
-                    type
-                }));
-                a.download = name;
-                a.click();
-                setTimeout( () => URL.revokeObjectURL(a.href), 1000)
-            }
-            function standaloneRuntime() {
-                return `// Standalone export keeps this project self-contained. Open it from a web server for module features.\nconsole.log(${JSON.stringify(project.name)});`
-            }
-            $('exportBtn').onclick = exportProject;
-            function diagnose() {
-                const src = editor.value
-                  , ds = [];
-                const clean = src.replace(/\/\/[\s\S]*?\/\//g, m => m.split('\n').map( () => '').join('\n'));
-                const lines = clean.split(/\r?\n/);
-                let depth = 0;
-                for (let i = 0; i < lines.length; i++) {
-                    const s = lines[i].trim();
-                    if (!s || s.startsWith('#') || s.startsWith('--'))
-                        continue;
-                    if (/^(if|while|forever|repeat\s*(?:\(|.+\s+times)|for\s+.+\s+do|function\s+)/i.test(s))
-                        depth++;
-                    if (/^end\b/i.test(s)) {
-                        depth--;
-                        if (depth < 0) {
-                            ds.push({
-                                line: i + 1,
-                                msg: 'Unexpected end'
-                            });
-                            depth = 0
-                        }
-                    }
-                    if (/^(elseif|else)\b/i.test(s) && depth === 0)
-                        ds.push({
-                            line: i + 1,
-                            msg: 'Unexpected else/elseif'
-                        });
-                    if (/^(if|elseif)\b/i.test(s) && !/(then)$/i.test(s))
-                        ds.push({
-                            line: i + 1,
-                            msg: 'Conditional needs then'
-                        });
-                    if (/^while\b/i.test(s) && !/(do)$/i.test(s))
-                        ds.push({
-                            line: i + 1,
-                            msg: 'while needs do'
-                        });
-                    if (/^repeat\s*\(/i.test(s) && !/\)$/i.test(s))
-                        ds.push({
-                            line: i + 1,
-                            msg: 'repeat needs closing )'
-                        });
-                    if (/^repeat\.until(?:\.statement)?\s*\(/i.test(s) && !/\)$/i.test(s))
-                        ds.push({
-                            line: i + 1,
-                            msg: 'repeat.until needs closing )'
-                        });
-                    if (/^repeat\s+.+$/i.test(s) && !/^repeat\.until/i.test(s) && !/times$/i.test(s) && !/^repeat\s*\(/i.test(s))
-                        ds.push({
-                            line: i + 1,
-                            msg: 'repeat needs times or repeat(count)'
-                        });
-                    if (/^(wait|random|random_int|draw_rect|draw_circle|draw_text)\b/i.test(s) && !s.includes('('))
-                        ds.push({
-                            line: i + 1,
-                            msg: 'Function call needs parentheses'
-                        })
-                }
-                if (depth > 0)
-                    ds.push({
-                        line: lines.length,
-                        msg: `Missing ${depth} end${depth > 1 ? 's' : ''}`
-                    });
-                $('diagnostics').innerHTML = ds.length ? ds.map(d => `<div>● Line ${d.line}: ${esc(d.msg)}</div>`).join('') : '<span class="diagOk">✓ No basic syntax errors detected</span>';
-                $('diagCount').textContent = ds.length ? `⚠ ${ds.length}` : '✓';
-                $('gutter').innerHTML = lines.map( (_, i) => `<div>${i + 1}</div>`).join('');
-                return ds
-            }
-            function showError(e) {
-                const m = String(e.message || e)
-                  , match = m.match(/line\s+(\d+)(?:, column\s+(\d+))?/i);
-                $('diagnostics').innerHTML = `<div>● ${esc(m)}</div>`;
-                if (match) {
-                    const line = +match[1]
-                      , lines = editor.value.split(/\r?\n/);
-                    let pos = 0;
-                    for (let i = 0; i < line - 1; i++)
-                        pos += lines[i].length + 1;
-                    editor.focus();
-                    editor.setSelectionRange(pos, pos + lines[line - 1]?.length || 0)
-                }
-            }
-            editor.addEventListener('input', () => {
-                if (project.settings.autosave) {
-                    project.files[current] = editor.value;
-                    localStorage.setItem('singulax-project', JSON.stringify(project));
-                }
-                diagnose();
-                showCompletions();
-            }
-            );
-            editor.addEventListener('scroll', () => {
-                $('gutter').scrollTop = editor.scrollTop;
-            }
-            );
-            editor.addEventListener('keydown', e => {
-                if (e.key === 'Tab') {
-                    if (!$('suggestions').hidden) {
-                        acceptCompletion();
-                        e.preventDefault();
-                        return;
-                    }
-                    e.preventDefault();
-                    const a = editor.selectionStart
-                      , b = editor.selectionEnd;
-                    editor.setRangeText('  ', a, b, 'end');
-                    return;
-                }
-                if (e.key === 'Enter') {
-                    if (!$('suggestions').hidden) {
-                        acceptCompletion();
-                        e.preventDefault();
-                        return;
-                    }
-                    setTimeout(diagnose, 0);
-                }
-                if (e.key === 'ArrowDown' && !$('suggestions').hidden) {
-                    moveCompletion(1);
-                    e.preventDefault();
-                }
-                if (e.key === 'ArrowUp' && !$('suggestions').hidden) {
-                    moveCompletion(-1);
-                    e.preventDefault();
-                }
-                if (e.key === 'Escape')
-                    hideCompletions();
-                if ((e.ctrlKey || e.metaKey) && e.code === 'Space') {
-                    e.preventDefault();
-                    showCompletions(true);
-                }
-            }
-            );
-            $('settingsBtn').onclick = () => $('settings').showModal();
-            $('closeSettings').onclick = () => {
-                $('settings').close();
-                applySettings();
-                save();
-            }
-            ;
-            $('theme').onchange = applySettings;
-            $('fontSize').oninput = applySettings;
-            $('autosave').onchange = save;
-            function applySettings() {
-                const st = project.settings || {};
-                document.documentElement.style.setProperty('--code-size', (st.fontSize || 15) + 'px');
-                document.body.dataset.theme = $('theme')?.value || st.theme || 'midnight';
-            }
-            let completionItems = []
-              , completionIndex = 0;
-            function completionContext() {
-                const before = editor.value.slice(0, editor.selectionStart);
-                const word = (before.match(/[A-Za-z_]\w*$/) || [''])[0];
-                const member = before.match(/([A-Za-z_]\w*)\.([A-Za-z_]\w*)$/);
-                return {
-                    word,
-                    member
-                };
-            }
-            function showCompletions(force=false) {
-                const {word, member} = completionContext();
-                if (!force && !word && !member) {
-                    hideCompletions();
-                    return;
-                }
-                const snippets = {
-                    if: 'if condition then\n  \nend',
-                    elseif: 'elseif condition then',
-                    while: 'while condition do\n  \nend',
-                    forever: 'forever do\n  \nend',
-                    for: 'for i = 1, 10 do\n  \nend',
-                    function: 'function name()\n  \nend',
-                    repeat: 'repeat(10)\n  \nend',
-                    'repeat.until': 'repeat.until(task(), done)\n  \nend',
-                    'repeat.until.statement': 'repeat.until.statement(condition, true)\n  \nend',
-                    wait: 'wait(1)',
-                    'wait.until': 'wait.until(task, done)'
-                };
-                let pool = [];
-                if (member) {
-                    const q = member[2].toLowerCase();
-                    pool = ['state', 'value', 'length', 'x', 'y', 'z', 'health', 'position', 'ready', 'done', 'starts', 'during', 'update', 'destroy', 'play', 'stop'].filter(x => x.startsWith(q));
-                } else {
-                    const names = [...new Set([...keywords, ...builtins, ...Object.keys(project.files).map(x => x.replace(/\.sglx$/, '')), ...Object.keys(project.assets)])];
-                    pool = names.filter(x => x.toLowerCase().startsWith(word.toLowerCase()));
-                    if (snippets[word.toLowerCase()])
-                        pool = [word.toLowerCase(), ...pool.filter(x => x.toLowerCase() !== word.toLowerCase())];
-                }
-                completionItems = pool.slice(0, 12);
-                completionIndex = 0;
-                const box = $('suggestions');
-                if (!completionItems.length) {
-                    hideCompletions();
-                    return;
-                }
-                box.hidden = false;
-                box.innerHTML = completionItems.map( (x, i) => `<button class="completion ${i === 0 ? 'selected' : ''}" data-sug-index="${i}"><b>${esc(x)}</b></button>`).join('');
-                box.onclick = e => {
-                    const b = e.target.closest('[data-sug-index]');
-                    if (!b)
-                        return;
-                    completionIndex = Number(b.dataset.sugIndex);
-                    acceptCompletion();
-                }
-                ;
-                positionCompletions();
-            }
-            function positionCompletions() {
-                const box = $('suggestions');
-                box.style.left = '58px';
-                box.style.top = '36px';
-            }
-            function acceptCompletion() {
-                if (!completionItems.length)
-                    return;
-                const {word, member} = completionContext();
-                const end = editor.selectionStart;
-                const prefixLength = member ? member[2].length : word.length;
-                const chosen = completionItems[completionIndex];
-                const snippets = {
-                    if: 'if condition then\n  \nend',
-                    while: 'while condition do\n  \nend',
-                    forever: 'forever do\n  \nend',
-                    for: 'for i = 1, 10 do\n  \nend',
-                    function: 'function name()\n  \nend',
-                    repeat: 'repeat(10)\n  \nend',
-                    'repeat.until': 'repeat.until(task(), done)\n  \nend',
-                    'repeat.until.statement': 'repeat.until.statement(condition, true)\n  \nend',
-                    wait: 'wait(1)',
-                    'wait.until': 'wait.until(task, done)'
-                };
-                editor.setRangeText(snippets[chosen] || chosen, end - prefixLength, end, 'end');
-                hideCompletions();
-                editor.focus();
-                diagnose();
-            }
-            function moveCompletion(delta) {
-                if (!completionItems.length)
-                    return;
-                completionIndex = (completionIndex + delta + completionItems.length) % completionItems.length;
-                document.querySelectorAll('.completion').forEach( (b, i) => b.classList.toggle('selected', i === completionIndex));
-            }
-            function hideCompletions() {
-                $('suggestions').hidden = true;
-                completionItems = [];
-            }
-            async function previewAsset(name) {
-                const url = project.assets[name];
-                if (url?.startsWith('data:image/')) {
-                    const w = window.open();
-                    w.document.write(`<img src="${url}" style="max-width:100%">`)
-                } else if (url?.startsWith('data:audio/')) {
-                    const w = window.open();
-                    w.document.write(`<audio controls autoplay src="${url}"></audio>`)
-                } else if (url?.startsWith('data:video/')) {
-                    const w = window.open();
-                    w.document.write(`<video controls autoplay style="max-width:100%" src="${url}"></video>`)
-                } else
-                    alert(name)
-            }
-            function playAudio(name) {
-                const u = project.assets[name] || name;
-                if (u) {
-                    const a = new Audio(u);
-                    a.play().catch( () => {}
-                    )
-                }
-            }
-
-            // Studio workspace tabs and multitasking
-            const studioTabs = ['code', 'console', 'preview'];
-            function setStudioTab(name) {
-                studioTabs.forEach(n => {
-                    const el = $('window-' + n);
-                    if (el)
-                        el.classList.toggle('active-window', n === name);
-                    const b = $('tab-' + n);
-                    if (b)
-                        b.classList.toggle('active', n === name);
-                }
-                );
-                document.body.dataset.focusPanel = name;
-            }
-            function initStudioTabs() {
-                studioTabs.forEach(n => $('tab-' + n)?.addEventListener('click', () => setStudioTab(n)));
-                $('multitaskBtn')?.addEventListener('click', () => document.body.classList.toggle('multitask'));
-                $('resetLayoutBtn')?.addEventListener('click', () => {
-                    document.body.classList.remove('multitask');
-                    setStudioTab('code');
-                }
-                );
-                setStudioTab('code');
-            }
-            initStudioTabs();
-
-            const old = localStorage.getItem('singulax-project');
-            if (old)
-                try {
-                    project = JSON.parse(old);
-                    current = Object.keys(project.files)[0] || 'main.sglx'
-                } catch {}
-            $('theme').value = project.settings?.theme || 'midnight';
-            $('fontSize').value = project.settings?.fontSize || 15;
-            $('autosave').checked = project.settings?.autosave !== false;
-            render();
-            if ('serviceWorker' in navigator)
-                navigator.serviceWorker.register('sw.js').catch( () => {}
-                );
-        </script>
-    </body>
+<head>
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#090b14"
+  >
+
+  <meta
+    name="mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-capable"
+    content="yes"
+  >
+
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+  >
+
+  <meta
+    name="apple-mobile-web-app-title"
+    content="SingulaX"
+  >
+
+  <link
+    rel="manifest"
+    href="manifest.webmanifest"
+  >
+
+  <link
+    rel="icon"
+    href="singulax-icon.png"
+  >
+
+  <link
+    rel="apple-touch-icon"
+    sizes="180x180"
+    href="singulax-icon.png"
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <title>SingulaX Studio Lite</title>
+</head>
+
+<body>
+
+<header>
+
+  <div class="brand">
+    <img src="singulax-icon.png" alt="SingulaX">
+    <span>SingulaX</span>
+    <small>Studio Lite</small>
+  </div>
+
+  <input
+    id="projectName"
+    value="MyProject"
+    aria-label="Project name"
+  >
+
+  <button id="newBtn">
+    New
+  </button>
+
+  <button id="saveBtn">
+    Save
+  </button>
+
+  <button id="runBtn">
+    ▶ Run
+  </button>
+
+  <button id="stopBtn">
+    ■ Stop
+  </button>
+
+  <button id="exportBtn">
+    Export
+  </button>
+
+  <button id="importBtn">
+    Import
+  </button>
+
+  <button id="settingsBtn">
+    ⚙
+  </button>
+
+  <button id="modeBtn">
+    🧩 Blocks
+  </button>
+
+  <input
+    id="importFile"
+    type="file"
+    multiple
+    hidden
+    accept=".sglx,.sglxproj,.zip"
+  >
+
+  <input
+    id="assetFile"
+    type="file"
+    multiple
+    hidden
+  >
+
+</header>
+
+<main>
+
+  <aside>
+
+    <div class="sidehead">
+      <h3>Project</h3>
+
+      <button id="addAssetBtn">
+        ＋ Asset
+      </button>
+    </div>
+
+    <div id="tree"></div>
+
+    <button
+      id="newFileBtn"
+      class="wide"
+    >
+      ＋ .sglx file
+    </button>
+
+    <button
+      id="newFolderBtn"
+      class="wide"
+    >
+      ＋ Folder
+    </button>
+
+    <hr>
+
+    <div class="sidehint">
+      Offline-first • Code + Scratch-style Blocks • 2D + 3D
+    </div>
+
+  </aside>
+
+  <section class="work">
+
+    <div class="studioTabs">
+
+      <button
+        id="tab-code"
+        class="studioTab"
+      >
+        Code
+      </button>
+
+      <button
+        id="tab-console"
+        class="studioTab"
+      >
+        Console
+      </button>
+
+      <button
+        id="tab-preview"
+        class="studioTab"
+      >
+        Preview
+      </button>
+
+      <button
+        id="multitaskBtn"
+        class="studioTab"
+      >
+        ⊞ Multitask
+      </button>
+
+      <button
+        id="resetLayoutBtn"
+        class="studioTab"
+      >
+        Reset
+      </button>
+
+    </div>
+
+    <div
+      id="window-code"
+      class="editorWrap window"
+    >
+
+      <div class="tabs">
+
+        <span id="fileTitle">
+          main.sglx
+        </span>
+
+        <span id="diagCount"></span>
+
+      </div>
+
+      <div class="codeShell">
+
+        <div id="gutter"></div>
+
+        <textarea
+          id="editor"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+          autocorrect="off"
+        ></textarea>
+
+        <div
+          id="suggestions"
+          hidden
+        ></div>
+
+      </div>
+
+      <div id="diagnostics"></div>
+
+    </div>
+
+    <div
+      id="blocksPane"
+      hidden
+    >
+
+      <div class="blockbar">
+
+        <button data-block="say">
+          say
+        </button>
+
+        <button data-block="var">
+          variable
+        </button>
+
+        <button data-block="if">
+          if
+        </button>
+
+        <button data-block="elseif">
+          elseif
+        </button>
+
+        <button data-block="else">
+          else
+        </button>
+
+        <button data-block="while">
+          while
+        </button>
+
+        <button data-block="forever">
+          forever
+        </button>
+
+        <button data-block="repeat">
+          repeat
+        </button>
+
+        <button data-block="for">
+          for
+        </button>
+
+        <button data-block="function">
+          function
+        </button>
+
+        <button data-block="wait">
+          wait
+        </button>
+
+        <button data-block="random">
+          random
+        </button>
+
+      </div>
+
+      <div id="blocks"></div>
+
+    </div>
+
+    <div class="bottom windows">
+
+      <div
+        id="window-console"
+        class="panel consolePanel window"
+      >
+
+        <div class="panelHead">
+
+          <h3>
+            Console
+          </h3>
+
+          <div>
+            <button id="clearConsole">
+              Clear
+            </button>
+          </div>
+
+        </div>
+
+        <pre id="console"></pre>
+
+        <input
+          id="stdin"
+          placeholder="Live input: type here and press Enter"
+        >
+
+      </div>
+
+      <div
+        id="window-preview"
+        class="panel previewPanel window"
+      >
+
+        <div class="panelHead">
+
+          <h3>
+            Game Preview
+          </h3>
+
+          <select id="previewMode">
+
+            <option value="2d">
+              2D
+            </option>
+
+            <option value="3d">
+              3D
+            </option>
+
+          </select>
+
+        </div>
+
+        <canvas
+          id="game"
+          width="800"
+          height="450"
+          tabindex="0"
+        ></canvas>
+
+        <div id="touchPad">
+
+          <button data-touch="up">
+            ▲
+          </button>
+
+          <div>
+
+            <button data-touch="left">
+              ◀
+            </button>
+
+            <button data-touch="down">
+              ▼
+            </button>
+
+            <button data-touch="right">
+              ▶
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<dialog id="settings">
+
+  <h2>
+    SingulaX Studio Settings
+  </h2>
+
+  <label>
+
+    Theme
+
+    <select id="theme">
+
+      <option value="midnight">
+        Midnight
+      </option>
+
+      <option value="nebula">
+        Nebula
+      </option>
+
+      <option value="light">
+        Light
+      </option>
+
+    </select>
+
+  </label>
+
+  <label>
+
+    Font size
+
+    <input
+      id="fontSize"
+      type="range"
+      min="12"
+      max="22"
+      value="15"
+    >
+
+  </label>
+
+  <label>
+
+    <input
+      id="autosave"
+      type="checkbox"
+      checked
+    >
+
+    Auto-save locally
+
+  </label>
+
+  <button id="closeSettings">
+    Close
+  </button>
+
+</dialog>
+
+<script
+  src="runtime.js"
+></script>
+
+<script
+  src="app.js"
+></script>
+
+</body>
 </html>
