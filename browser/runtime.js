@@ -125,6 +125,12 @@ class SingulaxRuntime{
   const serialObject=(o)=>({name:o.name,type:o.type,position:worldPos(o),rotation:o.rotation,scale:o.scale,size:o.size,visible:o.visible,material:{...o.material,color:o.material.color},mesh:o.mesh?{name:o.mesh.name,vertices:o.mesh.vertices.map(v=>[v.x,v.y,v.z]),faces:o.mesh.faces.map(f=>f.slice())}:null});
   const serializeScene=sc=>({name:sc.name,ambient:sc.ambient,background:sc.background,fog:sc.fog,camera:(sc.activeCamera||sc.cameras[0])?(()=>{const c=sc.activeCamera||sc.cameras[0];return {position:c.position,rotation:c.rotation,fov:c.fovValue,near:c.near,far:c.far,sensitivity:c.sensitivity}})():null,lights:sc.lights.filter(l=>l.visible).map(l=>({position:worldPos(l),rotation:l.rotation,type:l.lightType,intensity:l.intensity,range:l.range,color:l.color})),objects:sc.objects.filter(o=>o.visible&&o.type!=='camera'&&o.type!=='light').map(serialObject)});
   const raycast3d=(origin,direction,maxDistance=1000)=>{if(!active3d)return null;const o=v3(origin.x,origin.y,origin.z),d=vnorm(direction);let best=+maxDistance||1000,hit=null;for(const obj of active3d.objects){if(!obj.visible||!obj.collider||obj.type==='camera'||obj.type==='light')continue;const c=worldPos(obj),r=Math.max(.01,(obj.collider.size||obj.size||1)*Math.max(obj.scale.x,obj.scale.y,obj.scale.z)*.866),oc=vsub(o,c),b=2*(oc.x*d.x+oc.y*d.y+oc.z*d.z),cc=oc.x*oc.x+oc.y*oc.y+oc.z*oc.z-r*r,disc=b*b-4*cc;if(disc<0)continue;const t=(-b-Math.sqrt(disc))/2;if(t>=0&&t<best){best=t;hit={name:obj.name,distance:t,point:vadd(o,vmul(d,t))}}}return hit};
+  E.controls={all:()=>this.host.controls?.('all'),reset:()=>this.host.controls?.('reset'),only:(...names)=>this.host.controls?.('only',...names),show:(...names)=>this.host.controls?.('show',...names),hide:(...names)=>this.host.controls?.('hide',...names)};
+  E.controls_all=()=>this.host.controls?.('all');
+  E.controls_reset=()=>this.host.controls?.('reset');
+  E.controls_only=(...names)=>this.host.controls?.('only',...names);
+  E.controls_show=(...names)=>this.host.controls?.('show',...names);
+  E.controls_hide=(...names)=>this.host.controls?.('hide',...names);
   E.scene3d=api3d.scene;
   E.object3d=api3d.object;
   E.camera3d=api3d.camera;
