@@ -14,12 +14,12 @@ function stripDoubleSlashComments(src){
  return out;
 }
 class SingulaxRuntime{
- constructor(host={}){this.host=host;this.env=Object.create(null);this.running=false;this.keys=new Set();this.buttons=new Set();this.mouse={x:0,y:0};this.touch={x:0,y:0,active:false};this.gamepads={};this.clicked=new Set();this.frame=[];this.assets=Object.create(null);this.scopeStack=[];this.output=[];this.clock=0;
+ constructor(host={}){this.host=host;this.env=Object.create(null);this.running=false;this.keys=new Set();this.buttons=new Set();this.mouse={x:0,y:0};this.mouseDelta={x:0,y:0};this.touch={x:0,y:0,active:false};this.gamepads={};this.clicked=new Set();this.frame=[];this.assets=Object.create(null);this.scopeStack=[];this.output=[];this.clock=0;
   const E=this.env;
   E.say=(...a)=>this.say(a.map(v=>this.format(v)).join(' '));E.print=E.say;E.log=E.say;
   E.input=async p=>this.host.input?this.host.input(String(p??'')):globalThis.prompt?.(String(p??''))??'';
   E.key_down=k=>this.keys.has(String(k));E.key_pressed=k=>{const s=String(k);const v=this.clicked.has('key:'+s);this.clicked.delete('key:'+s);return v};
-  E.mouse_down=b=>this.buttons.has(String(b||'left'));E.mouse_clicked=b=>{const s='mouse:'+String(b||'left');const v=this.clicked.has(s);this.clicked.delete(s);return v};E.mouse_x=()=>this.mouse.x;E.mouse_y=()=>this.mouse.y;
+  E.mouse_down=b=>this.buttons.has(String(b||'left'));E.mouse_clicked=b=>{const s='mouse:'+String(b||'left');const v=this.clicked.has(s);this.clicked.delete(s);return v};E.mouse_x=()=>this.mouse.x;E.mouse_y=()=>this.mouse.y;E.mouse_dx=()=>{const v=this.mouseDelta.x;this.mouseDelta.x=0;return v};E.mouse_dy=()=>{const v=this.mouseDelta.y;this.mouseDelta.y=0;return v};E.mouse_lock=()=>this.host.mouseLock?.('lock');E.mouse_unlock=()=>this.host.mouseLock?.('unlock');E.mouse_locked=()=>!!this.host.mouseLock?.('state');
   E.touching=()=>this.touch.active;E.touch_x=()=>this.touch.x;E.touch_y=()=>this.touch.y;E.touch_started=()=>this.clicked.has('touch:start');E.touch_ended=()=>this.clicked.has('touch:end');
   E.gamepad_connected=i=>!!this.gamepads[i||0];E.gamepad_button=(i,b)=>!!this.gamepads[i||0]?.buttons?.[b];E.gamepad_axis=(i,a)=>this.gamepads[i||0]?.axes?.[a]||0;
   E.clear_screen=()=>{this.frame=[];this.emitFrame()};
@@ -169,7 +169,7 @@ class SingulaxRuntime{
  format(v){if(typeof v==='string')return v;try{return JSON.stringify(v)}catch{return String(v)}}
  say(s){this.output.push(String(s));this.host.output?.(String(s))}
  emitFrame(){this.host.frame?.(this.frame.slice())}
- setInput(i={}){for(const k of i.keys||[])this.keys.add(String(k));for(const k of i.up||[])this.keys.delete(String(k));for(const k of i.pressed||[])this.clicked.add('key:'+String(k));if(i.mouse)this.mouse=i.mouse;for(const b of i.buttons||[])this.buttons.add(String(b));for(const b of i.buttonup||[])this.buttons.delete(String(b));for(const b of i.clicked||[])this.clicked.add('mouse:'+String(b));if(i.touch)this.touch=i.touch;if(i.touchStart)this.clicked.add('touch:start');if(i.touchEnd)this.clicked.add('touch:end');if(i.gamepads)this.gamepads=i.gamepads}
+ setInput(i={}){for(const k of i.keys||[])this.keys.add(String(k));for(const k of i.up||[])this.keys.delete(String(k));for(const k of i.pressed||[])this.clicked.add('key:'+String(k));if(i.mouse)this.mouse=i.mouse;if(i.mouseDelta){this.mouseDelta.x+=+i.mouseDelta.x||0;this.mouseDelta.y+=+i.mouseDelta.y||0;}for(const b of i.buttons||[])this.buttons.add(String(b));for(const b of i.buttonup||[])this.buttons.delete(String(b));for(const b of i.clicked||[])this.clicked.add('mouse:'+String(b));if(i.touch)this.touch=i.touch;if(i.touchStart)this.clicked.add('touch:start');if(i.touchEnd)this.clicked.add('touch:end');if(i.gamepads)this.gamepads=i.gamepads}
  async run(source,options={}){this.running=true;this.output=[];this.frame=[];try{const program=this.parse(source);return await this.exec(program,this.env)}catch(e){this.host.error?.(e);this.say('Error: '+e.message);throw e}finally{this.running=false}}
  async runProject(project,{entry=null}={}){this.running=true;this.assets=project.assets||{};const names=Object.keys(project.files||{}).filter(n=>n.endsWith('.sglx'));const chosen=entry?names.filter(n=>n===entry):names;let source='';for(const n of chosen)source+=`\n# FILE ${n}\n${project.files[n]}\n`;return this.run(source)}
  parse(src){const raw=stripDoubleSlashComments(String(src).replace(/\r/g,'' )).split('\n');const lines=raw.map((s,i)=>({s:s.trim(),n:i+1,raw:s})).filter(x=>x.s&&!x.s.startsWith('#')&&!x.s.startsWith('--'));const root=[];const stack=[root],frames=[];
