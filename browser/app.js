@@ -136,7 +136,38 @@ const builtins = [
   'find',
   'list',
   'push',
-  'pop'
+  'pop',
+  'scene3d',
+  'object3d',
+  'camera3d',
+  'light3d',
+  'material3d',
+  'mesh3d',
+  'render3d',
+  'update3d',
+  'raycast3d',
+  'add3d',
+  'remove3d',
+  'position3d',
+  'rotation3d',
+  'scale3d',
+  'move3d',
+  'rotate3d',
+  'material3d_set',
+  'collider3d',
+  'camera3d_position',
+  'camera3d_rotation',
+  'camera3d_fov',
+  'light3d_position',
+  'light3d_rotation',
+  'light3d_intensity',
+  'light3d_color',
+  'scene3d_ambient',
+  'scene3d_background',
+  'scene3d_fog',
+  'mesh3d_vertex',
+  'mesh3d_face',
+  'mesh3d_use'
 ];
 
 function log(s) {
@@ -732,7 +763,68 @@ function paintFrame() {
     requestAnimationFrame(tick);
 }
 
+let sglx3dGL = null;
+
+function sglx3dColor(v) {
+  const names = {
+    white:[1,1,1], black:[0,0,0], red:[1,0,0], green:[0,1,0], blue:[0,0,1],
+    cyan:[0,1,1], magenta:[1,0,1], yellow:[1,1,0], orange:[1,.5,0], purple:[.55,0,1], violet:[.45,0,1], gray:[.5,.5,.5], grey:[.5,.5,.5]
+  };
+  const str=String(v||'white').toLowerCase().trim();
+  if(names[str]) return names[str];
+  const h=str.replace('#','');
+  if(/^[0-9a-f]{6}$/.test(h)) return [parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255];
+  if(/^[0-9a-f]{3}$/.test(h)) return [parseInt(h[0]+h[0],16)/255,parseInt(h[1]+h[1],16)/255,parseInt(h[2]+h[2],16)/255];
+  return [1,1,1];
+}
+function sglx3dMatMul(a,b){const o=new Float32Array(16);for(let r=0;r<4;r++)for(let c=0;c<4;c++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
+function sglx3dIdentity(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])}
+function sglx3dTranslate(x,y,z){const m=sglx3dIdentity();m[12]=x;m[13]=y;m[14]=z;return m}
+function sglx3dScale(x,y,z){const m=sglx3dIdentity();m[0]=x;m[5]=y;m[10]=z;return m}
+function sglx3dRx(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([1,0,0,0,0,c,s,0,0,-s,c,0,0,0,0,1])}
+function sglx3dRy(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,0,-s,0,0,1,0,0,s,0,c,0,0,0,0,1])}
+function sglx3dRz(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,s,0,0,-s,c,0,0,0,0,1,0,0,0,0,1])}
+function sglx3dModel(o){let m=sglx3dTranslate(o.position[0],o.position[1],o.position[2]);m=sglx3dMatMul(m,sglx3dRy(o.rotation[1]));m=sglx3dMatMul(m,sglx3dRx(o.rotation[0]));m=sglx3dMatMul(m,sglx3dRz(o.rotation[2]));m=sglx3dMatMul(m,sglx3dScale(o.scale[0],o.scale[1],o.scale[2]));return m}
+function sglx3dPerspective(fov,aspect,near,far){const f=1/Math.tan(fov*Math.PI/360),nf=1/(near-far),m=new Float32Array(16);m[0]=f/aspect;m[5]=f;m[10]=(far+near)*nf;m[11]=-1;m[14]=2*far*near*nf;return m}
+function sglx3dLookAt(eye,rot){const cp=Math.cos(rot[0]),sp=Math.sin(rot[0]),cy=Math.cos(rot[1]),sy=Math.sin(rot[1]);let fx=sy*cp,fy=-sp,fz=cy*cp;const fl=Math.hypot(fx,fy,fz)||1;fx/=fl;fy/=fl;fz/=fl;let rx=fz,ry=0,rz=-fx;const rl=Math.hypot(rx,rz)||1;rx/=rl;rz/=rl;const ux=ry*fz-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy-ry*fx;return new Float32Array([rx,ux,-fx,0,ry,uy,-fy,0,rz,uz,-fz,0,-(rx*eye[0]+ry*eye[1]+rz*eye[2]),-(ux*eye[0]+uy*eye[1]+uz*eye[2]),fx*eye[0]+fy*eye[1]+fz*eye[2],1])}
+function sglx3dGeometry(type){
+  const out=[];const tri=(a,b,c,na,nb,nc)=>{for(const [p,n] of [[a,na],[b,nb],[c,nc]])out.push(p[0],p[1],p[2],n[0],n[1],n[2])};
+  if(type==='plane'){tri([-1,0,-1],[1,0,-1],[1,0,1],[0,1,0],[0,1,0],[0,1,0]);tri([-1,0,-1],[1,0,1],[-1,0,1],[0,1,0],[0,1,0],[0,1,0]);return new Float32Array(out)}
+  if(type==='sphere'){
+    const seg=24,rings=16;
+    for(let y=0;y<rings;y++){const p0=(y/rings-.5)*Math.PI,p1=((y+1)/rings-.5)*Math.PI;for(let x=0;x<seg;x++){const u0=x/seg*Math.PI*2,u1=(x+1)/seg*Math.PI*2;const mk=(p,u)=>[Math.cos(p)*Math.cos(u),Math.sin(p),Math.cos(p)*Math.sin(u)];const a=mk(p0,u0),b=mk(p0,u1),c=mk(p1,u1),d=mk(p1,u0);tri(a,b,c,a,b,c);tri(a,c,d,a,c,d)}}return new Float32Array(out)
+  }
+  if(type==='cylinder'){
+    const seg=24;for(let i=0;i<seg;i++){const a=i/seg*Math.PI*2,b=(i+1)/seg*Math.PI*2;const p0=[Math.cos(a),-1,Math.sin(a)],p1=[Math.cos(b),-1,Math.sin(b)],p2=[Math.cos(b),1,Math.sin(b)],p3=[Math.cos(a),1,Math.sin(a)],n0=[Math.cos(a),0,Math.sin(a)],n1=[Math.cos(b),0,Math.sin(b)];tri(p0,p1,p2,n0,n1,n1);tri(p0,p2,p3,n0,n1,n0)}return new Float32Array(out)
+  }
+  const p=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  const f=[[0,1,2,3,[0,0,-1]],[5,4,7,6,[0,0,1]],[4,0,3,7,[-1,0,0]],[1,5,6,2,[1,0,0]],[3,2,6,7,[0,1,0]],[4,5,1,0,[0,-1,0]]];
+  for(const q of f){const n=q[4];tri(p[q[0]],p[q[1]],p[q[2]],n,n,n);tri(p[q[0]],p[q[2]],p[q[3]],n,n,n)}return new Float32Array(out)
+}
+function sglx3dInit(){
+  if(sglx3dGL)return sglx3dGL;
+  const gc=document.createElement('canvas');gc.id='singulax-3d-canvas';gc.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:5;display:none;pointer-events:none;';const parent=canvas.parentElement||document.body;if(getComputedStyle(parent).position==='static')parent.style.position='relative';parent.appendChild(gc);const gl=gc.getContext('webgl',{antialias:true,alpha:false})||gc.getContext('experimental-webgl');if(!gl)return null;
+  const vs=gl.createShader(gl.VERTEX_SHADER);gl.shaderSource(vs,'attribute vec3 aPosition;attribute vec3 aNormal;uniform mat4 uModel;uniform mat4 uView;uniform mat4 uProj;varying vec3 vNormal;varying vec3 vWorld;void main(){vec4 w=uModel*vec4(aPosition,1.0);vWorld=w.xyz;vNormal=mat3(uModel)*aNormal;gl_Position=uProj*uView*w;}');gl.compileShader(vs);
+  const fs=gl.createShader(gl.FRAGMENT_SHADER);gl.shaderSource(fs,'precision mediump float;varying vec3 vNormal;varying vec3 vWorld;uniform vec3 uColor;uniform float uAmbient;uniform vec3 uLightDir[8];uniform vec3 uLightColor[8];uniform float uLightIntensity[8];uniform int uLightCount;uniform vec3 uFogColor;uniform float uFogDensity;uniform bool uFog;void main(){vec3 n=normalize(vNormal);vec3 c=uColor*(uAmbient+0.05);for(int i=0;i<8;i++){if(i>=uLightCount)break;vec3 l=normalize(-uLightDir[i]);float d=max(dot(n,l),0.0);c+=uColor*uLightColor[i]*d*uLightIntensity[i];}if(uFog){float f=1.0-exp(-uFogDensity*uFogDensity*dot(vWorld,vWorld));c=mix(c,uFogColor,clamp(f,0.0,1.0));}gl_FragColor=vec4(c,1.0);}');gl.compileShader(fs);
+  const prog=gl.createProgram();gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);gl.useProgram(prog);
+  const loc={pos:gl.getAttribLocation(prog,'aPosition'),normal:gl.getAttribLocation(prog,'aNormal'),model:gl.getUniformLocation(prog,'uModel'),view:gl.getUniformLocation(prog,'uView'),proj:gl.getUniformLocation(prog,'uProj'),color:gl.getUniformLocation(prog,'uColor'),ambient:gl.getUniformLocation(prog,'uAmbient'),lightDir:gl.getUniformLocation(prog,'uLightDir'),lightColor:gl.getUniformLocation(prog,'uLightColor'),lightIntensity:gl.getUniformLocation(prog,'uLightIntensity'),lightCount:gl.getUniformLocation(prog,'uLightCount'),fogColor:gl.getUniformLocation(prog,'uFogColor'),fogDensity:gl.getUniformLocation(prog,'uFogDensity'),fog:gl.getUniformLocation(prog,'uFog')};
+  const buffers=new Map();
+  sglx3dGL={canvas:gc,gl,prog,loc,buffers,geometry:type=>{if(!buffers.has(type)){const data=sglx3dGeometry(type);const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);buffers.set(type,{b,count:data.length/6});}return buffers.get(type)}};return sglx3dGL;
+}
+function sglx3dRender(scene){
+  const r=sglx3dInit();if(!r)return;const {gl,prog,loc}=r;const w=canvas.clientWidth||canvas.width,h=canvas.clientHeight||canvas.height;r.canvas.width=canvas.width;r.canvas.height=canvas.height;r.canvas.style.width=canvas.clientWidth+'px';r.canvas.style.height=canvas.clientHeight+'px';r.canvas.style.display='block';gl.viewport(0,0,r.canvas.width,r.canvas.height);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);const bg=sglx3dColor(scene.background);gl.clearColor(bg[0],bg[1],bg[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);
+  const cam=scene.camera||{position:[0,1.5,6],rotation:[0,0,0],fov:75,near:.05,far:1000};const view=sglx3dLookAt(cam.position,cam.rotation),proj=sglx3dPerspective(cam.fov,(w||1)/(h||1),cam.near,cam.far);gl.uniformMatrix4fv(loc.view,false,view);gl.uniformMatrix4fv(loc.proj,false,proj);gl.uniform1f(loc.ambient,scene.ambient||0);
+  const dirs=[],cols=[],ints=[];(scene.lights||[]).slice(0,8).forEach(l=>{const rr=l.rotation||[0,0,0],cp=Math.cos(rr[0]),sp=Math.sin(rr[0]),cy=Math.cos(rr[1]),sy=Math.sin(rr[1]);dirs.push(sy*cp,-sp,cy*cp);const c=sglx3dColor(l.color);cols.push(...c);ints.push(+l.intensity||1)});while(dirs.length<24)dirs.push(0,-1,0);while(cols.length<24)cols.push(1,1,1);while(ints.length<8)ints.push(0);gl.uniform3fv(loc.lightDir,new Float32Array(dirs));gl.uniform3fv(loc.lightColor,new Float32Array(cols));gl.uniform1fv(loc.lightIntensity,new Float32Array(ints));gl.uniform1i(loc.lightCount,Math.min(8,(scene.lights||[]).length));const fc=sglx3dColor(scene.fog?.color||'black');gl.uniform3fv(loc.fogColor,new Float32Array(fc));gl.uniform1f(loc.fogDensity,scene.fog?.density||0);gl.uniform1i(loc.fog,scene.fog?.enabled?1:0);
+  for(const o of scene.objects||[]){const data=o.mesh;let type=o.type;if(!data&&(type==='box'))type='cube';let geo;if(data&&data.vertices?.length&&data.faces?.length){const verts=[];for(const f of data.faces){for(let i=1;i<f.length-1;i++){for(const idx of [f[0],f[i],f[i+1]]){const q=data.vertices[idx]||[0,0,0];verts.push(q[0],q[1],q[2],0,1,0);}}}const key='mesh:'+data.name;if(!r.buffers.has(key)){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);r.buffers.set(key,{b,count:verts.length/6})}geo=r.buffers.get(key)}else{geo=r.geometry(type==='sphere'?'sphere':type==='cylinder'?'cylinder':type==='plane'?'plane':'cube')}const m=sglx3dModel(o);gl.uniformMatrix4fv(loc.model,false,m);const c=sglx3dColor(o.material?.color||'white');gl.uniform3fv(loc.color,new Float32Array(c));gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.enableVertexAttribArray(loc.pos);gl.vertexAttribPointer(loc.pos,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(loc.normal);gl.vertexAttribPointer(loc.normal,3,gl.FLOAT,false,24,12);gl.drawArrays(gl.TRIANGLES,0,geo.count)}
+}
+
 function paintCanvas(frame = []) {
+  const threeFrame = frame.find(x => x.type === '3dscene');
+  if (threeFrame) {
+    sglx3dRender(threeFrame.scene);
+  } else if (sglx3dGL) {
+    sglx3dGL.canvas.style.display = 'none';
+  }
   const c = canvas;
   const ctx = c.getContext('2d');
 
@@ -753,11 +845,6 @@ function paintCanvas(frame = []) {
   );
 
   for (const x of frame) {
-    if (x.type === 'fps') {
-      drawFPS(ctx, x.state);
-      continue;
-    }
-
     ctx.fillStyle =
       x.fill || 'white';
 
@@ -858,124 +945,6 @@ function paintCanvas(frame = []) {
       }
     }
   }
-}
-
-function drawFPS(ctx, f) {
-  const W = canvas.width, H = canvas.height;
-  const maze = f?.maze || [];
-  if (!maze.length) return;
-  const mw = maze[0].length, mh = maze.length;
-  const px = +f.px || 1.5, py = +f.py || 1.5, pa = +f.pa || 0;
-  const FOV = Math.PI * 0.42;
-  const rays = Math.max(180, Math.floor(W * 0.75));
-  const maxDist = 24;
-  const depth = new Float32Array(W);
-
-  ctx.save();
-  ctx.fillStyle = '#02030a';
-  ctx.fillRect(0, 0, W, H / 2);
-  ctx.fillStyle = '#090b12';
-  ctx.fillRect(0, H / 2, W, H / 2);
-
-  // Ray-cast the maze. The flashlight determines how much of the corridor is visible.
-  for (let i = 0; i < rays; i++) {
-    const sx = Math.floor(i * W / rays);
-    const rayA = pa - FOV / 2 + (i / Math.max(1, rays - 1)) * FOV;
-    const rx = Math.cos(rayA), ry = Math.sin(rayA);
-    let d = 0, hit = false;
-    while (d < maxDist) {
-      d += 0.025;
-      const tx = Math.floor(px + rx * d), ty = Math.floor(py + ry * d);
-      if (tx < 0 || ty < 0 || tx >= mw || ty >= mh || maze[ty][tx] === '#') { hit = true; break; }
-    }
-    const corrected = Math.max(0.05, d * Math.cos(rayA - pa));
-    const wallH = Math.min(H * 1.8, H * 0.92 / corrected);
-    const top = (H - wallH) / 2;
-    const beamAngle = Math.abs(rayA - pa);
-    const beam = f.flashlight ? Math.max(0, 1 - beamAngle / (FOV * 0.58)) : 0.12;
-    const distanceLight = f.flashlight ? Math.max(0.05, 1 - corrected / 13) : Math.max(0.015, 0.13 - corrected / 70);
-    const light = Math.min(1, beam * distanceLight * 1.25);
-    const shade = Math.max(8, Math.floor(14 + light * 150));
-    ctx.fillStyle = `rgb(${shade},${shade + 2},${Math.min(255, shade + 10)})`;
-    ctx.fillRect(sx, top, Math.ceil(W / rays) + 1, wallH);
-    depth[sx] = corrected;
-  }
-
-  // Soft darkness outside the flashlight beam.
-  if (f.flashlight) {
-    const g = ctx.createRadialGradient(W / 2, H * 0.52, H * 0.08, W / 2, H * 0.52, W * 0.72);
-    g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(0.48, 'rgba(0,0,0,0.04)');
-    g.addColorStop(1, 'rgba(0,0,0,0.78)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-  } else {
-    ctx.fillStyle = 'rgba(0,0,0,0.72)';
-    ctx.fillRect(0, 0, W, H);
-  }
-
-  // Hunters.
-  const enemies = (f.enemies || []).map(en => {
-    const dx = en.x - px, dy = en.y - py;
-    const dist = Math.hypot(dx, dy);
-    let ang = Math.atan2(dy, dx) - pa;
-    while (ang > Math.PI) ang -= Math.PI * 2;
-    while (ang < -Math.PI) ang += Math.PI * 2;
-    return { en, dist, ang };
-  }).filter(o => Math.abs(o.ang) < FOV / 2 + 0.12 && o.dist < maxDist).sort((a,b) => b.dist - a.dist);
-
-  for (const o of enemies) {
-    const screenX = W / 2 + (o.ang / FOV) * W;
-    const col = Math.max(0, Math.min(W - 1, Math.floor(screenX)));
-    if (depth[col] && o.dist > depth[col] + 0.15) continue;
-    const visibility = f.flashlight ? Math.max(0, 1 - Math.abs(o.ang) / (FOV * 0.62)) * Math.max(0.05, 1 - o.dist / 14) : 0;
-    if (visibility <= 0.04) continue;
-    const size = Math.min(H * 0.72, H * 0.72 / Math.max(0.35, o.dist));
-    const y = H / 2 + H * 0.08;
-    ctx.globalAlpha = Math.min(1, visibility * 1.4);
-    ctx.fillStyle = '#7d1020';
-    ctx.beginPath();
-    ctx.ellipse(screenX, y, size * 0.25, size * 0.48, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#d9e6ef';
-    ctx.beginPath(); ctx.arc(screenX - size * 0.09, y - size * 0.22, Math.max(2, size * 0.045), 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(screenX + size * 0.09, y - size * 0.22, Math.max(2, size * 0.045), 0, Math.PI * 2); ctx.fill();
-    ctx.globalAlpha = 1;
-  }
-
-  // Crosshair.
-  ctx.strokeStyle = 'rgba(255,255,255,0.82)';
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(W/2-8,H/2); ctx.lineTo(W/2+8,H/2); ctx.moveTo(W/2,H/2-8); ctx.lineTo(W/2,H/2+8); ctx.stroke();
-
-  // HUD.
-  const health = Math.max(0, Math.floor(f.health ?? 100));
-  const minutes = Math.floor((f.elapsed || 0) / 60);
-  const seconds = Math.floor(f.elapsed || 0) % 60;
-  ctx.font = 'bold 18px system-ui, sans-serif';
-  ctx.fillStyle = '#fff';
-  ctx.fillText(`HEALTH ${health}`, 18, 28);
-  ctx.fillText(`HUNTERS ${(f.enemies || []).length}`, 18, 51);
-  ctx.fillText(`${minutes}:${String(seconds).padStart(2,'0')} / 10:00`, W - 118, 28);
-  ctx.fillStyle = f.flashlight ? '#fff' : '#666';
-  ctx.fillText(`FLASHLIGHT ${f.flashlight ? 'ON' : 'OFF'}`, W - 190, 51);
-  if (f.sprinting) {
-    ctx.fillStyle = '#fff';
-    ctx.fillText('SPRINT', W/2 - 32, H - 20);
-  }
-
-  if (f.dead || f.won) {
-    ctx.fillStyle = 'rgba(0,0,0,0.62)';
-    ctx.fillRect(0, 0, W, H);
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 38px system-ui, sans-serif';
-    ctx.fillStyle = '#fff';
-    ctx.fillText(f.won ? '10 MINUTES SURVIVED' : 'RUN ENDED', W/2, H/2);
-    ctx.font = '18px system-ui, sans-serif';
-    ctx.fillText(f.won ? 'You made it through the maze.' : 'The hunters caught you.', W/2, H/2 + 34);
-    ctx.textAlign = 'left';
-  }
-  ctx.restore();
 }
 
 function drawCube(ctx, x) {
@@ -1497,12 +1466,12 @@ function setupMobileControls(){
     .sglx-btn{position:absolute;width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,.75);background:rgba(45,55,85,.88);color:white;font-weight:800;font-size:18px;box-shadow:0 5px 16px rgba(0,0,0,.35);margin:0}
     .sglx-btn:active,.sglx-btn.pressed{transform:scale(.94);background:rgba(80,130,210,.95)}
     .sglx-dpad button:active,.sglx-dpad button.pressed,.sglx-bumper:active,.sglx-bumper.pressed,.sglx-trigger:active,.sglx-trigger.pressed{background:rgba(80,130,210,.95);transform:scale(.94)}
-    #sglxAB{right:18px;bottom:174px;width:132px;height:132px;z-index:30}
+    #sglxAB{right:18px;bottom:174px;width:132px;height:132px}
     #sglxAB [data-control="y"]{left:38px;top:0}
     #sglxAB [data-control="x"]{left:0;top:38px}
     #sglxAB [data-control="b"]{right:0;top:38px}
     #sglxAB [data-control="a"]{left:38px;bottom:0}
-    #sglxXY{display:none!important}
+    #sglxXY{display:none;right:18px;bottom:174px;width:132px;height:132px}
     #sglxXY [data-control="y"]{left:38px;top:0}
     #sglxXY [data-control="x"]{left:0;top:38px}
     .sglx-dpad{left:18px;bottom:174px;width:144px;height:144px}
@@ -1519,10 +1488,10 @@ function setupMobileControls(){
     @media(max-width:420px){
       .sglx-stick{width:96px;height:96px}.sglx-knob{width:46px;height:46px}
       #sglxLeftStick{left:12px;bottom:14px} #sglxRightStick{right:12px;bottom:14px}
-      .sglx-buttons,#sglxAB{width:116px;height:116px;bottom:150px}
-      #sglxAB [data-control="y"]{left:30px}
-      #sglxAB [data-control="x"]{top:30px}
-      #sglxAB [data-control="b"]{top:30px}
+      .sglx-buttons,#sglxAB,#sglxXY{width:116px;height:116px;bottom:150px}
+      #sglxAB [data-control="y"],#sglxXY [data-control="y"]{left:30px}
+      #sglxAB [data-control="x"],#sglxXY [data-control="x"]{top:30px}
+      #sglxAB [data-control="b"],#sglxXY [data-control="b"]{top:30px}
       #sglxAB [data-control="a"]{left:30px}
       .sglx-dpad{left:12px;bottom:150px;transform:scale(.86);transform-origin:bottom left}
       .sglx-bumpers,.sglx-triggers{left:12px;right:12px}
@@ -1560,22 +1529,14 @@ function setupMobileControls(){
   const ab=document.createElement('div');ab.id='sglxAB';ab.className='sglx-control sglx-buttons';
   const xy=document.createElement('div');xy.id='sglxXY';xy.className='sglx-control sglx-buttons';
   function addButton(parent,n,label){const b=document.createElement('button');b.className='sglx-btn';b.textContent=label;b.dataset.control=n;const normal='rgba(45,55,85,.88)', held='rgba(80,130,210,.95)';const down=e=>{e.preventDefault();e.stopPropagation();b.setPointerCapture?.(e.pointerId);b.classList.add('pressed');b.style.setProperty('background',held,'important');setButton(n,true)};const up=e=>{e.preventDefault();e.stopPropagation();b.classList.remove('pressed');b.style.setProperty('background',normal,'important');setButton(n,false)};b.onpointerdown=down;b.onpointerup=up;b.onpointercancel=up;b.onlostpointercapture=()=>{if(b.classList.contains('pressed'))up(new Event('pointerup'))};parent.appendChild(b)}
-  addButton(ab,'a','A');addButton(ab,'b','B');addButton(ab,'x','X');addButton(ab,'y','Y');root.append(ab);
-  xy.remove();
+  addButton(ab,'a','A');addButton(ab,'b','B');addButton(xy,'x','X');addButton(xy,'y','Y');root.append(ab,xy);
 
   const dp=document.createElement('div');dp.id='sglxDpad';dp.className='sglx-control sglx-dpad';[['up','▲'],['left','◀'],['down','▼'],['right','▶']].forEach(([n,l])=>{const b=document.createElement('button');b.className=n;b.textContent=l;const key={up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'}[n];const down=e=>{e.preventDefault();b.classList.add('pressed');keys.add(key);runtime?.setInput({keys:[key],pressed:[key]})};const up=e=>{e.preventDefault();b.classList.remove('pressed');keys.delete(key);runtime?.setInput({up:[key]})};b.onpointerdown=down;b.onpointerup=up;b.onpointercancel=up;b.onpointerleave=e=>{if(b.classList.contains('pressed'))up(e)};dp.appendChild(b)});root.appendChild(dp);
 
   const bump=document.createElement('div');bump.id='sglxBumpers';bump.className='sglx-control sglx-bumpers';[['lb','LB'],['rb','RB']].forEach(([n,l])=>{const b=document.createElement('button');b.className='sglx-bumper';b.textContent=l;b.onpointerdown=e=>{e.preventDefault();b.classList.add('pressed');setButton(n,true)};b.onpointerup=e=>{e.preventDefault();b.classList.remove('pressed');setButton(n,false)};b.onpointercancel=b.onpointerup;b.onpointerleave=e=>{if(b.classList.contains('pressed'))b.onpointerup(e)};bump.appendChild(b)});root.appendChild(bump);
   const trig=document.createElement('div');trig.id='sglxTriggers';trig.className='sglx-control sglx-triggers';[['lt','LT'],['rt','RT']].forEach(([n,l])=>{const b=document.createElement('button');b.className='sglx-trigger';b.textContent=l;b.onpointerdown=e=>{e.preventDefault();b.classList.add('pressed');setButton(n,true)};b.onpointerup=e=>{e.preventDefault();b.classList.remove('pressed');setButton(n,false)};b.onpointercancel=b.onpointerup;b.onpointerleave=e=>{if(b.classList.contains('pressed'))b.onpointerup(e)};trig.appendChild(b)});root.appendChild(trig);
 
-  function apply(){
-    Object.entries(state).forEach(([n,v])=>{const el=root.querySelector('[data-control="'+n+'"]'); if(el) el.style.display=v?'block':'none'});
-    [['sglxLeftStick','left_joystick'],['sglxRightStick','right_joystick'],['sglxDpad','dpad'],['sglxBumpers','lb'],['sglxTriggers','lt']].forEach(([id,n])=>{const el=document.getElementById(id);if(el)el.style.display=state[n]?'':'none'});
-    ab.style.display=(state.a||state.b||state.x||state.y)?'grid':'none';
-    ['a','b','x','y'].forEach(n=>{const el=ab.querySelector('[data-control="'+n+'"]');if(el)el.style.display=state[n]?'':'none'});
-    bump.style.display=(state.lb||state.rb)?'flex':'none';
-    trig.style.display=(state.lt||state.rt)?'flex':'none';
-  }
+  function apply(){Object.entries(state).forEach(([n,v])=>{const el=root.querySelector('[data-control="'+n+'"]'); if(el) el.style.display=v?'block':'none'}); [['sglxLeftStick','left_joystick'],['sglxRightStick','right_joystick'],['sglxAB','a'],['sglxXY','x'],['sglxDpad','dpad'],['sglxBumpers','lb'],['sglxTriggers','lt']].forEach(([id,n])=>{const el=document.getElementById(id);if(el)el.style.display=state[n]?'':'none'}); if(state.b&&state.a)ab.style.display='grid';else if(state.a||state.b){ab.style.display='grid';ab.querySelector('[data-control="a"]').style.display=state.a?'':'none';ab.querySelector('[data-control="b"]').style.display=state.b?'':'none'}; xy.style.display=(state.x||state.y)?'grid':'none'; xy.querySelector('[data-control="x"]').style.display=state.x?'':'none';xy.querySelector('[data-control="y"]').style.display=state.y?'':'none'; bump.style.display=(state.lb||state.rb)?'flex':'none';trig.style.display=(state.lt||state.rt)?'flex':'none';}
   window.singulaxSetControls=(action,...names)=>{if(action==='reset'){Object.assign(state,{left_joystick:true,right_joystick:false,dpad:false,a:true,b:true,x:false,y:false,lb:false,rb:false,lt:false,rt:false})}else if(action==='all'){Object.keys(state).forEach(k=>state[k]=true)}else if(action==='only'){Object.keys(state).forEach(k=>state[k]=false);names.forEach(n=>{if(n==='all')Object.keys(state).forEach(k=>state[k]=true);else if(state[n]!==undefined)state[n]=true})}else {names.forEach(n=>{if(state[n]!==undefined)state[n]=action==='show'})} apply()};
   apply();
 }
