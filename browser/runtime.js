@@ -48,62 +48,116 @@ class SingulaxRuntime{
   E.answer=()=>this.lastAnswer; E.result=v=>{this.lastResult=v;return v};
   E.ask=async(promptText='')=>{const v=await (this.host.input?this.host.input(String(promptText)):Promise.resolve('')); this.lastAnswer=v; return v};
   E.string=v=>String(v);E.number=v=>Number(v);E.boolean=v=>!!v;E.length=v=>v?.length??0;E.concat=(...a)=>a.join('');
+  // ---------------------------------------------------------------------------
+  // SingulaX Built-in 3D Engine
+  // Offline, game-agnostic, and intentionally simple at the language level.
+  // The browser host renders the scene with its bundled WebGL renderer.
+  // ---------------------------------------------------------------------------
+  const v3=(x=0,y=0,z=0)=>({x:+x||0,y:+y||0,z:+z||0});
+  const vadd=(a,b)=>v3(a.x+b.x,a.y+b.y,a.z+b.z);
+  const vsub=(a,b)=>v3(a.x-b.x,a.y-b.y,a.z-b.z);
+  const vmul=(a,n)=>v3(a.x*n,a.y*n,a.z*n);
+  const vlen=a=>Math.hypot(a.x,a.y,a.z);
+  const vnorm=a=>{const n=vlen(a);return n?v3(a.x/n,a.y/n,a.z/n):v3(0,0,1)};
+  const rotXYZ=(p,r)=>{let x=p.x,y=p.y,z=p.z,c=Math.cos,s=Math.sin,t;t=y*c(r.x)-z*s(r.x);z=y*s(r.x)+z*c(r.x);y=t;t=x*c(r.y)+z*s(r.y);z=-x*s(r.y)+z*c(r.y);x=t;t=x*c(r.z)-y*s(r.z);y=x*s(r.z)+y*c(r.z);x=t;return v3(x,y,z)};
+  const clamp01=x=>Math.max(0,Math.min(1,+x||0));
+  const color3=(value)=>{
+    if(Array.isArray(value))return [clamp01(value[0]),clamp01(value[1]),clamp01(value[2])];
+    const s=String(value||'white').trim().toLowerCase();
+    const named={white:[1,1,1],black:[0,0,0],red:[1,0,0],green:[0,1,0],blue:[0,0,1],cyan:[0,1,1],magenta:[1,0,1],yellow:[1,1,0],orange:[1,.5,0],purple:[.55,0,1],violet:[.45,0,1],gray:[.5,.5,.5],grey:[.5,.5,.5]};
+    if(named[s])return named[s].slice();
+    const h=s.replace('#','');
+    if(/^[0-9a-f]{6}$/i.test(h))return [parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255];
+    if(/^[0-9a-f]{3}$/i.test(h))return [parseInt(h[0]+h[0],16)/255,parseInt(h[1]+h[1],16)/255,parseInt(h[2]+h[2],16)/255];
+    return [1,1,1];
+  };
+  const makeObject=(name,type='cube')=>{
+    const o={name:String(name),type:String(type),position:v3(),rotation:v3(),scale:v3(1,1,1),visible:true,size:1,material:{color:'white',metallic:0,roughness:1,opacity:1,emission:0},collider:null,mesh:null,parent:null,children:[],user:{}};
+    o.set_position=(x,y,z)=>{o.position=v3(x,y,z);return o};
+    o.position_set=o.set_position;
+    o.set_rotation=(x,y,z)=>{o.rotation=v3(x,y,z);return o};
+    o.rotate=(x=0,y=0,z=0)=>{o.rotation=vadd(o.rotation,v3(x,y,z));return o};
+    o.set_scale=(x,y=x,z=y)=>{o.scale=v3(x,y,z);return o};
+    o.scale_set=o.set_scale;
+    o.move=(x=0,y=0,z=0)=>{o.position=vadd(o.position,v3(x,y,z));return o};
+    o.look_at=(x,y,z)=>{const d=vsub(v3(x,y,z),o.position);o.rotation.y=Math.atan2(d.x,d.z);o.rotation.x=-Math.atan2(d.y,Math.hypot(d.x,d.z));return o};
+    o.mesh_set=(m)=>{o.mesh=m;return o};
+    o.material_set=(m)=>{if(typeof m==='string')o.material={...o.material,color:m};else if(m&&typeof m==='object')o.material={...o.material,...m};return o};
+    o.collider_set=(type='box',size=1)=>{o.collider={type:String(type),size:+size||1};return o};
+    o.add_child=(child)=>{if(child?.parent)child.parent.remove_child?.(child);child.parent=o;o.children.push(child);return child};
+    o.remove_child=(child)=>{const i=o.children.indexOf(child);if(i>=0)o.children.splice(i,1);if(child?.parent===o)child.parent=null;return child};
+    return o;
+  };
+  const makeCamera=(name)=>{const c=makeObject(name,'camera');c.fovValue=75;c.near=.05;c.far=1000;c.sensitivity=1;c.fov=v=>{if(v===undefined)return c.fovValue;c.fovValue=Math.max(1,Math.min(179,+v));return c};c.clip=(n,f)=>{c.near=Math.max(.001,+n||.05);c.far=Math.max(c.near+.001,+f||1000);return c};c.sensitivity_set=v=>{c.sensitivity=Math.max(0,+v||0);return c};return c};
+  const makeLight=(name)=>{const l=makeObject(name,'light');l.lightType='directional';l.intensity=1;l.range=20;l.color='white';l.type_set=v=>{l.lightType=String(v);return l};l.intensity_set=v=>{l.intensity=+v||0;return l};l.range_set=v=>{l.range=Math.max(0,+v||0);return l};return l};
+  const makeScene=(name)=>{
+    const sc={name:String(name),objects:[],cameras:[],lights:[],activeCamera:null,ambient:.18,background:'black',fog:{enabled:false,density:0,color:'black'}};
+    sc.add=o=>{if(!o)return null;if(!sc.objects.includes(o))sc.objects.push(o);if(o.type==='camera'&&!sc.cameras.includes(o))sc.cameras.push(o);if(o.type==='light'&&!sc.lights.includes(o))sc.lights.push(o);return o};
+    sc.remove=o=>{let i=sc.objects.indexOf(o);if(i>=0)sc.objects.splice(i,1);i=sc.cameras.indexOf(o);if(i>=0)sc.cameras.splice(i,1);i=sc.lights.indexOf(o);if(i>=0)sc.lights.splice(i,1);return o};
+    sc.camera=(n='camera')=>{const c=makeCamera(n);sc.add(c);if(!sc.activeCamera)sc.activeCamera=c;return c};
+    sc.light=(n='light')=>{const l=makeLight(n);sc.add(l);return l};
+    sc.object=(n='object',t='cube')=>{const o=makeObject(n,t);sc.add(o);return o};
+    sc.find=n=>sc.objects.find(o=>o.name===String(n))||null;
+    sc.clear=()=>{sc.objects.length=0;sc.cameras.length=0;sc.lights.length=0;sc.activeCamera=null;return sc};
+    sc.ambient_light=v=>{sc.ambient=clamp01(v);return sc};
+    sc.background_set=v=>{sc.background=String(v);return sc};
+    sc.fog_set=(enabled,density=.02,color='black')=>{sc.fog={enabled:!!enabled,density:Math.max(0,+density||0),color:String(color)};return sc};
+    return sc;
+  };
+  const makeMesh=(name)=>{const m={name:String(name),vertices:[],faces:[]};m.vertex=(x,y,z)=>{m.vertices.push(v3(x,y,z));return m};m.face=(...idx)=>{m.faces.push(idx.map(Number));return m};return m};
+  const scenes=new Map(),materials=new Map(),meshes=new Map();let active3d=null;
+  const getObj=name=>active3d?.objects.find(o=>o.name===String(name))||null;
+  const api3d={
+    scene:(name='main')=>{const n=String(name);if(!scenes.has(n))scenes.set(n,makeScene(n));active3d=scenes.get(n);return active3d},
+    current:()=>active3d,
+    object:(name='object',type='cube')=>{if(!active3d)api3d.scene('main');return active3d.object(name,type)},
+    camera:(name='camera')=>{if(!active3d)api3d.scene('main');return active3d.camera(name)},
+    light:(name='light')=>{if(!active3d)api3d.scene('main');return active3d.light(name)},
+    material:(name='material')=>{const n=String(name);if(!materials.has(n))materials.set(n,{name:n,color:'white',metallic:0,roughness:1,opacity:1,emission:0});return materials.get(n)},
+    mesh:(name='mesh')=>{const n=String(name);if(!meshes.has(n))meshes.set(n,makeMesh(n));return meshes.get(n)},
+    add:o=>active3d?.add(o),remove:o=>active3d?.remove(o),
+    render:()=>{if(!active3d)return null;this.frame=[{type:'3dscene',scene:serializeScene(active3d)}];this.emitFrame();return active3d},
+    update:dt=>{for(const o of active3d?.objects||[])o.on_update?.(+dt||0);return active3d},
+    vector:(x,y,z)=>v3(x,y,z),
+    scenes,materials,meshes
+  };
+  const worldPos=o=>o.parent?vadd(worldPos(o.parent),rotXYZ(o.position,o.parent.rotation)):v3(o.position.x,o.position.y,o.position.z);
+  const serialObject=(o)=>({name:o.name,type:o.type,position:worldPos(o),rotation:o.rotation,scale:o.scale,size:o.size,visible:o.visible,material:{...o.material,color:o.material.color},mesh:o.mesh?{name:o.mesh.name,vertices:o.mesh.vertices.map(v=>[v.x,v.y,v.z]),faces:o.mesh.faces.map(f=>f.slice())}:null});
+  const serializeScene=sc=>({name:sc.name,ambient:sc.ambient,background:sc.background,fog:sc.fog,camera:(sc.activeCamera||sc.cameras[0])?(()=>{const c=sc.activeCamera||sc.cameras[0];return {position:c.position,rotation:c.rotation,fov:c.fovValue,near:c.near,far:c.far,sensitivity:c.sensitivity}})():null,lights:sc.lights.filter(l=>l.visible).map(l=>({position:worldPos(l),rotation:l.rotation,type:l.lightType,intensity:l.intensity,range:l.range,color:l.color})),objects:sc.objects.filter(o=>o.visible&&o.type!=='camera'&&o.type!=='light').map(serialObject)});
+  const raycast3d=(origin,direction,maxDistance=1000)=>{if(!active3d)return null;const o=v3(origin.x,origin.y,origin.z),d=vnorm(direction);let best=+maxDistance||1000,hit=null;for(const obj of active3d.objects){if(!obj.visible||!obj.collider||obj.type==='camera'||obj.type==='light')continue;const c=worldPos(obj),r=Math.max(.01,(obj.collider.size||obj.size||1)*Math.max(obj.scale.x,obj.scale.y,obj.scale.z)*.866),oc=vsub(o,c),b=2*(oc.x*d.x+oc.y*d.y+oc.z*d.z),cc=oc.x*oc.x+oc.y*oc.y+oc.z*oc.z-r*r,disc=b*b-4*cc;if(disc<0)continue;const t=(-b-Math.sqrt(disc))/2;if(t>=0&&t<best){best=t;hit={name:obj.name,distance:t,point:vadd(o,vmul(d,t))}}}return hit};
+  E.scene3d=api3d.scene;
+  E.object3d=api3d.object;
+  E.camera3d=api3d.camera;
+  E.light3d=api3d.light;
+  E.material3d=api3d.material;
+  E.mesh3d=api3d.mesh;
+  E.render3d=api3d.render;
+  E.update3d=api3d.update;
+  E.raycast3d=raycast3d;
+  E.add3d=api3d.add;
+  E.remove3d=api3d.remove;
+  E.position3d=(name,x,y,z)=>getObj(name)?.set_position(x,y,z);
+  E.rotation3d=(name,x,y,z)=>getObj(name)?.set_rotation(x,y,z);
+  E.scale3d=(name,x,y,z)=>getObj(name)?.set_scale(x,y,z);
+  E.move3d=(name,x,y,z)=>getObj(name)?.move(x,y,z);
+  E.rotate3d=(name,x,y,z)=>getObj(name)?.rotate(x,y,z);
+  E.material3d_set=(name,color,metallic=0,roughness=1,opacity=1)=>{const o=getObj(name);if(o)o.material={...o.material,color,metallic:+metallic||0,roughness:+roughness||1,opacity:clamp01(opacity)};return o};
+  E.collider3d=(name,type='box',size=1)=>getObj(name)?.collider_set(type,size);
+  E.camera3d_position=(name,x,y,z)=>getObj(name)?.set_position(x,y,z);
+  E.camera3d_rotation=(name,x,y,z)=>getObj(name)?.set_rotation(x,y,z);
+  E.camera3d_fov=(name,v)=>{const o=getObj(name);return o?.fov(v)};
+  E.light3d_position=(name,x,y,z)=>getObj(name)?.set_position(x,y,z);
+  E.light3d_rotation=(name,x,y,z)=>getObj(name)?.set_rotation(x,y,z);
+  E.light3d_intensity=(name,v)=>{const o=getObj(name);return o?.intensity_set(v)};
+  E.light3d_color=(name,v)=>{const o=getObj(name);if(o)o.color=String(v);return o};
+  E.scene3d_ambient=v=>active3d?.ambient_light(v);
+  E.scene3d_background=v=>active3d?.background_set(v);
+  E.scene3d_fog=(enabled,density=.02,color='black')=>active3d?.fog_set(enabled,density,color);
+  E.mesh3d_vertex=(name,x,y,z)=>api3d.mesh(name).vertex(x,y,z);
+  E.mesh3d_face=(name,...idx)=>api3d.mesh(name).face(...idx);
+  E.mesh3d_use=(objectName,meshName)=>{const o=getObj(objectName),m=meshes.get(String(meshName));if(o&&m)o.mesh=m;return o};
   E.time=()=>performance.now()/1000;E.seconds=E.time;
-  E.controls={
-    all:()=>this.host.controls?.('all'),
-    reset:()=>this.host.controls?.('reset'),
-    only:(...names)=>this.host.controls?.('only',...names),
-    show:(...names)=>this.host.controls?.('show',...names),
-    hide:(...names)=>this.host.controls?.('hide',...names)
-  };
-
-  // First-person maze engine. The renderer is intentionally kept in the browser app;
-  // the runtime owns the world, collision, enemies, timer, and input state.
-  this.fps=null;
-  const makeMaze=(w,h)=>{
-    w=Math.max(15,Math.floor(+w||81)); h=Math.max(15,Math.floor(+h||81));
-    if(w%2===0)w--; if(h%2===0)h--;
-    const g=Array.from({length:h},()=>Array(w).fill('#'));
-    const dirs=[[2,0],[-2,0],[0,2],[0,-2]];
-    const stack=[[1,1]]; g[1][1]='.';
-    while(stack.length){const [x,y]=stack[stack.length-1]; const choices=[];
-      for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy;if(nx>0&&nx<w-1&&ny>0&&ny<h-1&&g[ny][nx]==='#')choices.push([nx,ny,dx,dy]);}
-      if(!choices.length){stack.pop();continue;}
-      const [nx,ny,dx,dy]=choices[Math.floor(Math.random()*choices.length)];g[y+dy/2][x+dx/2]='.';g[ny][nx]='.';stack.push([nx,ny]);
-    }
-    return g.map(r=>r.join(''));
-  };
-  const wallAt=(g,x,y)=>{const ix=Math.floor(x),iy=Math.floor(y);return !g?.[iy]||g[iy][ix]==='#'};
-  const canStand=(g,x,y,r=0.12)=>{for(const [ox,oy] of [[r,0],[-r,0],[0,r],[0,-r],[r*.707,r*.707],[r*.707,-r*.707],[-r*.707,r*.707],[-r*.707,-r*.707]])if(wallAt(g,x+ox,y+oy))return false;return true};
-  const pathTo=(f,sx,sy,tx,ty)=>{const start=[Math.floor(sx),Math.floor(sy)],goal=[Math.floor(tx),Math.floor(ty)],key=(x,y)=>x+','+y;if(start[0]===goal[0]&&start[1]===goal[1])return goal;const q=[start],prev=new Map([[key(...start),null]]);for(let i=0;i<2500&&q.length;i++){const [x,y]=q.shift();for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=key(nx,ny);if(prev.has(k)||wallAt(f.maze,nx,ny))continue;prev.set(k,[x,y]);if(nx===goal[0]&&ny===goal[1]){let cur=[nx,ny];while(prev.get(key(...cur))&&!(prev.get(key(...cur))[0]===start[0]&&prev.get(key(...cur))[1]===start[1]))cur=prev.get(key(...cur));return cur}q.push([nx,ny])}}return null};
-  const spawnEnemy=(f)=>{
-    for(let tries=0;tries<200;tries++){const x=1+Math.floor(Math.random()*(f.w-2)),y=1+Math.floor(Math.random()*(f.h-2));if(!wallAt(f.maze,x,y)&&Math.hypot(x+0.5-f.px,y+0.5-f.py)>8){f.enemies.push({x:x+0.5,y:y+0.5,hp:1,phase:Math.random()*6.28});return true;}}
-    return false;
-  };
-  E.fps_new=(size=81)=>{const w=Math.max(15,Math.floor(+size||81)),h=w%2?w:w+1;const maze=makeMaze(w,h);this.fps={w:maze[0].length,h:maze.length,maze,px:1.5,py:1.5,pa:0,health:100,elapsed:0,spawnClock:0,enemies:[],dead:false,won:false,shake:0,flashlight:true,sprinting:false,prevB:false};return true};
-  E.fps_step=(dt=0.016)=>{const f=this.fps;if(!f||f.dead||f.won)return false;dt=Math.min(0.05,Math.max(0.001,+dt||0.016));f.elapsed+=dt;f.spawnClock+=dt;
-    if(f.elapsed>=600){f.won=true;return true;}
-    const pad=this.gamepads?.[0]||{}; const ax=pad.axes||[]; const pb=pad.buttons||[];
-    const lx=Math.abs(+ax[0]||0)>0.16?(+ax[0]||0):0, ly=Math.abs(+ax[1]||0)>0.16?(+ax[1]||0):0;
-    const rx=Math.abs(+ax[2]||0)>0.16?(+ax[2]||0):0;
-    const sprint=this.keys.has('Shift')||!!pb[0];
-    const bNow=!!pb[1]; if((this.keys.has('f')||this.keys.has('F')||this.clicked.has('key:f'))&&!f._fHeld){f.flashlight=!f.flashlight;f._fHeld=true;} if(!this.keys.has('f')&&!this.keys.has('F'))f._fHeld=false; if(bNow&&!f.prevB)f.flashlight=!f.flashlight; f.prevB=bNow; f.sprinting=!!sprint;
-    const speed=(sprint?3.4:2.15)*dt;
-    if(this.keys.has('ArrowLeft')||this.keys.has('q')||this.keys.has('Q'))f.pa-=2.5*dt;
-    if(this.keys.has('ArrowRight')||this.keys.has('e')||this.keys.has('E'))f.pa+=2.5*dt;
-    f.pa+=rx*5.2*dt;
-    let forward=0,strafe=0;if(this.keys.has('w')||this.keys.has('W')||this.keys.has('ArrowUp'))forward+=1;if(this.keys.has('s')||this.keys.has('S')||this.keys.has('ArrowDown'))forward-=1;if(this.keys.has('a')||this.keys.has('A'))strafe-=1;if(this.keys.has('d')||this.keys.has('D'))strafe+=1;
-    forward-=ly; strafe+=lx;
-    if(Math.abs(forward)>1)forward=Math.max(-1,Math.min(1,forward)); if(Math.abs(strafe)>1)strafe=Math.max(-1,Math.min(1,strafe));
-    const fx=Math.cos(f.pa),fy=Math.sin(f.pa),sx=Math.cos(f.pa+Math.PI/2),sy=Math.sin(f.pa+Math.PI/2);let nx=f.px+(fx*forward+sx*strafe)*speed,ny=f.py+(fy*forward+sy*strafe)*speed;
-    const r=.11; if(canStand(f.maze,nx,f.py,r))f.px=nx; if(canStand(f.maze,f.px,ny,r))f.py=ny;
-    const interval=Math.max(0.75,5.5-f.elapsed/75);if(f.spawnClock>=interval){f.spawnClock=0;const count=Math.min(45,1+Math.floor(f.elapsed/30));while(f.enemies.length<count)spawnEnemy(f);}
-    for(const en of f.enemies){const dx=f.px-en.x,dy=f.py-en.y,d=Math.hypot(dx,dy)||1;const es=(0.42+Math.min(0.55,f.elapsed/600))*dt;if(d>0.55){if(!en.pathClock||f.elapsed-en.pathClock>0.35||!en.path){en.path=pathTo(f,en.x,en.y,f.px,f.py);en.pathClock=f.elapsed}let tx=f.px,ty=f.py;if(en.path){tx=en.path[0]+0.5;ty=en.path[1]+0.5}const pdx=tx-en.x,pdy=ty-en.y,pd=Math.hypot(pdx,pdy)||1;const ex=en.x+pdx/pd*es,ey=en.y+pdy/pd*es;if(canStand(f.maze,ex,en.y,.10))en.x=ex;if(canStand(f.maze,en.x,ey,.10))en.y=ey;}else{f.health-=18*dt;f.shake=Math.min(1,f.shake+dt*4);}}
-    f.enemies=f.enemies.filter(en=>Math.hypot(en.x-f.px,en.y-f.py)<120);if(f.health<=0){f.health=0;f.dead=true;}return true;
-  };
-  E.fps_render=()=>{if(!this.fps)return false;this.frame.push({type:'fps',state:this.fps});this.emitFrame();return true};
-  E.fps_time=()=>this.fps?this.fps.elapsed:0;E.fps_health=()=>this.fps?this.fps.health:0;E.fps_enemies=()=>this.fps?this.fps.enemies.length:0;E.fps_dead=()=>!!this.fps?.dead;E.fps_won=()=>!!this.fps?.won;E.fps_flashlight=()=>!!this.fps?.flashlight;E.fps_sprinting=()=>!!this.fps?.sprinting;E.fps_toggle_flashlight=()=>{if(!this.fps)return false;this.fps.flashlight=!this.fps.flashlight;return this.fps.flashlight};
-  E.fps_reset=()=>{if(!this.fps)return false;return E.fps_new(this.fps.w)};
+  E.time=()=>performance.now()/1000;E.seconds=E.time;
  }
  format(v){if(typeof v==='string')return v;try{return JSON.stringify(v)}catch{return String(v)}}
  say(s){this.output.push(String(s));this.host.output?.(String(s))}
