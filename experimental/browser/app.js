@@ -74,7 +74,43 @@ const keywords = [
   'let',
   'return',
   'break',
-  'continue'
+  'continue',
+  'controls.all',
+  'controls.reset',
+  'controls.only',
+  'controls.show',
+  'controls.hide',
+  'scene3d',
+  'scene3d_background',
+  'scene3d_ambient',
+  'scene3d_fog',
+  'object3d',
+  'camera3d',
+  'light3d',
+  'material3d',
+  'mesh3d',
+  'position3d',
+  'rotation3d',
+  'scale3d',
+  'move3d',
+  'rotate3d',
+  'render3d',
+  'update3d',
+  'raycast3d',
+  'add3d',
+  'remove3d',
+  'material3d_set',
+  'collider3d',
+  'camera3d_position',
+  'camera3d_rotation',
+  'camera3d_fov',
+  'light3d_position',
+  'light3d_rotation',
+  'light3d_intensity',
+  'light3d_color',
+  'mesh3d_vertex',
+  'mesh3d_face',
+  'mesh3d_use'
 ];
 
 const builtins = [
@@ -136,38 +172,7 @@ const builtins = [
   'find',
   'list',
   'push',
-  'pop',
-  'scene3d',
-  'object3d',
-  'camera3d',
-  'light3d',
-  'material3d',
-  'mesh3d',
-  'render3d',
-  'update3d',
-  'raycast3d',
-  'add3d',
-  'remove3d',
-  'position3d',
-  'rotation3d',
-  'scale3d',
-  'move3d',
-  'rotate3d',
-  'material3d_set',
-  'collider3d',
-  'camera3d_position',
-  'camera3d_rotation',
-  'camera3d_fov',
-  'light3d_position',
-  'light3d_rotation',
-  'light3d_intensity',
-  'light3d_color',
-  'scene3d_ambient',
-  'scene3d_background',
-  'scene3d_fog',
-  'mesh3d_vertex',
-  'mesh3d_face',
-  'mesh3d_use'
+  'pop'
 ];
 
 function log(s) {
@@ -786,7 +791,7 @@ function sglx3dRy(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([
 function sglx3dRz(a){const c=Math.cos(a),s=Math.sin(a);return new Float32Array([c,s,0,0,-s,c,0,0,0,0,1,0,0,0,0,1])}
 function sglx3dModel(o){let m=sglx3dTranslate(o.position[0],o.position[1],o.position[2]);m=sglx3dMatMul(m,sglx3dRy(o.rotation[1]));m=sglx3dMatMul(m,sglx3dRx(o.rotation[0]));m=sglx3dMatMul(m,sglx3dRz(o.rotation[2]));m=sglx3dMatMul(m,sglx3dScale(o.scale[0],o.scale[1],o.scale[2]));return m}
 function sglx3dPerspective(fov,aspect,near,far){const f=1/Math.tan(fov*Math.PI/360),nf=1/(near-far),m=new Float32Array(16);m[0]=f/aspect;m[5]=f;m[10]=(far+near)*nf;m[11]=-1;m[14]=2*far*near*nf;return m}
-function sglx3dLookAt(eye,rot){const cp=Math.cos(rot[0]),sp=Math.sin(rot[0]),cy=Math.cos(rot[1]),sy=Math.sin(rot[1]);let fx=sy*cp,fy=-sp,fz=cy*cp;const fl=Math.hypot(fx,fy,fz)||1;fx/=fl;fy/=fl;fz/=fl;let rx=fz,ry=0,rz=-fx;const rl=Math.hypot(rx,rz)||1;rx/=rl;rz/=rl;const ux=ry*fz-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy-ry*fx;return new Float32Array([rx,ux,-fx,0,ry,uy,-fy,0,rz,uz,-fz,0,-(rx*eye[0]+ry*eye[1]+rz*eye[2]),-(ux*eye[0]+uy*eye[1]+uz*eye[2]),fx*eye[0]+fy*eye[1]+fz*eye[2],1])}
+function sglx3dLookAt(eye,rot){const cp=Math.cos(rot[0]),sp=Math.sin(rot[0]),cy=Math.cos(rot[1]),sy=Math.sin(rot[1]);let fx=sy*cp,fy=-sp,fz=-cy*cp;const fl=Math.hypot(fx,fy,fz)||1;fx/=fl;fy/=fl;fz/=fl;let rx=fz,ry=0,rz=-fx;const rl=Math.hypot(rx,rz)||1;rx/=rl;rz/=rl;const ux=ry*fz-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy-ry*fx;return new Float32Array([rx,ux,-fx,0,ry,uy,-fy,0,rz,uz,-fz,0,-(rx*eye[0]+ry*eye[1]+rz*eye[2]),-(ux*eye[0]+uy*eye[1]+uz*eye[2]),fx*eye[0]+fy*eye[1]+fz*eye[2],1])}
 function sglx3dGeometry(type){
   const out=[];const tri=(a,b,c,na,nb,nc)=>{for(const [p,n] of [[a,na],[b,nb],[c,nc]])out.push(p[0],p[1],p[2],n[0],n[1],n[2])};
   if(type==='plane'){tri([-1,0,-1],[1,0,-1],[1,0,1],[0,1,0],[0,1,0],[0,1,0]);tri([-1,0,-1],[1,0,1],[-1,0,1],[0,1,0],[0,1,0],[0,1,0]);return new Float32Array(out)}
@@ -803,7 +808,7 @@ function sglx3dGeometry(type){
 }
 function sglx3dInit(){
   if(sglx3dGL)return sglx3dGL;
-  const gc=document.createElement('canvas');gc.id='singulax-3d-canvas';gc.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:5;display:none;pointer-events:none;';const parent=canvas.parentElement||document.body;if(getComputedStyle(parent).position==='static')parent.style.position='relative';parent.appendChild(gc);const gl=gc.getContext('webgl',{antialias:true,alpha:false})||gc.getContext('experimental-webgl');if(!gl)return null;
+  const gc=document.createElement('canvas');gc.id='singulax-3d-canvas';gc.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:none;pointer-events:auto;z-index:5;';const parent=canvas.parentElement||document.body;if(getComputedStyle(parent).position==='static')parent.style.position='relative';parent.appendChild(gc);const gl=gc.getContext('webgl',{antialias:true,alpha:false})||gc.getContext('experimental-webgl');if(!gl)return null;
   const vs=gl.createShader(gl.VERTEX_SHADER);gl.shaderSource(vs,'attribute vec3 aPosition;attribute vec3 aNormal;uniform mat4 uModel;uniform mat4 uView;uniform mat4 uProj;varying vec3 vNormal;varying vec3 vWorld;void main(){vec4 w=uModel*vec4(aPosition,1.0);vWorld=w.xyz;vNormal=mat3(uModel)*aNormal;gl_Position=uProj*uView*w;}');gl.compileShader(vs);
   const fs=gl.createShader(gl.FRAGMENT_SHADER);gl.shaderSource(fs,'precision mediump float;varying vec3 vNormal;varying vec3 vWorld;uniform vec3 uColor;uniform float uAmbient;uniform vec3 uLightDir[8];uniform vec3 uLightColor[8];uniform float uLightIntensity[8];uniform int uLightCount;uniform vec3 uFogColor;uniform float uFogDensity;uniform bool uFog;void main(){vec3 n=normalize(vNormal);vec3 c=uColor*(uAmbient+0.05);for(int i=0;i<8;i++){if(i>=uLightCount)break;vec3 l=normalize(-uLightDir[i]);float d=max(dot(n,l),0.0);c+=uColor*uLightColor[i]*d*uLightIntensity[i];}if(uFog){float f=1.0-exp(-uFogDensity*uFogDensity*dot(vWorld,vWorld));c=mix(c,uFogColor,clamp(f,0.0,1.0));}gl_FragColor=vec4(c,1.0);}');gl.compileShader(fs);
   const prog=gl.createProgram();gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);gl.useProgram(prog);
@@ -812,7 +817,7 @@ function sglx3dInit(){
   sglx3dGL={canvas:gc,gl,prog,loc,buffers,geometry:type=>{if(!buffers.has(type)){const data=sglx3dGeometry(type);const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);buffers.set(type,{b,count:data.length/6});}return buffers.get(type)}};return sglx3dGL;
 }
 function sglx3dRender(scene){
-  const r=sglx3dInit();if(!r)return;const {gl,prog,loc}=r;const w=canvas.clientWidth||canvas.width,h=canvas.clientHeight||canvas.height;r.canvas.width=canvas.width;r.canvas.height=canvas.height;r.canvas.style.width=canvas.clientWidth+'px';r.canvas.style.height=canvas.clientHeight+'px';r.canvas.style.display='block';gl.viewport(0,0,r.canvas.width,r.canvas.height);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);const bg=sglx3dColor(scene.background);gl.clearColor(bg[0],bg[1],bg[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);
+  const r=sglx3dInit();if(!r)return;const {gl,prog,loc}=r;const w=canvas.clientWidth||canvas.width,h=canvas.clientHeight||canvas.height;r.canvas.width=Math.max(1,canvas.width||w||800);r.canvas.height=Math.max(1,canvas.height||h||450);r.canvas.style.display='block';gl.viewport(0,0,r.canvas.width,r.canvas.height);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);const bg=sglx3dColor(scene.background);gl.clearColor(bg[0],bg[1],bg[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);
   const cam=scene.camera||{position:[0,1.5,6],rotation:[0,0,0],fov:75,near:.05,far:1000};const view=sglx3dLookAt(cam.position,cam.rotation),proj=sglx3dPerspective(cam.fov,(w||1)/(h||1),cam.near,cam.far);gl.uniformMatrix4fv(loc.view,false,view);gl.uniformMatrix4fv(loc.proj,false,proj);gl.uniform1f(loc.ambient,scene.ambient||0);
   const dirs=[],cols=[],ints=[];(scene.lights||[]).slice(0,8).forEach(l=>{const rr=l.rotation||[0,0,0],cp=Math.cos(rr[0]),sp=Math.sin(rr[0]),cy=Math.cos(rr[1]),sy=Math.sin(rr[1]);dirs.push(sy*cp,-sp,cy*cp);const c=sglx3dColor(l.color);cols.push(...c);ints.push(+l.intensity||1)});while(dirs.length<24)dirs.push(0,-1,0);while(cols.length<24)cols.push(1,1,1);while(ints.length<8)ints.push(0);gl.uniform3fv(loc.lightDir,new Float32Array(dirs));gl.uniform3fv(loc.lightColor,new Float32Array(cols));gl.uniform1fv(loc.lightIntensity,new Float32Array(ints));gl.uniform1i(loc.lightCount,Math.min(8,(scene.lights||[]).length));const fc=sglx3dColor(scene.fog?.color||'black');gl.uniform3fv(loc.fogColor,new Float32Array(fc));gl.uniform1f(loc.fogDensity,scene.fog?.density||0);gl.uniform1i(loc.fog,scene.fog?.enabled?1:0);
   for(const o of scene.objects||[]){const data=o.mesh;let type=o.type;if(!data&&(type==='box'))type='cube';let geo;if(data&&data.vertices?.length&&data.faces?.length){const verts=[];for(const f of data.faces){for(let i=1;i<f.length-1;i++){for(const idx of [f[0],f[i],f[i+1]]){const q=data.vertices[idx]||[0,0,0];verts.push(q[0],q[1],q[2],0,1,0);}}}const key='mesh:'+data.name;if(!r.buffers.has(key)){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);r.buffers.set(key,{b,count:verts.length/6})}geo=r.buffers.get(key)}else{geo=r.geometry(type==='sphere'?'sphere':type==='cylinder'?'cylinder':type==='plane'?'plane':'cube')}const m=sglx3dModel(o);gl.uniformMatrix4fv(loc.model,false,m);const c=sglx3dColor(o.material?.color||'white');gl.uniform3fv(loc.color,new Float32Array(c));gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.enableVertexAttribArray(loc.pos);gl.vertexAttribPointer(loc.pos,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(loc.normal);gl.vertexAttribPointer(loc.normal,3,gl.FLOAT,false,24,12);gl.drawArrays(gl.TRIANGLES,0,geo.count)}
@@ -821,9 +826,12 @@ function sglx3dRender(scene){
 function paintCanvas(frame = []) {
   const threeFrame = frame.find(x => x.type === '3dscene');
   if (threeFrame) {
+    canvas.style.visibility = 'hidden';
+    if (sglx3dGL?.canvas) sglx3dGL.canvas.style.display = 'block';
     sglx3dRender(threeFrame.scene);
-  } else if (sglx3dGL) {
-    sglx3dGL.canvas.style.display = 'none';
+  } else {
+    canvas.style.visibility = 'visible';
+    if (sglx3dGL?.canvas) sglx3dGL.canvas.style.display = 'none';
   }
   const c = canvas;
   const ctx = c.getContext('2d');
@@ -843,6 +851,10 @@ function paintCanvas(frame = []) {
     c.width,
     c.height
   );
+
+  if (threeFrame && sglx3dGL?.canvas) {
+    return;
+  }
 
   for (const x of frame) {
     ctx.fillStyle =
