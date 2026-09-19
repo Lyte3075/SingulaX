@@ -149,6 +149,11 @@ const builtins = [
   'mouse_clicked',
   'mouse_x',
   'mouse_y',
+  'mouse_dx',
+  'mouse_dy',
+  'mouse_lock',
+  'mouse_unlock',
+  'mouse_locked',
   'touching',
   'touch_x',
   'touch_y',
@@ -816,8 +821,24 @@ function sglx3dInit(){
   const buffers=new Map();
   sglx3dGL={canvas:gc,gl,prog,loc,buffers,geometry:type=>{if(!buffers.has(type)){const data=sglx3dGeometry(type);const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);buffers.set(type,{b,count:data.length/6});}return buffers.get(type)}};return sglx3dGL;
 }
+function sglx3dEnableMouseLook(){
+  const gc=sglx3dGL?.canvas;
+  if(!gc||gc.dataset.mouseLookBound)return;
+  gc.dataset.mouseLookBound='1';
+  gc.addEventListener('pointerdown',e=>{
+    if(e.button===0){
+      gc.requestPointerLock?.();
+    }
+  });
+  document.addEventListener('mousemove',e=>{
+    if(document.pointerLockElement===gc){
+      runtime?.setInput({mouseDelta:{x:e.movementX||0,y:e.movementY||0}});
+    }
+  });
+}
+
 function sglx3dRender(scene){
-  const r=sglx3dInit();if(!r)return;const {gl,prog,loc}=r;const w=canvas.clientWidth||canvas.width,h=canvas.clientHeight||canvas.height;r.canvas.width=Math.max(1,canvas.width||w||800);r.canvas.height=Math.max(1,canvas.height||h||450);r.canvas.style.display='block';gl.viewport(0,0,r.canvas.width,r.canvas.height);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);const bg=sglx3dColor(scene.background);gl.clearColor(bg[0],bg[1],bg[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);
+  const r=sglx3dInit();if(!r)return;sglx3dEnableMouseLook();const {gl,prog,loc}=r;const w=canvas.clientWidth||canvas.width,h=canvas.clientHeight||canvas.height;r.canvas.width=Math.max(1,canvas.width||w||800);r.canvas.height=Math.max(1,canvas.height||h||450);r.canvas.style.display='block';gl.viewport(0,0,r.canvas.width,r.canvas.height);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);const bg=sglx3dColor(scene.background);gl.clearColor(bg[0],bg[1],bg[2],1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(prog);
   const cam=scene.camera||{position:[0,1.5,6],rotation:[0,0,0],fov:75,near:.05,far:1000};const view=sglx3dLookAt(cam.position,cam.rotation),proj=sglx3dPerspective(cam.fov,(w||1)/(h||1),cam.near,cam.far);gl.uniformMatrix4fv(loc.view,false,view);gl.uniformMatrix4fv(loc.proj,false,proj);gl.uniform1f(loc.ambient,scene.ambient||0);
   const dirs=[],cols=[],ints=[];(scene.lights||[]).slice(0,8).forEach(l=>{const rr=l.rotation||[0,0,0],cp=Math.cos(rr[0]),sp=Math.sin(rr[0]),cy=Math.cos(rr[1]),sy=Math.sin(rr[1]);dirs.push(sy*cp,-sp,cy*cp);const c=sglx3dColor(l.color);cols.push(...c);ints.push(+l.intensity||1)});while(dirs.length<24)dirs.push(0,-1,0);while(cols.length<24)cols.push(1,1,1);while(ints.length<8)ints.push(0);gl.uniform3fv(loc.lightDir,new Float32Array(dirs));gl.uniform3fv(loc.lightColor,new Float32Array(cols));gl.uniform1fv(loc.lightIntensity,new Float32Array(ints));gl.uniform1i(loc.lightCount,Math.min(8,(scene.lights||[]).length));const fc=sglx3dColor(scene.fog?.color||'black');gl.uniform3fv(loc.fogColor,new Float32Array(fc));gl.uniform1f(loc.fogDensity,scene.fog?.density||0);gl.uniform1i(loc.fog,scene.fog?.enabled?1:0);
   for(const o of scene.objects||[]){const data=o.mesh;let type=o.type;if(!data&&(type==='box'))type='cube';let geo;if(data&&data.vertices?.length&&data.faces?.length){const verts=[];for(const f of data.faces){for(let i=1;i<f.length-1;i++){for(const idx of [f[0],f[i],f[i+1]]){const q=data.vertices[idx]||[0,0,0];verts.push(q[0],q[1],q[2],0,1,0);}}}const key='mesh:'+data.name;if(!r.buffers.has(key)){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(verts),gl.STATIC_DRAW);r.buffers.set(key,{b,count:verts.length/6})}geo=r.buffers.get(key)}else{geo=r.geometry(type==='sphere'?'sphere':type==='cylinder'?'cylinder':type==='plane'?'plane':'cube')}const m=sglx3dModel(o);gl.uniformMatrix4fv(loc.model,false,m);const c=sglx3dColor(o.material?.color||'white');gl.uniform3fv(loc.color,new Float32Array(c));gl.bindBuffer(gl.ARRAY_BUFFER,geo.b);gl.enableVertexAttribArray(loc.pos);gl.vertexAttribPointer(loc.pos,3,gl.FLOAT,false,24,0);gl.enableVertexAttribArray(loc.normal);gl.vertexAttribPointer(loc.normal,3,gl.FLOAT,false,24,12);gl.drawArrays(gl.TRIANGLES,0,geo.count)}
@@ -1083,6 +1104,20 @@ async function run() {
 
       controls: (action, ...names) => {
         window.singulaxSetControls?.(action, ...names);
+      },
+
+      mouseLock: action => {
+        const gc = document.getElementById('singulax-3d-canvas');
+        if(action === 'lock') {
+          if(document.pointerLockElement !== gc) gc?.requestPointerLock?.();
+          return true;
+        }
+        if(action === 'unlock') {
+          if(document.pointerLockElement) document.exitPointerLock?.();
+          return false;
+        }
+        if(action === 'state') return document.pointerLockElement === gc;
+        return false;
       },
 
       mode3d: v => {

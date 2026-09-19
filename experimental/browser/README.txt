@@ -1,10 +1,18 @@
-SingulaX Built-in 3D Engine - Preview Fix
+SingulaX Built-in 3D + NEON RIFT
 
-This build keeps the 3D WebGL canvas hidden/offscreen and copies its rendered image into SingulaX's existing preview canvas. This prevents the 3D renderer from creating a visible/popped-out preview frame.
+This build adds simple mouse-look input to the built-in, dependency-free WebGL 3D renderer.
 
-Files:
-- app.js
-- runtime.js
-- 3d-demo.sglx
+Controls in NEON RIFT:
+- WASD: move relative to camera direction
+- Mouse: look around
+- Space: pulse attack
+- Esc: release the mouse cursor
+- Click the 3D preview to capture the mouse
 
-No CDN or network dependency is used by the 3D renderer.
+New SingulaX input builtins:
+- mouse_dx()
+- mouse_dy()
+
+mouse_dx() and mouse_dy() return mouse movement since the previous read, so they are useful for camera look controls.
+
+The renderer and runtime are self-contained. No CDN, downloads, or internet connection are required at runtime.
