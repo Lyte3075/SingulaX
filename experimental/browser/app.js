@@ -21,6 +21,17 @@ let project = {
 
 let current = 'main.sglx';
 let mode = 'code';
+
+const SINGULAX_EXTENSIONS = [
+  '.sglx',
+  '.vlla',
+  '.clyn'
+];
+
+function isSingulaXFileName(name) {
+  const lower = String(name || '').toLowerCase();
+  return SINGULAX_EXTENSIONS.some(ext => lower.endsWith(ext));
+}
 let runtime = null;
 let runGeneration = 0;
 let blocks = [];
@@ -484,8 +495,9 @@ $('tree').onclick = e => {
       );
 
     if (n) {
-      if (!n.endsWith('.sglx')) {
-        n += '.sglx';
+      if (!isSingulaXFileName(n)) {
+        alert('SingulaX files must use .sglx, .vlla, or .clyn.');
+        return;
       }
 
       const to =
@@ -666,9 +678,9 @@ $('newFileBtn').onclick = () => {
     n += '.sglx';
   }
 
-  if (!n.endsWith('.sglx')) {
+  if (!isSingulaXFileName(n)) {
     alert(
-      'Scripts should use the .sglx extension.'
+      'SingulaX files must use .sglx, .vlla, or .clyn.'
     );
 
     return;
@@ -3728,8 +3740,7 @@ function showCompletions(
             project.files
           ).map(
             x =>
-              x.replace(
-                /\.sglx$/,
+              x.replace(/\.(?:sglx|vlla|clyn)$/i,
                 ''
               )
           ),
