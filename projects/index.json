@@ -68,6 +68,78 @@
       ],
       "_path": "projects/3d-starter",
       "_id": "3d-starter"
+    },
+    {
+      "schema": 1,
+      "id": "mobile-dodge",
+      "name": "Mobile Dodge",
+      "description": "A fast touch-friendly survival game where you dodge falling hazards and chase a high score.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/mobile-dodge/files/main.sglx",
+      "files": [
+        "projects/mobile-dodge/files/main.sglx"
+      ],
+      "category": "Mobile Game",
+      "_path": "projects/mobile-dodge",
+      "_id": "mobile-dodge"
+    },
+    {
+      "schema": 1,
+      "id": "arena-brawl",
+      "name": "Arena Brawl",
+      "description": "A simple top-down fighting game sample with movement, attacks, health, and an enemy fighter.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/arena-brawl/files/main.sglx",
+      "files": [
+        "projects/arena-brawl/files/main.sglx"
+      ],
+      "category": "Fighting",
+      "_path": "projects/arena-brawl",
+      "_id": "arena-brawl"
+    },
+    {
+      "schema": 1,
+      "id": "neon-runner",
+      "name": "Neon Runner",
+      "description": "A mobile-friendly endless runner concept with lanes, obstacles, and a growing score.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/neon-runner/files/main.sglx",
+      "files": [
+        "projects/neon-runner/files/main.sglx"
+      ],
+      "category": "Mobile Game",
+      "_path": "projects/neon-runner",
+      "_id": "neon-runner"
+    },
+    {
+      "schema": 1,
+      "id": "space-duel",
+      "name": "Space Duel",
+      "description": "A tiny arcade duel sample with two ships, projectiles, and score tracking.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/space-duel/files/main.sglx",
+      "files": [
+        "projects/space-duel/files/main.sglx"
+      ],
+      "category": "Arcade",
+      "_path": "projects/space-duel",
+      "_id": "space-duel"
     }
   ]
 }
