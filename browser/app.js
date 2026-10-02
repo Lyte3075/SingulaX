@@ -683,11 +683,10 @@ $('newFileBtn').onclick = () => {
     n += '.sglx';
   }
 
-  if (!n.endsWith('.sglx')) {
+  if (!isSingulaXFileName(n)) {
     alert(
-      'Scripts should use the .sglx extension.'
+      'Scripts must use a supported SingulaX source extension: .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.'
     );
-
     return;
   }
 
