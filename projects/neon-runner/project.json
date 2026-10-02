@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "neon-runner",
+  "name": "Neon Runner",
+  "description": "A mobile-friendly endless runner concept with lanes, obstacles, and a growing score.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "projects/neon-runner/files/main.sglx",
+  "files": [
+    "projects/neon-runner/files/main.sglx"
+  ],
+  "category": "Mobile Game"
+}
