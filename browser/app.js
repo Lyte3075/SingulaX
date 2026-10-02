@@ -20,6 +20,19 @@ let project = {
 };
 
 let current = 'main.sglx';
+const SINGULAX_EXTENSIONS = [
+  '.sglx',
+  '.vlla',
+  '.clyn',
+  '.vlln',
+  '.cyln'
+];
+
+function isSingulaXFileName(name) {
+  const lower = String(name || '').toLowerCase();
+  return SINGULAX_EXTENSIONS.some(ext => lower.endsWith(ext));
+}
+
 let mode = 'code';
 let runtime = null;
 let runGeneration = 0;
@@ -484,7 +497,7 @@ $('tree').onclick = e => {
       );
 
     if (n) {
-      if (!n.endsWith('.sglx')) {
+      if (!/\.[\w-]+$/.test(n)) {
         n += '.sglx';
       }
 
@@ -2244,8 +2257,8 @@ async function importFiles(files) {
     }
 
     const isAsset =
-      !f.name.endsWith('.sglx') &&
-      !f.name.endsWith('.sglxproj');
+      !isSingulaXFileName(f.name) &&
+      !f.name.toLowerCase().endsWith('.sglxproj');
 
     if (isAsset) {
       project.assets[f.name] =
@@ -2417,9 +2430,7 @@ async function importZipFile(file) {
         path.startsWith(
           'scripts/'
         ) &&
-        path
-          .toLowerCase()
-          .endsWith('.sglx')
+        isSingulaXFileName(path)
       ) {
         project.files[
           path.slice(8)
@@ -2434,9 +2445,7 @@ async function importZipFile(file) {
       }
 
       if (
-        path
-          .toLowerCase()
-          .endsWith('.sglx')
+        isSingulaXFileName(path)
       ) {
         project.files[path] =
           new TextDecoder().decode(
@@ -2811,9 +2820,13 @@ async function exportProject() {
       'Export format:\n' +
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
-      '3 = Standalone HTML game\n' +
-      '4 = Project JSON backup\n' +
-      '5 = Full project ZIP',
+      '3 = Single script (.vlla)\n' +
+      '4 = Single script (.clyn)\n' +
+      '5 = Single script (.vlln)\n' +
+      '6 = Single script (.cyln)\n' +
+      '7 = Standalone HTML game\n' +
+      '8 = Project JSON backup\n' +
+      '9 = Full project ZIP',
       '5'
     );
 
@@ -2841,8 +2854,13 @@ async function exportProject() {
       current,
       'text/plain'
     );
+  } else if (['2','3','4','5','6'].includes(choice)) {
+    save();
+    const ext = ({'2':'.sglx','3':'.vlla','4':'.clyn','5':'.vlln','6':'.cyln'})[choice];
+    const base = current.replace(/\.(?:sglx|vlla|clyn|vlln|cyln)$/i, '');
+    download(project.files[current] || '', base + ext, 'text/plain');
   } else if (
-    choice === '3'
+    choice === '7'
   ) {
     save();
 
@@ -2872,7 +2890,7 @@ async function exportProject() {
       'text/html'
     );
   } else if (
-    choice === '4'
+    choice === '8'
   ) {
     save();
 
@@ -2892,7 +2910,7 @@ async function exportProject() {
       'application/json'
     );
   } else if (
-    choice === '5'
+    choice === '9'
   ) {
     await exportZip();
   }
@@ -3728,10 +3746,7 @@ function showCompletions(
             project.files
           ).map(
             x =>
-              x.replace(
-                /\.sglx$/,
-                ''
-              )
+              x.replace(/\.(?:sglx|vlla|clyn|vlln|cyln)$/i, '')
           ),
           ...Object.keys(
             project.assets
