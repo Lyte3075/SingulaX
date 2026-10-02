@@ -1,0 +1,36 @@
+local lane = 2
+local score = 0
+local obstacleLane = 1
+local obstacleY = -60
+
+forever do
+  clear_screen()
+  draw_text("NEON RUNNER", 24, 34, 28, "white")
+  draw_text("Score: " .. score, 24, 64, 18, "cyan")
+
+  if key_pressed("ArrowLeft") then
+    lane -= 1
+  end
+  if key_pressed("ArrowRight") then
+    lane += 1
+  end
+
+  if lane < 1 then lane = 1 end
+  if lane > 3 then lane = 3 end
+
+  obstacleY += 5
+  if obstacleY > 480 then
+    obstacleY = -60
+    obstacleLane = random(1, 3)
+    score += 1
+  end
+
+  draw_rect(120, 0, 4, 450, "#303040")
+  draw_rect(280, 0, 4, 450, "#303040")
+  draw_rect(440, 0, 4, 450, "#303040")
+  draw_rect(520, 0, 4, 450, "#303040")
+
+  draw_rect(140 + (lane - 1) * 160, 380, 60, 60, "cyan")
+  draw_rect(140 + (obstacleLane - 1) * 160, obstacleY, 60, 60, "red")
+  wait(0.016)
+end
