@@ -25,7 +25,7 @@ let mode = 'code';
 const SINGULAX_EXTENSIONS = [
   '.sglx',
   '.txt',
-  '.cyln'
+  '.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075'
 ];
 
 function isSingulaXFileName(name) {
@@ -496,7 +496,7 @@ $('tree').onclick = e => {
 
     if (n) {
       if (!isSingulaXFileName(n)) {
-        alert('SingulaX files must use .sglx, .txt, or .cyln.');
+        alert('SingulaX files must use .sglx, .txt, or .cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075.');
         return;
       }
 
@@ -680,7 +680,7 @@ $('newFileBtn').onclick = () => {
 
   if (!isSingulaXFileName(n)) {
     alert(
-      'SingulaX files must use .sglx, .txt, or .cyln.'
+      'SingulaX files must use .sglx, .txt, or .cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075.'
     );
 
     return;
@@ -790,7 +790,7 @@ let sglx3dGL = null;
 function sglx3dColor(v) {
   const names = {
     white:[1,1,1], black:[0,0,0], red:[1,0,0], green:[0,1,0], blue:[0,0,1],
-    cyan:[0,1,1], magenta:[1,0,1], yellow:[1,1,0], orange:[1,.5,0], purple:[.55,0,1], violet:[.45,0,1], gray:[.5,.5,.5], grey:[.5,.5,.5]
+    cyan:[0,1,1], magenta:[1,0,1], yellow:[1,1,0], orange:[1,.5,0], purple:[.55,0,1], violet:[.45,0,1], gray:[.5], grey:[.5]
   };
   const str=String(v||'white').toLowerCase().trim();
   if(names[str]) return names[str];
@@ -2818,7 +2818,7 @@ async function exportProject() {
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
       '3 = Single script (.txt)\n' +
-      '4 = Single script (.cyln)\n' +
+      '4 = Single script (.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075)\n' +
       '5 = Standalone HTML game\n' +
       '6 = Project JSON backup\n' +
       '7 = Full project ZIP',
@@ -2830,7 +2830,7 @@ async function exportProject() {
     download(JSON.stringify(project, null, 2), project.name + '.sglxproj', 'application/json');
   } else if (choice === '2' || choice === '3' || choice === '4') {
     save();
-    const ext = choice === '2' ? '.sglx' : choice === '3' ? '.txt' : '.cyln';
+    const ext = choice === '2' ? '.sglx' : choice === '3' ? '.txt' : '.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075';
     const base = current.replace(/\.(?:sglx|vlla|clyn)$/i, '');
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (choice === '5') {
