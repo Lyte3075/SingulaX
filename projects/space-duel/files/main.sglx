@@ -7,15 +7,19 @@ local score = 0
 forever do
   clear_screen()
   draw_text("SPACE DUEL", 24, 34, 28, "white")
-  draw_text("A/D move   Space fire", 24, 64, 16, "white")
+  draw_text("Left joystick = move   A = fire", 24, 64, 16, "white")
   draw_text("Score: " .. score, 24, 92, 18, "cyan")
 
-  if key_down("KeyA") then p1x -= 4 end
-  if key_down("KeyD") then p1x += 4 end
+  local moveX = gamepad_axis(0, 0)
 
-  if key_pressed(" ") then
+  if abs(moveX) > 0.15 then
+    p1x += moveX * 5
+  end
+
+  if gamepad_button(0, 0) then
     shotX = p1x
     shotY = 330
+    wait(0.15)
   end
 
   if shotY > 0 then
