@@ -1,51 +1,79 @@
-# 02_functions.sglx
-# Functions, default parameters, recursion, and closures.
+// 02_functions.sglx
+// TOPIC: Functions, parameters, return values, defaults, recursion, and closures.
+// Every example in this file is part of one complete function lesson. //
 
+say("=== SingulaX Functions ===")
+
+// A function groups reusable logic behind a name. //
 function add(a, b)
   return a + b
 end
-say("add(2, 3) =", add(2, 3))
 
-# default parameter values
+say("add(7, 5) =", add(7, 5))
+
+// Parameters can have default values. //
 function greet(name = "friend")
-  return "Hey there, " + name + "!"
+  return "Hello, " + name + "!"
 end
-say(greet())
-say(greet("Grace"))
 
-# recursion
+say(greet())
+say(greet("SingulaX"))
+
+// Functions can call other functions. //
+function rectangle_area(width, height)
+  return width * height
+end
+
+function rectangle_report(width, height)
+  let area = rectangle_area(width, height)
+  return "A " + width + "x" + height + " rectangle has area " + area
+end
+
+say(rectangle_report(8, 4))
+
+// Recursion means a function calls itself.
+// The base case stops the recursion. //
 function factorial(n)
   if n <= 1 then
     return 1
   end
+
   return n * factorial(n - 1)
 end
+
 say("5! =", factorial(5))
 
-# functions are values -- you can store and pass them around
-function double(x)
-  return x * 2
+// Functions are values, so they can be stored in variables. //
+function double(value)
+  return value * 2
 end
+
 let operation = double
 say("operation(21) =", operation(21))
 
-# closures: a function that remembers state from where it was created
+// A closure remembers variables from the function that created it. //
 function make_counter()
   let count = 0
+
   function increment()
     count = count + 1
     return count
   end
+
   return increment
 end
 
-let counter_a = make_counter()
-let counter_b = make_counter()
-say(counter_a(), counter_a(), counter_a())   # 1 2 3
-say(counter_b())                             # 1 (separate, independent state)
+let counter = make_counter()
 
-# anonymous functions
-let square = function(x)
-  return x * x
+say("Counter:", counter())
+say("Counter:", counter())
+say("Counter:", counter())
+
+// Anonymous functions can also be stored directly in variables. //
+let square = function(value)
+  return value * value
 end
+
 say("square(9) =", square(9))
+
+say("=== Functions complete ===")
