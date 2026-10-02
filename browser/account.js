@@ -2,6 +2,7 @@ import { supabase } from './supabase.js';
 
 const $ = id => document.getElementById(id);
 const syntheticDomain = 'users.singulax.local';
+const EMAIL_REDIRECT = 'https://lyte3075.github.io/SingulaX/browser/account.html';
 
 function authEmail(username) {
   return username.trim().toLowerCase() + '@' + syntheticDomain;
@@ -77,7 +78,7 @@ $('addEmail').onclick=async()=>{
   try{
     const {data:sessionData}=await supabase.auth.getSession();
     if(!sessionData?.session) return;
-    const {error}=await supabase.auth.updateUser({email});
+    const {error}=await supabase.auth.updateUser({email},{emailRedirectTo:EMAIL_REDIRECT});
     if(error) throw error;
     message('Verification email sent. Confirm it to verify your email.');
     await refresh();
