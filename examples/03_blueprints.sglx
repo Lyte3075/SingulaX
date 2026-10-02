@@ -1,11 +1,10 @@
-// 03_blueprints.sglx
-// TOPIC: Blueprints, objects, initialization, methods, and inheritance.
-// A blueprint is SingulaX's class-like object definition. //
+// 03_blueprints.sglx //
+// TOPIC: Blueprints, initialization, methods, objects, and inheritance. //
+// A blueprint is SingulaX's reusable object definition. //
 
 say("=== SingulaX Blueprints ===")
 
-// Animal is the base blueprint.
-// init() runs when a new Animal is created. //
+// Animal defines shared object data and behavior. //
 blueprint Animal
   function init(self, name, sound)
     self.name = name
@@ -17,8 +16,7 @@ blueprint Animal
   end
 end
 
-// Dog inherits Animal.
-// It keeps the basic animal data and adds dog-specific behavior. //
+// Dog inherits Animal and adds its own data and methods. //
 blueprint Dog is Animal
   function init(self, name)
     self.name = name
@@ -36,18 +34,14 @@ blueprint Dog is Animal
   end
 end
 
-// Create an object from the base blueprint. //
+// new creates an object and calls its init method. //
 let animal = new Animal("Creature", "...")
-
 say(animal.speak())
 
-// Create an object from the child blueprint. //
 let rex = new Dog("Rex")
-
 rex.learn_trick("sit")
 rex.learn_trick("roll over")
 rex.learn_trick("shake")
-
 rex.show_off()
 
 say("Dog name:", rex.name)
