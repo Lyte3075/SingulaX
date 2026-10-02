@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "mobile-dodge",
+  "name": "Mobile Dodge",
+  "description": "A fast touch-friendly survival game where you dodge falling hazards and chase a high score.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "projects/mobile-dodge/files/main.sglx",
+  "files": [
+    "projects/mobile-dodge/files/main.sglx"
+  ],
+  "category": "Mobile Game"
+}
