@@ -142,8 +142,8 @@ async function publish(req: Request, ctx: any) {
     name,
     description,
     version,
-    author: ctx.userClaims?.user_metadata?.user_name || ctx.userClaims?.email?.split("@")[0] || "SingulaX User",
-    author_id: ctx.userClaims?.sub || null,
+    author: "SingulaX Community User",
+    author_id: null,
     published: new Date().toISOString(),
     downloads: 0,
     likes: 0,
@@ -191,7 +191,7 @@ async function publish(req: Request, ctx: any) {
 }
 
 export default {
-  fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
+  fetch: withSupabase({ auth: "publishable" }, async (req, ctx) => {
     if (req.method !== "POST") return json({ error: "POST required." }, 405);
     try {
       return await publish(req, ctx);
