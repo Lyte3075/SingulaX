@@ -1,6 +1,6 @@
-// 11_repeat_until.sglx
-// TOPIC: Repetition primitives.
-// This script demonstrates counted repeat, task/state repeat,
+// 11_repeat_until.sglx //
+// TOPIC: Repetition primitives. //
+// This script demonstrates counted repeat, task/state repeat, //
 // and statement/state repeat. //
 
 say("=== SingulaX Repeat ===")
