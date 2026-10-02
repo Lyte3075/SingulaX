@@ -1,0 +1,33 @@
+// 18_2d_drawing.sglx //
+// TOPIC: 2D drawing primitives. //
+// This lesson demonstrates the main drawing calls in one animated scene. //
+
+let x = 120
+let direction = 3
+
+forever do
+  clear_screen()
+
+  // A rectangle can be used for backgrounds, panels, and objects. //
+  draw_rect(0, 0, 800, 450, "#10182b")
+
+  // A line is useful for borders, floors, and guides. //
+  draw_line(0, 390, 800, 390, "cyan")
+
+  // Move the demo object so the scene is visibly animated. //
+  x += direction
+  if x <= 40 or x >= 760 then
+    direction = -direction
+  end
+
+  // Circles are useful for players, particles, and indicators. //
+  draw_circle(x, 180, 40, "magenta")
+
+  // draw_text places readable information into the scene. //
+  draw_text("SingulaX 2D Drawing", 24, 34, 24, "white")
+  draw_text("Rectangle + line + circles + text", 24, 62, 16, "white")
+  draw_text("Animated X: {x}", 24, 88, 16, "white")
+
+  // Mouse coordinates can be used as another drawing input. //
+  draw_circle(mouse_x(), mouse_y(), 8, "white")
+end
