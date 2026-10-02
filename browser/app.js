@@ -23,9 +23,9 @@ let current = 'main.sglx';
 const SINGULAX_EXTENSIONS = [
   '.sglx',
   '.txt',
-  '.cyln',
+  '.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075',
   '.vlln',
-  '.cyln'
+  '.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075'
 ];
 
 function isSingulaXFileName(name) {
@@ -791,7 +791,7 @@ let sglx3dGL = null;
 function sglx3dColor(v) {
   const names = {
     white:[1,1,1], black:[0,0,0], red:[1,0,0], green:[0,1,0], blue:[0,0,1],
-    cyan:[0,1,1], magenta:[1,0,1], yellow:[1,1,0], orange:[1,.5,0], purple:[.55,0,1], violet:[.45,0,1], gray:[.5,.5,.5], grey:[.5,.5,.5]
+    cyan:[0,1,1], magenta:[1,0,1], yellow:[1,1,0], orange:[1,.5,0], purple:[.55,0,1], violet:[.45,0,1], gray:[.5], grey:[.5]
   };
   const str=String(v||'white').toLowerCase().trim();
   if(names[str]) return names[str];
@@ -2821,9 +2821,9 @@ async function exportProject() {
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
       '3 = Single script (.txt)\n' +
-      '4 = Single script (.cyln)\n' +
+      '4 = Single script (.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075)\n' +
       '5 = Single script (.vlln)\n' +
-      '6 = Single script (.cyln)\n' +
+      '6 = Single script (.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075)\n' +
       '7 = Standalone HTML game\n' +
       '8 = Project JSON backup\n' +
       '9 = Full project ZIP',
@@ -2856,7 +2856,7 @@ async function exportProject() {
     );
   } else if (['2','3','4','5','6'].includes(choice)) {
     save();
-    const ext = ({'2':'.sglx','3':'.txt','4':'.cyln','5':'.vlln','6':'.cyln'})[choice];
+    const ext = ({'2':'.sglx','3':'.txt','4':'.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075','5':'.vlln','6':'.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075'})[choice];
     const base = current.replace(/\.(?:sglx|vlla|clyn|vlln|cyln)$/i, '');
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (
