@@ -1,0 +1,5 @@
+# SingulaX Hello World
+draw_text("Hello, SingulaX!", 40, 60, 32, "white")
+draw_text("Welcome to your first SingulaX program.", 40, 105, 20, "cyan")
+
+wait(2)
