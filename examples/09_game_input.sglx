@@ -1,26 +1,99 @@
-# 09_game_input.sglx
-# Run this from Singulax Studio. Use arrow keys and click the canvas.
+// 09_game_input.sglx
+// TOPIC: Game input in SingulaX.
+// This one script demonstrates keyboard, mouse, touch, both joysticks,
+// ABXY buttons, and the D-pad using one small playable input demo. //
 
-local x = 350
-local y = 190
+let player_x = 360
+let player_y = 200
+let aim_x = 360
+let aim_y = 200
+let speed = 4
+let color = "dodgerblue"
 
+// The game loop runs once per frame. //
 forever do
   clear_screen()
 
+  // Keyboard movement works on desktop. //
   if key_down("ArrowLeft") then
-    x -= 4
-  elseif key_down("ArrowRight") then
-    x += 4
+    player_x -= speed
+  end
+
+  if key_down("ArrowRight") then
+    player_x += speed
   end
 
   if key_down("ArrowUp") then
-    y -= 4
-  elseif key_down("ArrowDown") then
-    y += 4
+    player_y -= speed
   end
 
-  draw_rect(x, y, 70, 70, "dodgerblue")
-  draw_circle(mouse_x(), mouse_y(), 12, "white")
-  draw_text("Arrow keys move the square", 20, 30, 22, "white")
-  draw_text("Mouse: {mouse_x()}, {mouse_y()}", 20, 60, 16, "white")
+  if key_down("ArrowDown") then
+    player_y += speed
+  end
+
+  // The first joystick can also move the player.
+  // It is mapped to joystick_x/y on touch controls and gamepads. //
+  player_x += joystick_x() * speed
+  player_y += joystick_y() * speed
+
+  // The second joystick controls the aiming marker. //
+  aim_x += joystick2_x() * speed * 2
+  aim_y += joystick2_y() * speed * 2
+
+  // ABXY demonstrate button_down().
+  // A/B/X/Y map to the first four gamepad buttons. //
+  if button_down("a") then
+    color = "lime"
+  end
+
+  if button_down("b") then
+    color = "tomato"
+  end
+
+  if button_down("x") then
+    color = "gold"
+  end
+
+  if button_down("y") then
+    color = "violet"
+  end
+
+  // D-pad names are also supported by button_down(). //
+  if button_down("dpad_left") then
+    player_x -= speed
+  end
+
+  if button_down("dpad_right") then
+    player_x += speed
+  end
+
+  if button_down("dpad_up") then
+    player_y -= speed
+  end
+
+  if button_down("dpad_down") then
+    player_y += speed
+  end
+
+  // Touch input can be read directly as a pointer position. //
+  if touching() then
+    aim_x = touch_x()
+    aim_y = touch_y()
+  end
+
+  // Mouse input works on desktop. //
+  if mouse_down("left") then
+    aim_x = mouse_x()
+    aim_y = mouse_y()
+  end
+
+  // Draw the player and aim marker. //
+  draw_rect(player_x, player_y, 60, 60, color)
+  draw_circle(aim_x, aim_y, 12, "white")
+
+  draw_text("GAME INPUT LAB", 20, 30, 22, "white")
+  draw_text("Arrows / left joystick: move", 20, 60, 16, "white")
+  draw_text("Right joystick / mouse / touch: aim", 20, 84, 16, "white")
+  draw_text("ABXY changes player color", 20, 108, 16, "white")
+  draw_text("D-pad also moves the player", 20, 132, 16, "white")
 end
