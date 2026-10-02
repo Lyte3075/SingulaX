@@ -1,33 +1,20 @@
 // 18_2d_drawing.sglx //
-// TOPIC: 2D drawing primitives. //
-// This lesson demonstrates the main drawing calls in one animated scene. //
+// TOPIC: The 2D drawing API. //
+// This script puts the main drawing primitives in one place. //
 
-let x = 120
-let direction = 3
+clear_screen()
 
-forever do
-  clear_screen()
+// Rectangles use x, y, width, height, and a color. //
+draw_rect(40, 60, 160, 90, "royalblue")
 
-  // A rectangle can be used for backgrounds, panels, and objects. //
-  draw_rect(0, 0, 800, 450, "#10182b")
+// Circles use a center, radius, and color. //
+draw_circle(300, 105, 45, "magenta")
 
-  // A line is useful for borders, floors, and guides. //
-  draw_line(0, 390, 800, 390, "cyan")
+// Lines use two endpoints and a color. //
+draw_line(400, 60, 650, 150, "cyan")
 
-  // Move the demo object so the scene is visibly animated. //
-  x += direction
-  if x <= 40 or x >= 760 then
-    direction = -direction
-  end
-
-  // Circles are useful for players, particles, and indicators. //
-  draw_circle(x, 180, 40, "magenta")
-
-  // draw_text places readable information into the scene. //
-  draw_text("SingulaX 2D Drawing", 24, 34, 24, "white")
-  draw_text("Rectangle + line + circles + text", 24, 62, 16, "white")
-  draw_text("Animated X: {x}", 24, 88, 16, "white")
-
-  // Mouse coordinates can be used as another drawing input. //
-  draw_circle(mouse_x(), mouse_y(), 8, "white")
-end
+// Text uses content, x, y, size, and color. //
+draw_text("SingulaX 2D Drawing", 40, 210, 28, "white")
+draw_text("Rectangle", 60, 95, 16, "white")
+draw_text("Circle", 275, 100, 16, "white")
+draw_text("Line", 500, 100, 16, "white")
