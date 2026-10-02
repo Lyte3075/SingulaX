@@ -2859,7 +2859,9 @@ async function exportProject() {
     };
     const ext = extensions[choice];
     let base = current;
-    while (/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(base)) {\n      base = base.replace(/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');\n    }
+    while (/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(base)) {
+      base = base.replace(/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');
+    }
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (choice === '11') {
     save();
