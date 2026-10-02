@@ -1,12 +1,21 @@
-# geometry.sglx
-# A small reusable module. Any Singulax file can be pulled in with "use".
+// geometry.sglx
+// TOPIC: Reusable module logic.
+// This file is imported by 05_modules.sglx.
+// It intentionally contains only geometry calculations. //
 
 let pi = 3.14159
 
+// Calculate the area of a circle. //
 function circle_area(radius)
   return pi * radius ^ 2
 end
 
+// Calculate the area of a rectangle. //
 function rectangle_area(width, height)
   return width * height
+end
+
+// Calculate the perimeter of a rectangle. //
+function rectangle_perimeter(width, height)
+  return 2 * (width + height)
 end
