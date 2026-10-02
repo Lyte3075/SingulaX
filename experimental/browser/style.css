@@ -55,3 +55,171 @@ aside,.panel,.studioTabs,.codeShell textarea,#diagnostics{scrollbar-width:auto;s
   .studioTab{font-size:12px;padding:6px 9px}
   .multitask .windows{gap:4px}
 }
+
+
+/* Custom SingulaX themes */
+body[data-theme="pretty-scene"]{
+  --theme-accent:#ef9fbe;
+  --theme-accent-strong:#e982aa;
+  --theme-secondary:#a9dcf5;
+  --theme-bg:#fff4f8;
+  --theme-panel:#fff9fc;
+  --theme-panel2:#e9f6fd;
+  --theme-text:#352737;
+  --theme-muted:#7a6575;
+  --theme-border:#e7c7d6;
+  background:var(--theme-bg);
+  color:var(--theme-text);
+}
+body[data-theme="pretty-scene"] header,
+body[data-theme="pretty-scene"] aside,
+body[data-theme="pretty-scene"] .studioTabs,
+body[data-theme="pretty-scene"] .tabs,
+body[data-theme="pretty-scene"] .blockbar{
+  background:var(--theme-panel);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="pretty-scene"] button,
+body[data-theme="pretty-scene"] select{
+  background:var(--theme-panel2);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="pretty-scene"] button:hover,
+body[data-theme="pretty-scene"] .studioTab.active,
+body[data-theme="pretty-scene"] .treeitem.active{
+  background:var(--theme-accent);
+  color:#3a2030;
+  border-color:var(--theme-accent-strong);
+}
+body[data-theme="pretty-scene"] #projectName,
+body[data-theme="pretty-scene"] .codeShell textarea,
+body[data-theme="pretty-scene"] .panel,
+body[data-theme="pretty-scene"] .editorWrap,
+body[data-theme="pretty-scene"] #gutter,
+body[data-theme="pretty-scene"] dialog{
+  background:var(--theme-panel);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="pretty-scene"] #gutter{background:#f3e9ef;color:#9a8291}
+body[data-theme="pretty-scene"] .block{background:#e9f6fd;border-color:#b8dcec}
+body[data-theme="pretty-scene"] .block.if{background:#fbe5ef}
+body[data-theme="pretty-scene"] .block.loop{background:#e2f3fb}
+body[data-theme="pretty-scene"] .previewPanel canvas{border-color:#c8dce8}
+body[data-theme="pretty-scene"] #suggestions{background:#fff9fc;border-color:#e7b8ce;color:var(--theme-text)}
+body[data-theme="pretty-scene"] #suggestions button.selected,
+body[data-theme="pretty-scene"] #suggestions button:hover{background:#e9f6fd}
+body[data-theme="pretty-scene"] .brand span{background:linear-gradient(90deg,#ef9fbe,#a9dcf5);background-clip:text;-webkit-background-clip:text}
+body[data-theme="pretty-scene"] .touchPad button{background:#e9f6fd}
+
+body[data-theme="matcha"]{
+  --theme-accent:#8fbf8f;
+  --theme-accent-strong:#6fa86f;
+  --theme-secondary:#d9e8c5;
+  --theme-bg:#f2f6ed;
+  --theme-panel:#f8fbf4;
+  --theme-panel2:#e5efd8;
+  --theme-text:#243126;
+  --theme-muted:#647363;
+  --theme-border:#c5d4b9;
+  background:var(--theme-bg);
+  color:var(--theme-text);
+}
+body[data-theme="matcha"] header,
+body[data-theme="matcha"] aside,
+body[data-theme="matcha"] .studioTabs,
+body[data-theme="matcha"] .tabs,
+body[data-theme="matcha"] .blockbar{
+  background:var(--theme-panel);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="matcha"] button,
+body[data-theme="matcha"] select{
+  background:var(--theme-panel2);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="matcha"] button:hover,
+body[data-theme="matcha"] .studioTab.active,
+body[data-theme="matcha"] .treeitem.active{
+  background:var(--theme-accent);
+  color:#173018;
+  border-color:var(--theme-accent-strong);
+}
+body[data-theme="matcha"] #projectName,
+body[data-theme="matcha"] .codeShell textarea,
+body[data-theme="matcha"] .panel,
+body[data-theme="matcha"] .editorWrap,
+body[data-theme="matcha"] #gutter,
+body[data-theme="matcha"] dialog{
+  background:var(--theme-panel);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="matcha"] #gutter{background:#e8efdf;color:#71806d}
+body[data-theme="matcha"] .block{background:#e5efd8;border-color:#b8cba8}
+body[data-theme="matcha"] .block.if{background:#e1ead5}
+body[data-theme="matcha"] .block.loop{background:#dcebd9}
+body[data-theme="matcha"] #suggestions{background:#f8fbf4;border-color:#afc49f;color:var(--theme-text)}
+body[data-theme="matcha"] #suggestions button.selected,
+body[data-theme="matcha"] #suggestions button:hover{background:#e5efd8}
+body[data-theme="matcha"] .brand span{background:linear-gradient(90deg,#6fa86f,#b7d69c);background-clip:text;-webkit-background-clip:text}
+body[data-theme="matcha"] .touchPad button{background:#e5efd8}
+
+body[data-theme="caitlyn"]{
+  --theme-accent:#ef3b45;
+  --theme-accent-strong:#ff5962;
+  --theme-secondary:#3a1116;
+  --theme-bg:#0c0b0d;
+  --theme-panel:#151214;
+  --theme-panel2:#242126;
+  --theme-text:#f7eef0;
+  --theme-muted:#aa969b;
+  --theme-border:#43282e;
+  background:var(--theme-bg);
+  color:var(--theme-text);
+}
+body[data-theme="caitlyn"] header,
+body[data-theme="caitlyn"] aside,
+body[data-theme="caitlyn"] .studioTabs,
+body[data-theme="caitlyn"] .tabs,
+body[data-theme="caitlyn"] .blockbar{
+  background:var(--theme-panel);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="caitlyn"] button,
+body[data-theme="caitlyn"] select{
+  background:var(--theme-panel2);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="caitlyn"] button:hover,
+body[data-theme="caitlyn"] .studioTab.active,
+body[data-theme="caitlyn"] .treeitem.active{
+  background:var(--theme-accent);
+  color:#fff;
+  border-color:var(--theme-accent-strong);
+}
+body[data-theme="caitlyn"] #projectName,
+body[data-theme="caitlyn"] .codeShell textarea,
+body[data-theme="caitlyn"] .panel,
+body[data-theme="caitlyn"] .editorWrap,
+body[data-theme="caitlyn"] #gutter,
+body[data-theme="caitlyn"] dialog{
+  background:var(--theme-panel);
+  color:var(--theme-text);
+  border-color:var(--theme-border);
+}
+body[data-theme="caitlyn"] #gutter{background:#110f11;color:#735f64}
+body[data-theme="caitlyn"] .block{background:#24181b;border-color:#613238}
+body[data-theme="caitlyn"] .block.if{background:#32181d}
+body[data-theme="caitlyn"] .block.loop{background:#241d20}
+body[data-theme="caitlyn"] #suggestions{background:#151214;border-color:#6b3038;color:var(--theme-text)}
+body[data-theme="caitlyn"] #suggestions button.selected,
+body[data-theme="caitlyn"] #suggestions button:hover{background:#3a1116}
+body[data-theme="caitlyn"] .brand span{background:linear-gradient(90deg,#ef3b45,#ff7b82);background-clip:text;-webkit-background-clip:text}
+body[data-theme="caitlyn"] .touchPad button{background:#3a1116}
