@@ -1,45 +1,31 @@
 // 13_math_and_random.sglx //
-// TOPIC: Numbers, math functions, clamping, interpolation, and randomness. //
-// Every calculation in this lesson is demonstrated with a real result. //
+// TOPIC: Numbers, math functions, ranges, and random values. //
 
 say("=== Math and Random ===")
 
-// Basic arithmetic uses +, -, *, /, %, and ^. //
-let a = 12
-let b = 5
-say("a + b:", a + b)
-say("a - b:", a - b)
-say("a * b:", a * b)
-say("a / b:", a / b)
-say("a % b:", a % b)
-say("a ^ 2:", a ^ 2)
+let radius = 5
+let height = 12
 
-// Built-in math functions handle common calculations. //
-say("abs(-9):", abs(-9))
-say("floor(4.8):", floor(4.8))
-say("ceil(4.2):", ceil(4.2))
-say("round(4.5):", round(4.5))
-say("sqrt(81):", sqrt(81))
-say("pow(2, 5):", pow(2, 5))
+say("Absolute value:", abs(-42))
+say("Minimum:", min(8, 3, 11))
+say("Maximum:", max(8, 3, 11))
+say("Square root:", sqrt(144))
+say("Power:", radius ^ 2)
+say("Circle area:", 3.14159 * radius ^ 2)
 
-// min and max compare values. //
-say("min:", min(7, 2, 9))
-say("max:", max(7, 2, 9))
+// random creates a value you can use for games and simulations. //
+let roll = random(1, 6)
+say("Dice roll:", roll)
 
-// clamp keeps a value inside a range. //
-let health = clamp(135, 0, 100)
-say("Clamped health:", health)
+let choices = ["red", "green", "blue", "yellow"]
+say("Random choice:", random_choice(choices))
 
-// lerp moves between two numbers using a value from 0 to 1. //
-let halfway = lerp(0, 100, 0.5)
-say("Halfway from 0 to 100:", halfway)
+// A range is useful for repeated numeric work. //
+let values = range(1, 6)
+say("Range:", values)
 
-// random creates a decimal value, while random_int creates an integer. //
-say("Random decimal:", random())
-say("Random integer 1-6:", random_int(1, 6))
-
-// random_choice selects one item from a collection. //
-let colors = ["red", "green", "blue", "purple"]
-say("Random color:", random_choice(colors))
-
-say("=== Math and Random complete ===")
+let total = 0
+for each value in values do
+  total += value
+end
+say("Range total:", total)
