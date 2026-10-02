@@ -8,23 +8,28 @@ local enemyHealth = 100
 forever do
   clear_screen()
   draw_text("ARENA BRAWL", 24, 34, 28, "white")
-  draw_text("WASD = move   Space = attack", 24, 64, 16, "white")
+  draw_text("Left joystick = move   A = attack", 24, 64, 16, "white")
 
-  if key_down("KeyW") then py -= 3 end
-  if key_down("KeyS") then py += 3 end
-  if key_down("KeyA") then px -= 3 end
-  if key_down("KeyD") then px += 3 end
+  local moveX = gamepad_axis(0, 0)
+  local moveY = gamepad_axis(0, 1)
 
-  if key_pressed(" ") then
+  if abs(moveX) > 0.15 then
+    px += moveX * 4
+  end
+  if abs(moveY) > 0.15 then
+    py += moveY * 4
+  end
+
+  if gamepad_button(0, 0) then
     if abs(px - ex) < 90 and abs(py - ey) < 90 then
       enemyHealth -= 10
     end
+    wait(0.15)
   end
 
   draw_rect(px - 28, py - 28, 56, 56, "cyan")
   draw_rect(ex - 28, ey - 28, 56, 56, "red")
   draw_text("HP " .. health, px - 30, py - 42, 14, "white")
   draw_text("ENEMY " .. enemyHealth, ex - 45, ey - 42, 14, "white")
-
   wait(0.016)
 end
