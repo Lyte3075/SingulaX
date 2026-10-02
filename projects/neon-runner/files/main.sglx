@@ -1,49 +1,137 @@
 local lane = 2
 local score = 0
-local obstacleLane = 1
-local obstacleY = -60
+local speed = 8
+local gameOver = false
+
+local obstacle1Lane = 1
+local obstacle1Y = -80
+local obstacle2Lane = 3
+local obstacle2Y = -300
+local obstacle3Lane = 2
+local obstacle3Y = -520
+local obstacle4Lane = 1
+local obstacle4Y = -740
 
 forever do
   clear_screen()
-  draw_text("NEON RUNNER", 24, 34, 28, "white")
-  draw_text("Score: " .. score, 24, 64, 18, "cyan")
-  draw_text("Left joystick = switch lanes", 24, 92, 16, "white")
 
-  local stickX = gamepad_axis(0, 0)
+  if gameOver then
+    draw_text("GAME OVER", 170, 190, 42, "red")
+    draw_text("Score: " .. score, 190, 240, 22, "white")
+    draw_text("Press A to restart", 165, 280, 18, "cyan")
 
-  if stickX < -0.5 then
-    if lane > 1 then
-      lane -= 1
-      wait(0.12)
+    if gamepad_button(0, 0) then
+      lane = 2
+      score = 0
+      obstacle1Lane = 1
+      obstacle1Y = -80
+      obstacle2Lane = 3
+      obstacle2Y = -300
+      obstacle3Lane = 2
+      obstacle3Y = -520
+      obstacle4Lane = 1
+      obstacle4Y = -740
+      gameOver = false
+      wait(0.2)
     end
-  end
 
-  if stickX > 0.5 then
-    if lane < 3 then
-      lane += 1
-      wait(0.12)
+    wait(0.016)
+  else
+    draw_text("NEON RUNNER", 24, 34, 28, "white")
+    draw_text("Score: " .. score, 24, 64, 18, "cyan")
+    draw_text("Speed: " .. speed, 24, 88, 16, "orange")
+    draw_text("Left joystick = switch lanes", 24, 112, 16, "white")
+
+    local stickX = gamepad_axis(0, 0)
+
+    if stickX < -0.5 then
+      if lane > 1 then
+        lane -= 1
+        wait(0.12)
+      end
     end
-  end
 
-  if lane < 1 then
-    lane = 1
-  end
-  if lane > 3 then
-    lane = 3
-  end
+    if stickX > 0.5 then
+      if lane < 3 then
+        lane += 1
+        wait(0.12)
+      end
+    end
 
-  obstacleY += 5
-  if obstacleY > 480 then
-    obstacleY = -60
-    obstacleLane = random(1, 3)
-    score += 1
-  end
+    if lane < 1 then
+      lane = 1
+    end
+    if lane > 3 then
+      lane = 3
+    end
 
-  draw_rect(120, 0, 4, 450, "#303040")
-  draw_rect(280, 0, 4, 450, "#303040")
-  draw_rect(440, 0, 4, 450, "#303040")
-  draw_rect(520, 0, 4, 450, "#303040")
-  draw_rect(140 + (lane - 1) * 160, 380, 60, 60, "cyan")
-  draw_rect(140 + (obstacleLane - 1) * 160, obstacleY, 60, 60, "red")
-  wait(0.016)
+    obstacle1Y += speed
+    obstacle2Y += speed
+    obstacle3Y += speed
+    obstacle4Y += speed
+
+    if obstacle1Y > 480 then
+      obstacle1Y = -80
+      obstacle1Lane = random(1, 3)
+      score += 1
+    end
+
+    if obstacle2Y > 480 then
+      obstacle2Y = -80
+      obstacle2Lane = random(1, 3)
+      score += 1
+    end
+
+    if obstacle3Y > 480 then
+      obstacle3Y = -80
+      obstacle3Lane = random(1, 3)
+      score += 1
+    end
+
+    if obstacle4Y > 480 then
+      obstacle4Y = -80
+      obstacle4Lane = random(1, 3)
+      score += 1
+    end
+
+    if score >= 10 then
+      speed = 10
+    end
+    if score >= 20 then
+      speed = 12
+    end
+    if score >= 35 then
+      speed = 14
+    end
+
+    local playerX = 140 + (lane - 1) * 160
+    local playerY = 380
+
+    if obstacle1Lane == lane and obstacle1Y > 330 and obstacle1Y < 440 then
+      gameOver = true
+    end
+    if obstacle2Lane == lane and obstacle2Y > 330 and obstacle2Y < 440 then
+      gameOver = true
+    end
+    if obstacle3Lane == lane and obstacle3Y > 330 and obstacle3Y < 440 then
+      gameOver = true
+    end
+    if obstacle4Lane == lane and obstacle4Y > 330 and obstacle4Y < 440 then
+      gameOver = true
+    end
+
+    draw_rect(120, 0, 4, 450, "#303040")
+    draw_rect(280, 0, 4, 450, "#303040")
+    draw_rect(440, 0, 4, 450, "#303040")
+    draw_rect(520, 0, 4, 450, "#303040")
+
+    draw_rect(playerX, playerY, 60, 60, "cyan")
+
+    draw_rect(140 + (obstacle1Lane - 1) * 160, obstacle1Y, 60, 60, "red")
+    draw_rect(140 + (obstacle2Lane - 1) * 160, obstacle2Y, 60, 60, "orange")
+    draw_rect(140 + (obstacle3Lane - 1) * 160, obstacle3Y, 60, 60, "red")
+    draw_rect(140 + (obstacle4Lane - 1) * 160, obstacle4Y, 60, 60, "orange")
+
+    wait(0.016)
+  end
 end
