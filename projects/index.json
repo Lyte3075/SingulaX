@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "projects": [
+    {
+      "schema": 1,
+      "id": "hello-world",
+      "name": "Hello World",
+      "description": "A tiny first SingulaX project. Learn variables, text output, and the main loop.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/hello-world/files/main.sglx",
+      "files": [
+        "projects/hello-world/files/main.sglx"
+      ],
+      "_path": "projects/hello-world",
+      "_id": "hello-world"
+    },
+    {
+      "schema": 1,
+      "id": "controls-guide",
+      "name": "Input & Controls Guide",
+      "description": "A practical example showing keyboard input, movement, and button presses in SingulaX.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/controls-guide/files/main.sglx",
+      "files": [
+        "projects/controls-guide/files/main.sglx"
+      ],
+      "_path": "projects/controls-guide",
+      "_id": "controls-guide"
+    },
+    {
+      "schema": 1,
+      "id": "drawing-basics",
+      "name": "2D Drawing Basics",
+      "description": "A simple SingulaX graphics guide covering rectangles, circles, lines, and text.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/drawing-basics/files/main.sglx",
+      "files": [
+        "projects/drawing-basics/files/main.sglx"
+      ],
+      "_path": "projects/drawing-basics",
+      "_id": "drawing-basics"
+    },
+    {
+      "schema": 1,
+      "id": "3d-starter",
+      "name": "3D Starter Guide",
+      "description": "A minimal introduction to SingulaX's built-in 3D engine.",
+      "version": "1.0.0",
+      "author": "SingulaX",
+      "published": true,
+      "downloads": 0,
+      "likes": 0,
+      "main": "projects/3d-starter/files/main.sglx",
+      "files": [
+        "projects/3d-starter/files/main.sglx"
+      ],
+      "_path": "projects/3d-starter",
+      "_id": "3d-starter"
+    }
+  ]
+}
