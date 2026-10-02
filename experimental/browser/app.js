@@ -2255,9 +2255,11 @@ async function importFiles(files) {
       continue;
     }
 
+    const isSingulaX = isSingulaXFileName(f.name);
+
     const isAsset =
-      !f.name.endsWith('.sglx') &&
-      !f.name.endsWith('.sglxproj');
+      !isSingulaX &&
+      !f.name.toLowerCase().endsWith('.sglxproj');
 
     if (isAsset) {
       project.assets[f.name] =
@@ -2426,12 +2428,8 @@ async function importZipFile(file) {
       }
 
       if (
-        path.startsWith(
-          'scripts/'
-        ) &&
-        path
-          .toLowerCase()
-          .endsWith('.sglx')
+        path.startsWith('scripts/') &&
+        isSingulaXFileName(path)
       ) {
         project.files[
           path.slice(8)
@@ -2445,11 +2443,7 @@ async function importZipFile(file) {
         continue;
       }
 
-      if (
-        path
-          .toLowerCase()
-          .endsWith('.sglx')
-      ) {
+      if (isSingulaXFileName(path)) {
         project.files[path] =
           new TextDecoder().decode(
             bytes
@@ -2823,93 +2817,34 @@ async function exportProject() {
       'Export format:\n' +
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
-      '3 = Standalone HTML game\n' +
-      '4 = Project JSON backup\n' +
-      '5 = Full project ZIP',
-      '5'
+      '3 = Single script (.vlla)\n' +
+      '4 = Single script (.clyn)\n' +
+      '5 = Standalone HTML game\n' +
+      '6 = Project JSON backup\n' +
+      '7 = Full project ZIP',
+      '7'
     );
 
   if (choice === '1') {
     save();
-
-    download(
-      JSON.stringify(
-        project,
-        null,
-        2
-      ),
-      project.name +
-        '.sglxproj',
-      'application/json'
-    );
-  } else if (
-    choice === '2'
-  ) {
+    download(JSON.stringify(project, null, 2), project.name + '.sglxproj', 'application/json');
+  } else if (choice === '2' || choice === '3' || choice === '4') {
     save();
-
-    download(
-      project.files[current] ||
-        '',
-      current,
-      'text/plain'
-    );
-  } else if (
-    choice === '3'
-  ) {
+    const ext = choice === '2' ? '.sglx' : choice === '3' ? '.vlla' : '.clyn';
+    const base = current.replace(/\.(?:sglx|vlla|clyn)$/i, '');
+    download(project.files[current] || '', base + ext, 'text/plain');
+  } else if (choice === '5') {
     save();
-
-    const code =
-      project.files[current] ||
-      '';
-
-    const html =
-      '<!doctype html>' +
-      '<meta charset="utf-8">' +
-      '<title>' +
-      esc(project.name) +
-      '</title>' +
-      '<style>' +
-      'body{margin:0;background:#000}' +
-      'canvas{width:100vw;height:100vh}' +
-      '</style>' +
-      '<canvas id="c" width="800" height="450"></canvas>' +
-      '<script>' +
-      standaloneRuntime() +
-      '<\\/script>';
-
-    download(
-      html,
-      project.name +
-        '.html',
-      'text/html'
-    );
-  } else if (
-    choice === '4'
-  ) {
+    const code = project.files[current] || '';
+    const html = '<!doctype html>' + '<meta charset="utf-8">' + '<title>' + esc(project.name) + '</title>' + '<style>body{margin:0;background:#000}canvas{width:100vw;height:100vh}</style>' + '<canvas id="c" width="800" height="450"></canvas>' + '<script>' + standaloneRuntime() + '<\\/script>';
+    download(html, project.name + '.html', 'text/html');
+  } else if (choice === '6') {
     save();
-
-    download(
-      JSON.stringify(
-        {
-          format:
-            'singulax-project',
-          version: 2,
-          project
-        },
-        null,
-        2
-      ),
-      project.name +
-        '.json',
-      'application/json'
-    );
-  } else if (
-    choice === '5'
-  ) {
+    download(JSON.stringify({format:'singulax-project',version:2,project}, null, 2), project.name + '.json', 'application/json');
+  } else if (choice === '7') {
     await exportZip();
   }
 }
-
 async function exportZip() {
   save();
 
