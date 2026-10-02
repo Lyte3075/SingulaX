@@ -1,5 +1,6 @@
 import { withSupabase } from "npm:@supabase/server@1";
-import { SignJWT, importPKCS1, importPKCS8 } from "npm:jose@6.1.0";
+import { createPrivateKey } from "node:crypto";
+import { SignJWT, importPKCS8 } from "npm:jose@6.1.0";
 
 const OWNER = "Lyte3075";
 const REPO = "SingulaX";
@@ -65,9 +66,19 @@ async function appToken() {
   if (!appId || !privateKey) throw new Error("GitHub App is not configured on the publisher.");
 
   const pem = privateKey.replace(/\\n/g, "\n").trim();
-  const key = pem.includes("BEGIN RSA PRIVATE KEY")
-    ? await importPKCS1(pem, "RS256")
-    : await importPKCS8(pem, "RS256");
+  let pkcs8 = pem;
+  if (pem.includes("BEGIN RSA PRIVATE KEY")) {
+    const privateKeyObject = createPrivateKey({
+      key: pem,
+      format: "pem",
+      type: "pkcs1",
+    });
+    pkcs8 = privateKeyObject.export({
+      format: "pem",
+      type: "pkcs8",
+    }).toString();
+  }
+  const key = await importPKCS8(pkcs8, "RS256");
   const now = Math.floor(Date.now() / 1000);
   const jwt = await new SignJWT({})
     .setProtectedHeader({ alg: "RS256", typ: "JWT" })
@@ -194,7 +205,7 @@ async function publish(req: Request, ctx: any) {
 }
 
 export default {
-  fetch: withSupabase({ auth: "publishable" }, async (req, ctx) => {
+  fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
     if (req.method !== "POST") return json({ error: "POST required." }, 405);
     try {
       return await publish(req, ctx);
