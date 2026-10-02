@@ -23,7 +23,7 @@ let current = 'main.sglx';
 const SINGULAX_EXTENSIONS = [
   '.sglx',
   '.txt',
-  '.clyn',
+  '.cyln',
   '.vlln',
   '.cyln'
 ];
@@ -2821,7 +2821,7 @@ async function exportProject() {
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
       '3 = Single script (.txt)\n' +
-      '4 = Single script (.clyn)\n' +
+      '4 = Single script (.cyln)\n' +
       '5 = Single script (.vlln)\n' +
       '6 = Single script (.cyln)\n' +
       '7 = Standalone HTML game\n' +
@@ -2856,7 +2856,7 @@ async function exportProject() {
     );
   } else if (['2','3','4','5','6'].includes(choice)) {
     save();
-    const ext = ({'2':'.sglx','3':'.txt','4':'.clyn','5':'.vlln','6':'.cyln'})[choice];
+    const ext = ({'2':'.sglx','3':'.txt','4':'.cyln','5':'.vlln','6':'.cyln'})[choice];
     const base = current.replace(/\.(?:sglx|vlla|clyn|vlln|cyln)$/i, '');
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (
