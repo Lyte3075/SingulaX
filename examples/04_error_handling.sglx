@@ -1,10 +1,11 @@
-// 04_error_handling.sglx
-// TOPIC: try/catch, raise, error values, and graceful recovery.
-// The important idea is that an error can be handled instead of ending the program. //
+// 04_error_handling.sglx //
+// TOPIC: try, catch, raise, error values, and graceful recovery. //
+// Use this pattern when code can fail and the program should keep running. //
 
 say("=== SingulaX Error Handling ===")
 
-// This function deliberately handles a possible failure. //
+// A try block contains code that might raise an error. //
+// catch receives the error value so your program can respond to it. //
 function safe_divide(a, b)
   try
     return a / b
@@ -14,10 +15,10 @@ function safe_divide(a, b)
   end
 end
 
-say("10 / 2 =", safe_divide(10, 2))
-say("10 / 0 =", safe_divide(10, 0))
+say("10 / 2:", safe_divide(10, 2))
+say("10 / 0:", safe_divide(10, 0))
 
-// raise lets your own code report a problem. //
+// raise lets your own function create a meaningful error. //
 function withdraw(balance, amount)
   if amount < 0 then
     raise "amount cannot be negative"
@@ -30,7 +31,7 @@ function withdraw(balance, amount)
   return balance - amount
 end
 
-// A successful operation returns normally. //
+// A successful call returns normally. //
 try
   let balance = withdraw(100, 25)
   say("Successful withdrawal. Balance:", balance)
@@ -38,7 +39,7 @@ catch as problem
   say("Unexpected failure:", problem)
 end
 
-// This operation raises an error, but the outer program keeps running. //
+// A failed call can be caught without stopping the rest of the program. //
 try
   let balance = withdraw(50, 100)
   say("New balance:", balance)
@@ -46,9 +47,8 @@ catch as problem
   say("Transaction failed:", problem)
 end
 
-// Errors can also be converted into a safe fallback value. //
+// You can turn a failure into a safe fallback value. //
 let result = safe_divide(20, 0)
-
 if result == nothing then
   say("Using a fallback because the result was nothing.")
 end
