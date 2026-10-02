@@ -23,7 +23,7 @@ let current = 'main.sglx';
 const SINGULAX_EXTENSIONS = [
   '.sglx',
   '.txt',
-  '.vlln',
+  '.vlla',
   '.cyln',
   '.smsc',
   '.wsc',
@@ -2825,7 +2825,7 @@ async function exportProject() {
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
       '3 = Single script (.txt)\n' +
-      '4 = Single script (.vlln)\n' +
+      '4 = Single script (.vlla)\n' +
       '5 = Single script (.cyln)\n' +
       '6 = Single script (.smsc)\n' +
       '7 = Single script (.wsc)\n' +
@@ -2850,7 +2850,7 @@ async function exportProject() {
     const extensions = {
       '2': '.sglx',
       '3': '.txt',
-      '4': '.vlln',
+      '4': '.vlla',
       '5': '.cyln',
       '6': '.smsc',
       '7': '.wsc',
