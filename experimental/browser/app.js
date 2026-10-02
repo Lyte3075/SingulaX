@@ -4152,7 +4152,16 @@ async function openHelp() {
     '09_game_input.sglx',
     '10_singulax_showcase.sglx',
     '11_repeat_until.sglx',
-    'geometry.sglx'
+    'geometry.sglx',
+    '12_data_and_lists.sglx',
+    '13_math_and_random.sglx',
+    '14_text_and_strings.sglx',
+    '15_keyboard_and_mouse.sglx',
+    '16_touch_controls.sglx',
+    '17_gamepad_controls.sglx',
+    '18_2d_drawing.sglx',
+    '19_timing_and_wait.sglx',
+    '20_mini_game.sglx'
   ];
 
   box.innerHTML = '';
