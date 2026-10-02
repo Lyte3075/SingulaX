@@ -1,40 +1,30 @@
 // 14_text_and_strings.sglx //
-// TOPIC: Strings, concatenation, interpolation, and text-oriented program output. //
-// This file keeps the complete text workflow in one copyable example. //
+// TOPIC: Strings, interpolation, searching, and clean text processing. //
 
-say("=== Text and Strings ===")
+let first = "Ada"
+let last = "Lovelace"
+let full = first + " " + last
 
-// A string is text inside quotation marks. //
-let first = "SingulaX"
-let second = "Studio"
+say("Full name:", full)
+say("Interpolated:", "Hello, {first}!")
 
-// + joins strings together. //
-let title = first + " " + second
-say(title)
+// String methods make text easier to process. //
+let raw = "   SingulaX Programming   "
+let clean = raw.trim()
+say("Trimmed:", clean)
+say("Lowercase:", clean.lower())
+say("Uppercase:", clean.upper())
+say("Length:", len(clean))
 
-// {name} interpolation inserts a variable into a string. //
-let user = "Coder"
-let version = 1
-say("Welcome, {user}!")
-say("You are using {first} version {version}.")
+// split turns one string into a list. //
+let words = "write code learn build".split(" ")
+say("Words:", words)
 
-// Numbers can be combined with text through interpolation. //
-let score = 1250
-say("Score: {score}")
+// replace creates a changed copy of text. //
+let message = "SingulaX is fun"
+say("Changed:", message.replace("fun", "powerful"))
 
-// A function can build reusable text. //
-function make_status(name, health)
-  return "{name} has {health} health."
+// Strings work naturally in conditions. //
+if clean.contains("SingulaX") then
+  say("The text contains SingulaX.")
 end
-
-say(make_status("Nova", 80))
-
-// Strings can also be used in comparisons. //
-let command = "run"
-if command == "run" then
-  say("The command was run.")
-else
-  say("The command was not run.")
-end
-
-say("=== Text and Strings complete ===")
