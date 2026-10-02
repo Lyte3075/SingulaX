@@ -29,7 +29,7 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
 <main>
   <section class="hero">
     <h1>Discover. Test. Remix. 🚀</h1>
-    <p>Explore SingulaX projects, publish your own projects, test community code, and remix projects into SingulaX Studio.</p>
+    <p>Explore actual published SingulaX projects, test them, follow them, and remix them into SingulaX Studio. GitHub repositories are not the projects shown here.</p>
   </section>
 
   <nav class="tabs" aria-label="Community sections">
@@ -41,7 +41,7 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
   </nav>
 
   <div id="searchBox" class="search" hidden>
-    <input id="query" placeholder="Search SingulaX projects on GitHub...">
+    <input id="query" placeholder="Search published SingulaX projects...">
     <button id="searchBtn">Search</button>
   </div>
   <div id="status">Loading trending projects…</div>
@@ -122,14 +122,19 @@ async function loadTab(tab){
   $('grid').innerHTML='';
   if(tab==='following'){await renderFollowing();return;}
   if(tab==='yours'){await renderYourProjects();return;}
-  $('status').textContent='Loading '+tab+' projects…';
+  $('status').textContent='Loading published SingulaX projects…';
   try{
-    const data=await github(tabSearch(tab));
-    const repos=data.items||[];
-    $('status').textContent=repos.length+' GitHub repositories found. Published SingulaX projects are stored separately.';
-    if(!repos.length){$('grid').innerHTML='<div class="empty">No GitHub repositories found yet.</div>';return;}
-    repos.forEach(addRepo);
-  }catch(e){$('status').textContent='Could not load community projects: '+e.message;}
+    let projects=await getCommunityProjects();
+    if(tab==='trending')projects.sort((a,b)=>((b.downloads||0)*2+(b.likes||0))-((a.downloads||0)*2+(a.likes||0)));
+    else if(tab==='recommended')projects.sort((a,b)=>(b.likes||0)-(a.likes||0));
+    else projects.sort((a,b)=>String(b.published||'').localeCompare(String(a.published||'')));
+    $('status').textContent=projects.length+' published SingulaX projects.';
+    if(!projects.length){$('grid').innerHTML='<div class="empty">No SingulaX projects have been published yet.</div>';return;}
+    projects.forEach(addCommunityCard);
+  }catch(e){
+    $('status').textContent='Could not load published projects: '+e.message;
+    $('grid').innerHTML='<div class="empty">The Community project store is not available yet.</div>';
+  }
 }
 
 function addRepo(repo){
@@ -290,7 +295,17 @@ async function publishProject(){
 }
 
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>loadTab(b.dataset.tab));
-$('searchBtn').onclick=()=>{const q=$('query').value.trim()||'SingulaX';const encoded=/singulax/i.test(q)?q:q+' SingulaX';$('status').textContent='Searching GitHub repositories…';$('grid').innerHTML='';github('/search/repositories?q='+encodeURIComponent(encoded)+'&sort=updated&order=desc&per_page=18').then(d=>{(d.items||[]).forEach(addRepo);$('status').textContent=(d.items||[]).length+' GitHub repositories found.'}).catch(e=>$('status').textContent='Search failed: '+e.message)};
+$('searchBtn').onclick=async()=>{
+  const q=$('query').value.trim().toLowerCase();
+  $('status').textContent='Searching published projects…';$('grid').innerHTML='';
+  try{
+    const projects=await getCommunityProjects();
+    const results=projects.filter(p=>!q||String(p.name||'').toLowerCase().includes(q)||String(p.description||'').toLowerCase().includes(q)||String(p.author||'').toLowerCase().includes(q));
+    $('status').textContent=results.length+' published projects found.';
+    if(!results.length){$('grid').innerHTML='<div class="empty">No published projects matched your search.</div>';return;}
+    results.forEach(addCommunityCard);
+  }catch(e){$('status').textContent='Search failed: '+e.message;}
+};
 $('query').onkeydown=e=>{if(e.key==='Enter')$('searchBtn').click()};
 $('closeBtn').onclick=()=>{$('viewer').classList.remove('show');generation++;if(runtime)runtime.running=false;runtime=null};
 $('remixBtn').onclick=()=>{if(!currentProject)return;const files=currentProject.files||{[currentProject.src.path]:currentProject.src.text};localStorage.setItem('singulax-project',JSON.stringify({name:(currentProject.community?.name||currentProject.repo?.name||'Project')+' Remix',files,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:true}}));location.href='lite-ide.html'};
