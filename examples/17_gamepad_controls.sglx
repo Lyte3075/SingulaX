@@ -1,73 +1,47 @@
 // 17_gamepad_controls.sglx //
-// TOPIC: Gamepads, ABXY buttons, D-pad buttons, and two joysticks. //
-// This script is a complete controller test that also works with SingulaX touch controls. //
+// TOPIC: First joystick, second joystick, ABXY, and D-pad input. //
+// This is the complete gamepad-style API reference for desktop and touch controls. //
 
-let x = 360
-let y = 200
-let aim_x = 400
-let aim_y = 225
-let color = "cyan"
-let speed = 4
+let x = 380
+let y = 210
+let aim_x = 380
+let aim_y = 210
 
 forever do
   clear_screen()
 
-  // The first joystick controls the player. //
-  x += joystick_x() * speed
-  y += joystick_y() * speed
+  // First joystick: movement axes and directional helpers. //
+  x += joystick_x() * 5
+  y += joystick_y() * 5
+  if joystick_left() then x -= 2 end
+  if joystick_right() then x += 2 end
+  if joystick_up() then y -= 2 end
+  if joystick_down() then y += 2 end
 
-  // The second joystick controls the aim marker. //
-  aim_x += joystick2_x() * speed * 2
-  aim_y += joystick2_y() * speed * 2
+  // Second joystick: aiming axes and directional helpers. //
+  aim_x += joystick2_x() * 6
+  aim_y += joystick2_y() * 6
+  if joystick2_left() then aim_x -= 2 end
+  if joystick2_right() then aim_x += 2 end
+  if joystick2_up() then aim_y -= 2 end
+  if joystick2_down() then aim_y += 2 end
 
-  // These directional helpers are easier than checking raw axes. //
-  if joystick_left() then
-    x -= speed
-  end
-  if joystick_right() then
-    x += speed
-  end
-  if joystick_up() then
-    y -= speed
-  end
-  if joystick_down() then
-    y += speed
-  end
+  // ABXY are read by name. //
+  let color = "white"
+  if button_down("a") then color = "green" end
+  if button_down("b") then color = "red" end
+  if button_down("x") then color = "blue" end
+  if button_down("y") then color = "yellow" end
 
-  // button_down reads the ABXY buttons by name. //
-  if button_down("a") then
-    color = "lime"
-  end
-  if button_down("b") then
-    color = "red"
-  end
-  if button_down("x") then
-    color = "yellow"
-  end
-  if button_down("y") then
-    color = "purple"
-  end
+  // The D-pad is also available by name. //
+  if button_down("dpad_left") then x -= 4 end
+  if button_down("dpad_right") then x += 4 end
+  if button_down("dpad_up") then y -= 4 end
+  if button_down("dpad_down") then y += 4 end
 
-  // button_down also reads the D-pad. //
-  if button_down("dpad_left") then
-    x -= speed
-  end
-  if button_down("dpad_right") then
-    x += speed
-  end
-  if button_down("dpad_up") then
-    y -= speed
-  end
-  if button_down("dpad_down") then
-    y += speed
-  end
-
-  draw_rect(x, y, 60, 60, color)
-  draw_circle(aim_x, aim_y, 12, "white")
-
-  draw_text("GAMEPAD INPUT", 20, 30, 22, "white")
-  draw_text("Left stick: move", 20, 60, 16, "white")
-  draw_text("Right stick: aim", 20, 84, 16, "white")
-  draw_text("A/B/X/Y: change color", 20, 108, 16, "white")
-  draw_text("D-pad: move", 20, 132, 16, "white")
+  draw_rect(x, y, 48, 48, color)
+  draw_circle(aim_x, aim_y, 10, "white")
+  draw_text("Left joystick = move", 20, 28, 16, "white")
+  draw_text("Right joystick = aim", 20, 52, 16, "white")
+  draw_text("ABXY + D-pad are button_down inputs", 20, 76, 16, "white")
 end
