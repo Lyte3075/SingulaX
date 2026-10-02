@@ -4193,10 +4193,8 @@ async function openHelp() {
     try {
       let text =
         await fetch(
-          '../examples/' +
-            encodeURIComponent(
-              name
-            )
+          'https://raw.githubusercontent.com/Lyte3075/SingulaX/main/examples/' +
+            encodeURIComponent(name)
         ).then(
           r => {
             if (!r.ok) {
