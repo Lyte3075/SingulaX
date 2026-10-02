@@ -1,0 +1,48 @@
+// 12_data_and_lists.sglx //
+// TOPIC: Lists, dictionaries, indexing, iteration, and data updates. //
+// This is a complete data lesson that keeps all related operations in one script. //
+
+say("=== Data and Lists ===")
+
+// Lists are ordered collections. //
+let inventory = ["sword", "shield", "potion"]
+say("Inventory:", inventory)
+say("First item:", inventory[0])
+
+// push adds an item to the end. //
+inventory.push("key")
+say("After push:", inventory)
+
+// pop removes and returns the last item. //
+let last_item = inventory.pop()
+say("Popped item:", last_item)
+say("Inventory now:", inventory)
+
+// Lists can be processed with a for each loop. //
+for each item in inventory do
+  say("Item:", item)
+end
+
+// Dictionaries store named fields. //
+let player = {
+  name: "Nova",
+  health: 100,
+  score: 250
+}
+
+say("Player:", player.name)
+say("Health:", player.health)
+
+// Fields can be changed after the dictionary is created. //
+player.health = player.health - 25
+player.score = player.score + 50
+
+say("Updated health:", player.health)
+say("Updated score:", player.score)
+
+// Dictionaries can be visited as key/value pairs. //
+for each key, value in player do
+  say(key, "=", value)
+end
+
+say("=== Data and Lists complete ===")
