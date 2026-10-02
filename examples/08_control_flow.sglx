@@ -1,36 +1,70 @@
-# 08_control_flow.sglx
-# Luau-friendly declarations and control flow.
+// 08_control_flow.sglx
+// TOPIC: if/elseif/else, for, while, repeat, forever, break, and continue.
+// This script is a complete control-flow tour. //
 
-local score = 87
+say("=== SingulaX Control Flow ===")
+
+// if chooses one branch. //
+let score = 87
+
 if score >= 90 then
-  say("A")
+  say("Grade: A")
 elseif score >= 80 then
-  say("B")
+  say("Grade: B")
+elseif score >= 70 then
+  say("Grade: C")
 else
-  say("C or below")
+  say("Grade: F")
 end
 
-local total = 0
+// A numeric for loop is useful when you know the range. //
+let total = 0
+
 for i = 1, 5 do
   total += i
 end
-say("numeric for:", total)
 
+say("1 through 5 total:", total)
+
+// A loop can count backwards. //
 for i = 5, 1, -1 do
-  say("countdown:", i)
+  say("Countdown:", i)
 end
 
-local n = 0
+// while repeats while its condition is true. //
+let n = 0
+
 while n < 3 do
   n += 1
+  say("while step:", n)
 end
-say("while:", n)
 
-local stopped = 0
+// repeat N times is a compact counted loop. //
+repeat 3 times as index
+  say("repeat item:", index)
+end
+
+// continue skips the rest of the current iteration. //
+for i = 1, 6 do
+  if i % 2 == 0 then
+    continue
+  end
+
+  say("Odd number:", i)
+end
+
+// forever creates a loop that must eventually be stopped.
+// break exits the loop immediately. //
+let stopped = 0
+
 forever do
   stopped += 1
+
   if stopped >= 3 then
     break
   end
 end
-say("forever:", stopped)
+
+say("Forever stopped after:", stopped)
+
+say("=== Control flow complete ===")
