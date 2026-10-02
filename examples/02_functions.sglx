@@ -1,15 +1,15 @@
-// 02_functions.sglx
-// TOPIC: Functions, parameters, return values, defaults, recursion, and closures.
-// Every example in this file is part of one complete function lesson. //
+// 02_functions.sglx //
+// TOPIC: Functions, parameters, defaults, return values, recursion, and closures. //
+// This file is a complete lesson on reusable behavior. //
 
 say("=== SingulaX Functions ===")
 
-// A function groups reusable logic behind a name. //
+// A function groups logic under a reusable name. //
 function add(a, b)
   return a + b
 end
 
-say("add(7, 5) =", add(7, 5))
+say("add(7, 5):", add(7, 5))
 
 // Parameters can have default values. //
 function greet(name = "friend")
@@ -26,54 +26,49 @@ end
 
 function rectangle_report(width, height)
   let area = rectangle_area(width, height)
-  return "A " + width + "x" + height + " rectangle has area " + area
+  return "Area of " + width + "x" + height + " = " + area
 end
 
 say(rectangle_report(8, 4))
 
-// Recursion means a function calls itself.
-// The base case stops the recursion. //
+// Recursion means a function calls itself. The base case stops it. //
 function factorial(n)
   if n <= 1 then
     return 1
   end
-
   return n * factorial(n - 1)
 end
 
-say("5! =", factorial(5))
+say("5!:", factorial(5))
 
-// Functions are values, so they can be stored in variables. //
+// Functions can be stored in variables and called through the variable. //
 function double(value)
   return value * 2
 end
 
 let operation = double
-say("operation(21) =", operation(21))
+say("operation(21):", operation(21))
 
-// A closure remembers variables from the function that created it. //
+// A closure keeps access to variables created by its parent function. //
 function make_counter()
   let count = 0
-
   function increment()
     count = count + 1
     return count
   end
-
   return increment
 end
 
 let counter = make_counter()
-
 say("Counter:", counter())
 say("Counter:", counter())
 say("Counter:", counter())
 
-// Anonymous functions can also be stored directly in variables. //
+// Anonymous functions can be assigned directly to a variable. //
 let square = function(value)
   return value * value
 end
 
-say("square(9) =", square(9))
+say("square(9):", square(9))
 
 say("=== Functions complete ===")
