@@ -2858,7 +2858,7 @@ async function exportProject() {
       '10': '.lyte3075'
     };
     const ext = extensions[choice];
-    const base = current.replace(/\.(?:sglx|txt|vlln|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');
+    let base = current;\n    while (/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(base)) {\n      base = base.replace(/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');\n    }
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (choice === '11') {
     save();
