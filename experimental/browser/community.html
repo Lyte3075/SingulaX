@@ -17,14 +17,14 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
 #status{color:var(--muted);margin:10px 0 18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}.card{background:linear-gradient(180deg,rgba(21,26,42,.96),rgba(13,16,27,.96));border:1px solid var(--border);border-radius:16px;padding:17px;box-shadow:0 12px 35px rgba(0,0,0,.18)}.card h3{margin:0 0 7px}.card p{color:var(--muted);min-height:42px;line-height:1.45}.meta{font-size:12px;color:#737d9c;margin-bottom:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.empty{padding:30px;border:1px dashed var(--border);border-radius:14px;color:var(--muted)}
 .viewer{display:none;margin-top:24px;background:#0d111d;border:1px solid var(--border);border-radius:16px;overflow:hidden}.viewer.show{display:block}.viewerHead{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}.viewerHead strong{flex:1}.viewerBody{display:grid;grid-template-columns:1fr 1fr;min-height:500px}.code{margin:0;padding:16px;overflow:auto;white-space:pre;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:#080b13}.preview{border:0;border-left:1px solid var(--border);width:100%;min-height:500px;background:#000}
 .modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modalBox{width:min(620px,100%);background:#111522;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.modalBox h2{margin-top:0}.field{display:grid;gap:7px;margin:14px 0}.field input,.field textarea{width:100%;background:#0b0f1a;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.hint{color:var(--muted);font-size:13px;line-height:1.5}
-@media(max-width:760px){header{flex-wrap:wrap}.viewerBody{grid-template-columns:1fr}.preview{border-left:0;border-top:1px solid var(--border);min-height:320px}.code{min-height:320px}.tabs{margin-top:18px}}
+.idePicker{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px}.idePicker.show{display:flex}.idePickerBox{width:min(560px,100%);background:#111522;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.55)}.idePickerBox h2{margin:0 0 7px}.idePickerBox>p{color:var(--muted);margin-top:0}.ideOptions{display:grid;gap:10px;margin-top:16px}.ideOption{display:flex;align-items:center;gap:14px;text-align:left;padding:14px;border-radius:13px;background:#0d111d;border:1px solid var(--border)}.ideOption:hover{border-color:#6f70ff;background:#151a2a}.ideOption strong{display:block}.ideOption span{display:block;color:var(--muted);font-size:13px;margin-top:3px}.idePickerActions{display:flex;justify-content:flex-end;margin-top:16px}@media(max-width:760px){header{flex-wrap:wrap}.viewerBody{grid-template-columns:1fr}.preview{border-left:0;border-top:1px solid var(--border);min-height:320px}.code{min-height:320px}.tabs{margin-top:18px}}
 </style>
 </head>
 <body>
 <header>
   <div class="brand">◆ <span>SingulaX Community</span></div>
   <button id="uploadBtn">＋ Upload Project</button>
-  <a href="lite-ide.html">Open Experimental IDE</a>
+  <button id="openIdeBtn">Open IDE</button>
 </header>
 <main>
   <section class="hero">
@@ -59,6 +59,21 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
     </div>
   </section>
 </main>
+
+<div id="idePicker" class="idePicker">
+  <div class="idePickerBox">
+    <h2 id="idePickerTitle">Choose a SingulaX IDE</h2>
+    <p>Select which editor you want to use.</p>
+    <div class="ideOptions">
+      <button class="ideOption" data-ide="browser/full-ide.html"><div><strong>SingulaX Studio</strong><span>Full stable IDE</span></div></button>
+      <button class="ideOption" data-ide="browser/lite-ide.html"><div><strong>SingulaX Studio Lite</strong><span>Mobile-friendly stable IDE</span></div></button>
+      <button class="ideOption" data-ide="ide/swift-ide.html"><div><strong>SingulaX Studio Swift</strong><span>Core, lightweight editor</span></div></button>
+      <button class="ideOption" data-ide="full-ide.html"><div><strong>Experimental Studio</strong><span>Experimental full IDE</span></div></button>
+      <button class="ideOption" data-ide="lite-ide.html"><div><strong>Experimental Studio Lite</strong><span>Experimental mobile IDE</span></div></button>
+    </div>
+    <div class="idePickerActions"><button id="cancelIdePicker">Cancel</button></div>
+  </div>
+</div>
 
 <div id="uploadModal" class="modal">
   <div class="modalBox">
@@ -315,7 +330,26 @@ $('searchBtn').onclick=async()=>{
 };
 $('query').onkeydown=e=>{if(e.key==='Enter')$('searchBtn').click()};
 $('closeBtn').onclick=()=>{$('viewer').classList.remove('show');generation++;if(runtime)runtime.running=false;runtime=null};
-$('remixBtn').onclick=()=>{if(!currentProject)return;const files=currentProject.files||{[currentProject.src.path]:currentProject.src.text};localStorage.setItem('singulax-project',JSON.stringify({name:(currentProject.community?.name||currentProject.repo?.name||'Project')+' Remix',files,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:true}}));location.href='lite-ide.html'};
+let idePickerMode='remix';
+function openIdePicker(mode='open'){
+  idePickerMode=mode;
+  $('idePickerTitle').textContent=mode==='remix'?'Choose an IDE for your remix':'Choose a SingulaX IDE';
+  $('idePicker').classList.add('show');
+}
+function closeIdePicker(){$('idePicker').classList.remove('show');}
+$('remixBtn').onclick=()=>{
+  if(!currentProject)return;
+  const files=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  localStorage.setItem('singulax-project',JSON.stringify({name:(currentProject.community?.name||currentProject.repo?.name||'Project')+' Remix',files,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:true}}));
+  openIdePicker('remix');
+};
+$('openIdeBtn').onclick=()=>openIdePicker('open');
+document.querySelectorAll('.ideOption').forEach(b=>b.onclick=()=>{
+  const target=b.dataset.ide;
+  closeIdePicker();
+  location.href=target;
+});
+$('cancelIdePicker').onclick=closeIdePicker;
 $('uploadBtn').onclick=()=>{$('uploadModal').classList.add('show');$('uploadStatus').textContent='';};
 $('cancelUpload').onclick=()=>{$('uploadModal').classList.remove('show');$('githubToken').value='';};
 $('publishBtn').onclick=publishProject;
