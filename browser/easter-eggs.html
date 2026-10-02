@@ -6,35 +6,6 @@
   <title>SingulaX Easter Eggs</title>
 
   <style>
-    /*
-      ============================================================
-      SINGULAX EASTER EGGS
-      EASY EDIT AREA
-      ------------------------------------------------------------
-      Most of the content you will want to change is in the
-      JavaScript arrays near the bottom of this file.
-
-      You can add, remove, or edit an Easter egg like this:
-
-        {
-          title: "My Easter Egg",
-          icon: "🥚",
-          description: "What it does.",
-          secret: "How to find it."
-        }
-
-      You can add a file extension like this:
-
-        {
-          extension: ".example",
-          name: "Example Source File",
-          description: "SingulaX source code."
-        }
-
-      You do NOT need to change the HTML below when adding items.
-      ============================================================
-    */
-
     :root {
       --bg: #05060b;
       --panel: #0c0f18;
@@ -64,6 +35,27 @@
       padding: 42px 22px 26px;
       text-align: center;
       border-bottom: 1px solid var(--border);
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      background: var(--panel);
+      text-decoration: none;
+      font-weight: 700;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+
+    .back-button:hover {
+      transform: translateY(-1px);
+      border-color: #46506d;
+      background: var(--panel-2);
     }
 
     .logo {
@@ -186,6 +178,8 @@
 
 <body>
   <header>
+    <a class="back-button" href="../index.html">← Back to SingulaX</a>
+
     <div class="logo">SingulaX</div>
     <h1>🥚 Easter Eggs</h1>
     <p class="subtitle">
@@ -210,13 +204,6 @@
   </footer>
 
   <script>
-    /*
-      ============================================================
-      EDIT THESE ARRAYS
-      ============================================================
-
-      Add new Easter eggs here.
-    */
     const EASTER_EGGS = [
       /*
       {
@@ -228,10 +215,6 @@
       */
     ];
 
-    /*
-      Add or edit file extensions here.
-      Every extension listed here can represent SingulaX source code.
-    */
     const FILE_EXTENSIONS = [
       {
         extension: ".sglxproj",
@@ -284,12 +267,6 @@
         description: "An alternative SingulaX source-file extension named after Lyte3075."
       }
     ];
-
-    /*
-      ============================================================
-      DO NOT EDIT BELOW HERE UNLESS YOU WANT TO CHANGE THE LAYOUT
-      ============================================================
-    */
 
     function renderEasterEggs() {
       const root = document.getElementById("easterEggs");
