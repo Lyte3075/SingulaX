@@ -1,27 +1,26 @@
-// 05_modules.sglx
-// TOPIC: Modules and reusable code.
-// This script demonstrates importing the separate geometry.sglx module.
-// geometry.sglx contains the reusable functions used below. //
+// 05_modules.sglx //
+// TOPIC: Modules and reusable code across files. //
+// This lesson is intentionally a two-file example because modules are about file boundaries. //
+// Keep this script beside geometry.sglx, then run this script. //
 
 say("=== SingulaX Modules ===")
 
-// use loads another SingulaX source file.
-// "as geometry" gives the imported module a local name. //
+// use loads another SingulaX source file into this script. //
+// as gives the imported module a local name. //
 use "geometry.sglx" as geometry
 
-// The module exposes its public values through the module name. //
+// Public values from the module are accessed through its name. //
 say("Pi:", geometry.pi)
 
 let radius = 3
 let width = 8
 let height = 4
 
-say("Circle radius:", radius)
 say("Circle area:", geometry.circle_area(radius))
-
-say("Rectangle:", width, "x", height)
 say("Rectangle area:", geometry.rectangle_area(width, height))
+say("Rectangle perimeter:", geometry.rectangle_perimeter(width, height))
 
-// A module keeps reusable logic separate from the script that uses it.
-// This main file stays focused on using the geometry API. //
+// The important rule is that the reusable calculations live in geometry.sglx. //
+// The main script owns the application logic that uses those calculations. //
+
 say("=== Modules complete ===")
