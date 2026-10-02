@@ -283,11 +283,22 @@ async function publishProject(){
       files[main]=raw;
     }
     if(!Object.keys(files).length)throw new Error('The project contains no source files.');
-    const id=slugify(name)+'-'+Date.now().toString(36);
+    const id=slugify(name)+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
     const root=COMMUNITY_ROOT+'/'+id;
     const me=await githubAuth('/user',token);
     const cleanPath=p=>String(p).replace(/^\/+/, '').replace(/\.\.(\/|\\)/g,'').replace(/\\/g,'/');
-    const manifest={schema:1,id,name,description,version,author:me.login||'Unknown',published:new Date().toISOString(),downloads:0,likes:0,main:root+'/files/'+cleanPath(main),files:Object.keys(files).map(p=>root+'/files/'+cleanPath(p))};
+    const safeFiles=Object.keys(files).map((p,i)=>cleanPath(p)||('file-'+(i+1)+'.sglx'));
+    if(new Set(safeFiles).size!==safeFiles.length) throw new Error('The project contains duplicate file paths.');
+    const destinations=safeFiles.map(p=>root+'/files/'+p);
+    $('uploadStatus').textContent='Checking that this project path is unused…';
+    const exists=async path=>{
+      const res=await fetch('https://api.github.com/repos/Lyte3075/SingulaX/contents/'+path+'?ref='+encodeURIComponent(COMMUNITY_BRANCH),{headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json'}});
+      return res.status===200;
+    };
+    if(await exists(root+'/project.json') || (await Promise.all(destinations.map(exists))).some(Boolean)){
+      throw new Error('This Community project path already exists. Published projects are append-only and cannot be overwritten.');
+    }
+    const manifest={schema:1,id,name,description,version,author:me.login||'Unknown',published:new Date().toISOString(),downloads:0,likes:0,main:root+'/files/'+cleanPath(main),files:destinations};
     $('uploadStatus').textContent='Publishing project.json to community-projects…';
     await githubAuth('/repos/Lyte3075/SingulaX/contents/'+root+'/project.json',token,{method:'PUT',body:JSON.stringify({message:'Publish SingulaX project: '+name,content:btoa(unescape(encodeURIComponent(JSON.stringify(manifest,null,2)))),branch:COMMUNITY_BRANCH})});
     let i=0;const entries=Object.entries(files);
@@ -302,7 +313,8 @@ async function publishProject(){
       const indexResponse=await fetch(COMMUNITY_INDEX_RAW+'?t='+Date.now());
       const indexData=indexResponse.ok?await indexResponse.json():{schema:1,projects:[]};
       const indexProject={...manifest,_path:root,_id:id};
-      indexData.projects=(indexData.projects||[]).filter(x=>x.id!==id);
+      indexData.projects=indexData.projects||[];
+      if(indexData.projects.some(x=>x.id===id)) throw new Error('This project is already published. The Community index is append-only.');
       indexData.projects.push(indexProject);
       await githubAuth('/repos/Lyte3075/SingulaX/contents/'+COMMUNITY_ROOT+'/index.json',token,{method:'PUT',body:JSON.stringify({message:'Update community project index: '+name,content:btoa(unescape(encodeURIComponent(JSON.stringify(indexData,null,2)))),branch:COMMUNITY_BRANCH})});
     }catch(indexError){
