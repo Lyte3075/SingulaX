@@ -82,14 +82,14 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
     <div class="field"><label>Project name</label><input id="repoName" placeholder="My SingulaX Project"></div>
     <div class="field"><label>Description</label><input id="repoDescription" placeholder="A SingulaX project"></div>
     <div class="field"><label>Version</label><input id="projectVersion" value="1.0.0" placeholder="1.0.0"></div>
-    <div class="field"><label>GitHub personal access token</label><input id="githubToken" type="password" autocomplete="off" placeholder="Token with write access to Lyte3075/SingulaX"></div>
-    <p class="hint">For this experimental version, the token must be able to write to the SingulaX repository. It is used only for this publish action, sent directly to GitHub, and cleared afterward.</p>
+    <p class="hint">Publishing is handled securely by SingulaX Community. You do not need a GitHub token or personal access token.</p>
     <div id="uploadStatus" class="hint"></div>
     <div class="modalActions"><button id="cancelUpload">Cancel</button><button id="publishBtn" class="primary">Publish</button></div>
   </div>
 </div>
 
 <script src="runtime.js"></script>
+<script>const SUPABASE_URL="https://xkguvpwhfpksaltjdofv.supabase.co";const SUPABASE_PUBLISHABLE_KEY="sb_publishable_rA4N5-KX3A_ACZHbylEjBw_WvokXs85";</script>
 <script>
 const $=id=>document.getElementById(id);
 const EXTENSIONS=['sglx','txt','vlla','cyln','smsc','wsc','ctrsc','ezsc','lyte3075'];
@@ -264,8 +264,8 @@ function drawFrame(){
 }
 
 async function publishProject(){
-  const file=$('projectFile').files[0],token=$('githubToken').value.trim(),name=$('repoName').value.trim(),description=$('repoDescription').value.trim()||'A SingulaX project',version=$('projectVersion').value.trim()||'1.0.0';
-  if(!file||!token||!name){$('uploadStatus').textContent='Choose a project file, project name, and GitHub token.';return;}
+  const file=$('projectFile').files[0],name=$('repoName').value.trim(),description=$('repoDescription').value.trim()||'A SingulaX project',version=$('projectVersion').value.trim()||'1.0.0';
+  if(!file||!name){$('uploadStatus').textContent='Choose a project file and project name.';return;}
   $('publishBtn').disabled=true;$('uploadStatus').textContent='Reading project…';
   try{
     const raw=await file.text();
@@ -273,7 +273,7 @@ async function publishProject(){
     if(/\.sglxproj$/i.test(file.name)){
       let p;try{p=JSON.parse(raw)}catch{throw new Error('The project package is not valid JSON.')}
       for(const [path,value] of Object.entries(p.files||{})){
-        if(typeof value==='string')files[path.replace(/^\/+/,'')]=value;
+        if(typeof value==='string')files[path.replace(/^\/+/, '')]=value;
       }
       main=p.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
     }else{
@@ -283,51 +283,23 @@ async function publishProject(){
       files[main]=raw;
     }
     if(!Object.keys(files).length)throw new Error('The project contains no source files.');
-    const id=slugify(name)+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
-    const root=COMMUNITY_ROOT+'/'+id;
-    const me=await githubAuth('/user',token);
-    const cleanPath=p=>String(p).replace(/^\/+/, '').replace(/\.\.(\/|\\)/g,'').replace(/\\/g,'/');
-    const safeFiles=Object.keys(files).map((p,i)=>cleanPath(p)||('file-'+(i+1)+'.sglx'));
-    if(new Set(safeFiles).size!==safeFiles.length) throw new Error('The project contains duplicate file paths.');
-    const destinations=safeFiles.map(p=>root+'/files/'+p);
-    $('uploadStatus').textContent='Checking that this project path is unused…';
-    const exists=async path=>{
-      const res=await fetch('https://api.github.com/repos/Lyte3075/SingulaX/contents/'+path+'?ref='+encodeURIComponent(COMMUNITY_BRANCH),{headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json'}});
-      return res.status===200;
-    };
-    if(await exists(root+'/project.json') || (await Promise.all(destinations.map(exists))).some(Boolean)){
-      throw new Error('This Community project path already exists. Published projects are append-only and cannot be overwritten.');
-    }
-    const manifest={schema:1,id,name,description,version,author:me.login||'Unknown',published:new Date().toISOString(),downloads:0,likes:0,main:root+'/files/'+cleanPath(main),files:destinations};
-    $('uploadStatus').textContent='Publishing project.json to community-projects…';
-    await githubAuth('/repos/Lyte3075/SingulaX/contents/'+root+'/project.json',token,{method:'PUT',body:JSON.stringify({message:'Publish SingulaX project: '+name,content:btoa(unescape(encodeURIComponent(JSON.stringify(manifest,null,2)))),branch:COMMUNITY_BRANCH})});
-    let i=0;const entries=Object.entries(files);
-    for(const [originalPath,content] of entries){
-      i++;const filename=cleanPath(originalPath)||('file-'+i+'.sglx');
-      const dest=root+'/files/'+filename;
-      $('uploadStatus').textContent='Uploading project files ('+i+'/'+entries.length+')…';
-      await githubAuth('/repos/Lyte3075/SingulaX/contents/'+dest,token,{method:'PUT',body:JSON.stringify({message:'Add '+name+' project file '+filename,content:btoa(unescape(encodeURIComponent(content))),branch:COMMUNITY_BRANCH})});
-    }
-    // Keep the public index updated so browsing/searching does not hit GitHub's unauthenticated API rate limit.
-    try{
-      const indexResponse=await fetch(COMMUNITY_INDEX_RAW+'?t='+Date.now());
-      const indexData=indexResponse.ok?await indexResponse.json():{schema:1,projects:[]};
-      const indexProject={...manifest,_path:root,_id:id};
-      indexData.projects=indexData.projects||[];
-      if(indexData.projects.some(x=>x.id===id)) throw new Error('This project is already published. The Community index is append-only.');
-      indexData.projects.push(indexProject);
-      await githubAuth('/repos/Lyte3075/SingulaX/contents/'+COMMUNITY_ROOT+'/index.json',token,{method:'PUT',body:JSON.stringify({message:'Update community project index: '+name,content:btoa(unescape(encodeURIComponent(JSON.stringify(indexData,null,2)))),branch:COMMUNITY_BRANCH})});
-    }catch(indexError){
-      console.warn('Project published, but community index update failed:',indexError);
-    }
-    const published={id,name,description,version,full_name:'Lyte3075/SingulaX',html_url:'https://github.com/Lyte3075/SingulaX/tree/'+COMMUNITY_BRANCH+'/'+root};
+    const payload={name,description,version,main,files:Object.entries(files).map(([path,content])=>({path,content}))};
+    $('uploadStatus').textContent='Publishing securely…';
+    const response=await fetch(SUPABASE_URL+'/functions/v1/community-publish',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY},
+      body:JSON.stringify(payload)
+    });
+    let result=null;try{result=await response.json()}catch{}
+    if(!response.ok)throw new Error(result?.error||'Community publisher returned HTTP '+response.status);
+    const id=result.id;
+    const published={id,name,description,version,full_name:'Lyte3075/SingulaX',html_url:'https://github.com/Lyte3075/SingulaX/tree/'+COMMUNITY_BRANCH+'/projects/'+id};
     const list=getPublished().filter(x=>x.id!==id);list.push(published);localStorage.setItem('singulax-community-published',JSON.stringify(list));
-    $('githubToken').value='';$('uploadStatus').textContent='Published to community-projects! 🎉';
+    $('uploadStatus').textContent='Published to Community! 🎉';
     setTimeout(()=>{$('uploadModal').classList.remove('show');loadTab('yours');},900);
   }catch(e){$('uploadStatus').textContent='Publish failed: '+e.message;}
   finally{$('publishBtn').disabled=false;}
 }
-
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>loadTab(b.dataset.tab));
 $('searchBtn').onclick=async()=>{
   const q=$('query').value.trim().toLowerCase();
@@ -363,7 +335,7 @@ document.querySelectorAll('.ideOption').forEach(b=>b.onclick=()=>{
 });
 $('cancelIdePicker').onclick=closeIdePicker;
 $('uploadBtn').onclick=()=>{$('uploadModal').classList.add('show');$('uploadStatus').textContent='';};
-$('cancelUpload').onclick=()=>{$('uploadModal').classList.remove('show');$('githubToken').value='';};
+$('cancelUpload').onclick=()=>{$('uploadModal').classList.remove('show');};
 $('publishBtn').onclick=publishProject;
 loadTab('trending');
 </script>
