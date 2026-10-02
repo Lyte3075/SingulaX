@@ -1,16 +1,42 @@
-// Repeat examples //
-repeat(10)
-  say("Hello World")
+// 11_repeat_until.sglx
+// TOPIC: Repetition primitives.
+// This script demonstrates counted repeat, task/state repeat,
+// and statement/state repeat. //
+
+say("=== SingulaX Repeat ===")
+
+// Counted repeat runs a block a fixed number of times. //
+repeat(5)
+  say("Counted repeat")
 end
 
-// Task/state repeat //
-repeat.until(ui(), done)
-  say("running ui")
-  wait(0.1)
+// A task/state repeat checks a value or function until it reaches a target state. //
+// The function below simulates a task that becomes ready after several checks. //
+let checks = 0
+
+function task_state()
+  checks += 1
+
+  if checks >= 4 then
+    return "done"
+  end
+
+  return "waiting"
 end
 
-// Statement/state repeat //
-repeat.until.statement(player.health <= 50, true)
-  say("checking player health")
-  wait(0.1)
+say("Starting task/state repeat...")
+
+repeat.until(task_state(), "done")
+  say("Task is still running. Checks:", checks)
 end
+
+// Statement/state repeat evaluates the expression each time through the loop. //
+let health = 100
+
+repeat.until.statement(health <= 50, true)
+  health -= 15
+  say("Health check:", health)
+end
+
+say("Health reached the target:", health)
+say("=== Repeat complete ===")
