@@ -38,6 +38,10 @@ function isSingulaXFileName(name) {
   const lower = String(name || '').toLowerCase();
   return SINGULAX_EXTENSIONS.some(ext => lower.endsWith(ext));
 }
+
+function isRunnableSingulaXFileName(name) {
+  return isSingulaXFileName(name);
+}
 let runtime = null;
 let runGeneration = 0;
 let blocks = [];
@@ -502,7 +506,7 @@ $('tree').onclick = e => {
 
     if (n) {
       if (!isSingulaXFileName(n)) {
-        alert('SingulaX files must use .sglx, .txt, or .cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075.');
+        alert('SingulaX files must use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.');
         return;
       }
 
@@ -686,7 +690,7 @@ $('newFileBtn').onclick = () => {
 
   if (!isSingulaXFileName(n)) {
     alert(
-      'SingulaX files must use .sglx, .txt, or .cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075.'
+      'SingulaX files must use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.'
     );
 
     return;
