@@ -1,0 +1,24 @@
+# SingulaX 3D Starter Guide
+scene3d("main")
+scene3d_background("#07101c")
+scene3d_ambient(0.25)
+
+camera3d("camera")
+camera3d_position("camera", 0, 2, 8)
+camera3d_fov("camera", 70)
+
+light3d("sun")
+light3d_rotation("sun", -0.8, 0.7, 0)
+light3d_intensity("sun", 1.8)
+
+object3d("cube", "cube")
+position3d("cube", 0, 0, 0)
+scale3d("cube", 1.5, 1.5, 1.5)
+material3d_set("cube", "cyan")
+
+forever do
+  rotate3d("cube", 0, 0.02, 0)
+  update3d(0.016)
+  render3d()
+  wait(0.016)
+end
