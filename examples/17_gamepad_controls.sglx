@@ -1,0 +1,73 @@
+// 17_gamepad_controls.sglx //
+// TOPIC: Gamepads, ABXY buttons, D-pad buttons, and two joysticks. //
+// This script is a complete controller test that also works with SingulaX touch controls. //
+
+let x = 360
+let y = 200
+let aim_x = 400
+let aim_y = 225
+let color = "cyan"
+let speed = 4
+
+forever do
+  clear_screen()
+
+  // The first joystick controls the player. //
+  x += joystick_x() * speed
+  y += joystick_y() * speed
+
+  // The second joystick controls the aim marker. //
+  aim_x += joystick2_x() * speed * 2
+  aim_y += joystick2_y() * speed * 2
+
+  // These directional helpers are easier than checking raw axes. //
+  if joystick_left() then
+    x -= speed
+  end
+  if joystick_right() then
+    x += speed
+  end
+  if joystick_up() then
+    y -= speed
+  end
+  if joystick_down() then
+    y += speed
+  end
+
+  // button_down reads the ABXY buttons by name. //
+  if button_down("a") then
+    color = "lime"
+  end
+  if button_down("b") then
+    color = "red"
+  end
+  if button_down("x") then
+    color = "yellow"
+  end
+  if button_down("y") then
+    color = "purple"
+  end
+
+  // button_down also reads the D-pad. //
+  if button_down("dpad_left") then
+    x -= speed
+  end
+  if button_down("dpad_right") then
+    x += speed
+  end
+  if button_down("dpad_up") then
+    y -= speed
+  end
+  if button_down("dpad_down") then
+    y += speed
+  end
+
+  draw_rect(x, y, 60, 60, color)
+  draw_circle(aim_x, aim_y, 12, "white")
+
+  draw_text("GAMEPAD INPUT", 20, 30, 22, "white")
+  draw_text("Left stick: move", 20, 60, 16, "white")
+  draw_text("Right stick: aim", 20, 84, 16, "white")
+  draw_text("A/B/X/Y: change color", 20, 108, 16, "white")
+  draw_text("D-pad: move", 20, 132, 16, "white")
+end
