@@ -9,12 +9,18 @@ forever do
   clear_screen()
   draw_text("MOBILE DODGE", 24, 32, 28, "white")
   draw_text("Score: " .. score, 24, 64, 20, "cyan")
-  draw_text("Touch/Arrow keys: move", 24, 92, 16, "white")
+  draw_text("Left joystick = move", 24, 92, 16, "white")
 
-  if key_down("ArrowLeft") then
+  local stickX = gamepad_axis(0, 0)
+
+  if abs(stickX) > 0.15 then
+    x += stickX * 6
+  end
+
+  if gamepad_button(0, 14) then
     x -= 5
   end
-  if key_down("ArrowRight") then
+  if gamepad_button(0, 15) then
     x += 5
   end
 
