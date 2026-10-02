@@ -7,16 +7,30 @@ forever do
   clear_screen()
   draw_text("NEON RUNNER", 24, 34, 28, "white")
   draw_text("Score: " .. score, 24, 64, 18, "cyan")
+  draw_text("Left joystick = switch lanes", 24, 92, 16, "white")
 
-  if key_pressed("ArrowLeft") then
-    lane -= 1
-  end
-  if key_pressed("ArrowRight") then
-    lane += 1
+  local stickX = gamepad_axis(0, 0)
+
+  if stickX < -0.5 then
+    if lane > 1 then
+      lane -= 1
+      wait(0.12)
+    end
   end
 
-  if lane < 1 then lane = 1 end
-  if lane > 3 then lane = 3 end
+  if stickX > 0.5 then
+    if lane < 3 then
+      lane += 1
+      wait(0.12)
+    end
+  end
+
+  if lane < 1 then
+    lane = 1
+  end
+  if lane > 3 then
+    lane = 3
+  end
 
   obstacleY += 5
   if obstacleY > 480 then
@@ -29,7 +43,6 @@ forever do
   draw_rect(280, 0, 4, 450, "#303040")
   draw_rect(440, 0, 4, 450, "#303040")
   draw_rect(520, 0, 4, 450, "#303040")
-
   draw_rect(140 + (lane - 1) * 160, 380, 60, 60, "cyan")
   draw_rect(140 + (obstacleLane - 1) * 160, obstacleY, 60, 60, "red")
   wait(0.016)
