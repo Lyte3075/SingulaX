@@ -177,6 +177,7 @@ const builtins = [
   'gamepad_connected',
   'gamepad_button',
   'gamepad_axis',
+  'button_down',
   'joystick_x',
   'joystick_y',
   'joystick2_x',
@@ -1156,6 +1157,33 @@ async function run() {
     touch,
     gamepads: readGamepads()
   });
+
+  runtime.env.button_down = name => {
+    const n = String(name ?? '').toLowerCase();
+    const dpad = {
+      up: 'ArrowUp',
+      down: 'ArrowDown',
+      left: 'ArrowLeft',
+      right: 'ArrowRight',
+      dpad_up: 'ArrowUp',
+      dpad_down: 'ArrowDown',
+      dpad_left: 'ArrowLeft',
+      dpad_right: 'ArrowRight'
+    };
+
+    if (dpad[n]) return runtime?.keys?.has(dpad[n]) || false;
+
+    const index = {
+      a: 0,
+      b: 1,
+      x: 2,
+      y: 3
+    }[n];
+
+    return index !== undefined
+      ? !!runtime?.gamepads?.[0]?.buttons?.[index]
+      : false;
+  };
 
   runtime.env.joystick_x = () =>
     runtime?.gamepads?.[0]?.axes?.[0] || 0;
