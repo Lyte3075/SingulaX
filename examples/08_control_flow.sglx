@@ -1,12 +1,11 @@
-// 08_control_flow.sglx
-// TOPIC: if/elseif/else, for, while, repeat, forever, break, and continue.
-// This script is a complete control-flow tour. //
+// 08_control_flow.sglx //
+// TOPIC: if, elseif, else, for, while, repeat, forever, break, and continue. //
+// This is the complete control-flow reference in one script. //
 
 say("=== SingulaX Control Flow ===")
 
-// if chooses one branch. //
+// if chooses a branch from a condition. //
 let score = 87
-
 if score >= 90 then
   say("Grade: A")
 elseif score >= 80 then
@@ -17,23 +16,20 @@ else
   say("Grade: F")
 end
 
-// A numeric for loop is useful when you know the range. //
+// A numeric for loop is useful for a known range. //
 let total = 0
-
 for i = 1, 5 do
   total += i
 end
-
 say("1 through 5 total:", total)
 
-// A loop can count backwards. //
+// The third number makes the loop count backwards. //
 for i = 5, 1, -1 do
   say("Countdown:", i)
 end
 
-// while repeats while its condition is true. //
+// while repeats while its condition remains true. //
 let n = 0
-
 while n < 3 do
   n += 1
   say("while step:", n)
@@ -49,22 +45,17 @@ for i = 1, 6 do
   if i % 2 == 0 then
     continue
   end
-
   say("Odd number:", i)
 end
 
-// forever creates a loop that must eventually be stopped.
-// break exits the loop immediately. //
+// forever creates a loop that only stops when break or another stop condition is used. //
 let stopped = 0
-
 forever do
   stopped += 1
-
   if stopped >= 3 then
     break
   end
 end
-
 say("Forever stopped after:", stopped)
 
 say("=== Control flow complete ===")
