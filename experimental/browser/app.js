@@ -25,7 +25,7 @@ let mode = 'code';
 const SINGULAX_EXTENSIONS = [
   '.sglx',
   '.txt',
-  '.clyn'
+  '.cyln'
 ];
 
 function isSingulaXFileName(name) {
@@ -496,7 +496,7 @@ $('tree').onclick = e => {
 
     if (n) {
       if (!isSingulaXFileName(n)) {
-        alert('SingulaX files must use .sglx, .txt, or .clyn.');
+        alert('SingulaX files must use .sglx, .txt, or .cyln.');
         return;
       }
 
@@ -680,7 +680,7 @@ $('newFileBtn').onclick = () => {
 
   if (!isSingulaXFileName(n)) {
     alert(
-      'SingulaX files must use .sglx, .txt, or .clyn.'
+      'SingulaX files must use .sglx, .txt, or .cyln.'
     );
 
     return;
@@ -2818,7 +2818,7 @@ async function exportProject() {
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
       '3 = Single script (.txt)\n' +
-      '4 = Single script (.clyn)\n' +
+      '4 = Single script (.cyln)\n' +
       '5 = Standalone HTML game\n' +
       '6 = Project JSON backup\n' +
       '7 = Full project ZIP',
@@ -2830,7 +2830,7 @@ async function exportProject() {
     download(JSON.stringify(project, null, 2), project.name + '.sglxproj', 'application/json');
   } else if (choice === '2' || choice === '3' || choice === '4') {
     save();
-    const ext = choice === '2' ? '.sglx' : choice === '3' ? '.txt' : '.clyn';
+    const ext = choice === '2' ? '.sglx' : choice === '3' ? '.txt' : '.cyln';
     const base = current.replace(/\.(?:sglx|vlla|clyn)$/i, '');
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (choice === '5') {
