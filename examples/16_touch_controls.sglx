@@ -1,26 +1,21 @@
 // 16_touch_controls.sglx //
-// TOPIC: Touch input for mobile games and interfaces. //
-// Run this in a mobile-sized Studio Preview and touch the preview surface. //
+// TOPIC: Touch input and the mobile control surface. //
+// Run this on a phone or tablet in the Studio Preview. //
 
-let target_x = 400
-let target_y = 225
+let x = 380
+let y = 210
+let speed = 4
 
-// The main loop continuously reads the current touch state. //
 forever do
   clear_screen()
 
-  // touching reports whether a touch is currently active. //
+  // touching tells you whether the screen currently has a touch. //
   if touching() then
-    target_x = touch_x()
-    target_y = touch_y()
+    x = touch_x()
+    y = touch_y()
   end
 
-  // The touch position becomes the center of the player. //
-  draw_circle(target_x, target_y, 32, "lightblue")
-  draw_circle(target_x, target_y, 10, "white")
-
-  draw_text("TOUCH INPUT", 20, 30, 22, "white")
-  draw_text("Touch anywhere to move the marker.", 20, 60, 16, "white")
-  draw_text("X: {target_x}", 20, 88, 16, "white")
-  draw_text("Y: {target_y}", 20, 112, 16, "white")
+  draw_circle(x, y, 28, "deepskyblue")
+  draw_text("Touch the preview to move the marker.", 20, 30, 18, "white")
+  draw_text("The mobile control surface also exposes gamepad-style inputs.", 20, 58, 16, "white")
 end
