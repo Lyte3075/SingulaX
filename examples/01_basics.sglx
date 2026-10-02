@@ -1,10 +1,11 @@
-// 01_basics.sglx
-// TOPIC: Variables, values, operators, strings, lists, and dictionaries.
-// This script is intentionally self-contained. Run it from SingulaX Studio. //
+// 01_basics.sglx //
+// TOPIC: Variables, values, operators, strings, lists, and dictionaries. //
+// Read this file from top to bottom as the first SingulaX lesson. //
+// Every non-code explanation is written as a complete // comment // so the file can be copied directly. //
 
 say("=== SingulaX Basics ===")
 
-// Variables store values. SingulaX can infer the value's type for you. //
+// A variable gives a value a name. SingulaX uses let for a normal variable. //
 let name = "Ada"
 let age = 30
 let learning = true
@@ -15,42 +16,43 @@ say("Age:", age)
 say("Learning:", learning)
 say("Nothing:", nothing_here)
 
-// Math operators work directly on numbers. //
+// Numbers support normal arithmetic operators. //
 let a = 17
 let b = 5
+say("Addition:", a + b)
+say("Subtraction:", a - b)
+say("Multiplication:", a * b)
+say("Division:", a / b)
+say("Floor division:", a // b)
+say("Remainder:", a % b)
+say("Power:", a ^ 2)
 
-say("a + b =", a + b)
-say("a - b =", a - b)
-say("a * b =", a * b)
-say("a / b =", a / b)
-say("a // b =", a // b)
-say("a % b =", a % b)
-say("a ^ 2 =", a ^ 2)
-
-// Strings can be joined with + or use {name} interpolation. //
+// Strings can be combined with + or with {name} interpolation. //
 say("Hello, " + name + "!")
-say("Hello, {name}! You are {age}.")
+say("Hello, {name}! You are {age} years old.")
 
-// Conditions choose which code runs. //
+// Comparisons produce true or false and can control an if statement. //
 let score = 82
-
 if score >= 90 then
   say("Grade: A")
-otherwise if score >= 80 then
+elseif score >= 80 then
   say("Grade: B")
-otherwise if score >= 70 then
+elseif score >= 70 then
   say("Grade: C")
-otherwise
+else
   say("Grade: F")
 end
 
-// Lists hold ordered values and can be changed. //
+// Lists keep values in order. push adds an item and pop removes an item. //
 let colors = ["red", "green", "blue"]
 colors.push("purple")
-
 say("Colors:", colors)
-say("Color count:", len(colors))
+say("First color:", colors[0])
+say("List length:", len(colors))
+let removed_color = colors.pop()
+say("Removed color:", removed_color)
 
+// for each is the readable way to visit every item in a list. //
 for each color in colors do
   say("Color:", color)
 end
@@ -66,7 +68,9 @@ say("Person name:", person.name)
 say("Person job:", person.job)
 
 person.city = "Baltimore"
+say("Person city:", person.city)
 
+// Dictionaries can also be iterated as key/value pairs. //
 for each key, value in person do
   say(key, "->", value)
 end
