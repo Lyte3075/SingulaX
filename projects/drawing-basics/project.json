@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "drawing-basics",
+  "name": "2D Drawing Basics",
+  "description": "A simple SingulaX graphics guide covering rectangles, circles, lines, and text.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "main.sglx",
+  "files": [
+    "main.sglx"
+  ]
+}
