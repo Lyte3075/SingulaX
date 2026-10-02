@@ -1,0 +1,44 @@
+// 15_keyboard_and_mouse.sglx //
+// TOPIC: Keyboard and mouse input. //
+// Run this in the Studio Preview and move the mouse or press the arrow keys. //
+
+let x = 360
+let y = 200
+let speed = 5
+
+// The forever loop creates a live input-driven program. //
+forever do
+  clear_screen()
+
+  // key_down is true while the named key is held. //
+  if key_down("ArrowLeft") then
+    x -= speed
+  end
+  if key_down("ArrowRight") then
+    x += speed
+  end
+  if key_down("ArrowUp") then
+    y -= speed
+  end
+  if key_down("ArrowDown") then
+    y += speed
+  end
+
+  // mouse_x and mouse_y return the current mouse position. //
+  let mx = mouse_x()
+  let my = mouse_y()
+
+  // mouse_down is true while the named mouse button is held. //
+  if mouse_down("left") then
+    x = mx
+    y = my
+  end
+
+  // Draw the player and a marker at the mouse. //
+  draw_rect(x, y, 50, 50, "cyan")
+  draw_circle(mx, my, 10, "white")
+
+  draw_text("Keyboard + Mouse", 20, 30, 22, "white")
+  draw_text("Arrow keys move the square.", 20, 58, 16, "white")
+  draw_text("Hold left mouse to move it to the cursor.", 20, 82, 16, "white")
+end
