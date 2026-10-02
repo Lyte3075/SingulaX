@@ -1,0 +1,33 @@
+local p1x = 180
+local p2x = 620
+local shotX = -100
+local shotY = 0
+local score = 0
+
+forever do
+  clear_screen()
+  draw_text("SPACE DUEL", 24, 34, 28, "white")
+  draw_text("A/D move   Space fire", 24, 64, 16, "white")
+  draw_text("Score: " .. score, 24, 92, 18, "cyan")
+
+  if key_down("KeyA") then p1x -= 4 end
+  if key_down("KeyD") then p1x += 4 end
+
+  if key_pressed(" ") then
+    shotX = p1x
+    shotY = 330
+  end
+
+  if shotY > 0 then
+    shotY -= 7
+    draw_circle(shotX, shotY, 6, "yellow")
+    if shotY < 80 and abs(shotX - p2x) < 40 then
+      score += 1
+      shotY = -1
+    end
+  end
+
+  draw_rect(p1x - 30, 360, 60, 30, "cyan")
+  draw_rect(p2x - 30, 60, 60, 30, "red")
+  wait(0.016)
+end
