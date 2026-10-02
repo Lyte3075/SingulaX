@@ -1,32 +1,45 @@
-# SingulaX language showcase
-local score = 0
-local target = random_int(5, 10)
+// 10_singulax_showcase.sglx
+// TOPIC: 2D drawing and animation.
+// This is a complete visual demo showing the main drawing primitives together. //
 
-function add_points(amount)
-  score += amount
-  return score
+let x = 120
+let y = 180
+let dx = 3
+let dy = 2
+let radius = 24
+let frame = 0
+
+forever do
+  clear_screen()
+
+  // Move the animated ball every frame. //
+  x += dx
+  y += dy
+  frame += 1
+
+  // Bounce from the visible canvas edges. //
+  if x <= radius or x >= 800 - radius then
+    dx = -dx
+  end
+
+  if y <= radius or y >= 480 - radius then
+    dy = -dy
+  end
+
+  // Draw a simple scene using multiple primitives. //
+  draw_rect(0, 0, 800, 480, "#07111f")
+  draw_line(0, 420, 800, 420, "cyan")
+  draw_circle(x, y, radius, "magenta")
+
+  // A second shape follows a predictable pattern. //
+  let pulse = 20 + (frame % 20)
+  draw_circle(650, 150, pulse, "purple")
+
+  // Text can display live values while the program runs. //
+  draw_text("SingulaX 2D Animation", 24, 36, 24, "white")
+  draw_text("Frame: {frame}", 24, 66, 16, "white")
+  draw_text("Ball: {x}, {y}", 24, 90, 16, "white")
+
+  // The mouse becomes a small interactive marker. //
+  draw_circle(mouse_x(), mouse_y(), 8, "white")
 end
-
-if score == 0 then
-  say("Start!")
-elseif score > 0 then
-  say("Playing")
-else
-  say("Impossible")
-end
-
-for i = 1, 5 do
-  say("Round " .. i)
-end
-
-repeat 3 times
-  say(random_choice({"red", "green", "blue"}))
-end
-
-wait(1)
-wait.until(gamepad_connected, done)
-
-# repeat.until(task, state) is a single-line polling/repetition primitive.
-# It repeatedly evaluates/calls the task until the returned/current state matches.
-# Example:
-# repeat.until(ui, "done")
