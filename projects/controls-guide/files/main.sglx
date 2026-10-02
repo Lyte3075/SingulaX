@@ -1,0 +1,29 @@
+# SingulaX Input & Controls Guide
+local x = 300
+local y = 220
+local speed = 4
+
+forever do
+  clear_screen()
+
+  if key_down("ArrowLeft") then
+    x -= speed
+  end
+
+  if key_down("ArrowRight") then
+    x += speed
+  end
+
+  if key_down("ArrowUp") then
+    y -= speed
+  end
+
+  if key_down("ArrowDown") then
+    y += speed
+  end
+
+  draw_rect(x, y, 60, 60, "cyan")
+  draw_text("Use Arrow Keys to move", 24, 35, 20, "white")
+
+  wait(0.016)
+end
