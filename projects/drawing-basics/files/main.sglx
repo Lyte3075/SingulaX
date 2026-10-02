@@ -1,0 +1,14 @@
+# SingulaX 2D Drawing Basics
+clear_screen()
+
+draw_text("SingulaX Drawing Basics", 30, 45, 28, "white")
+
+draw_rect(40, 80, 180, 90, "cyan")
+draw_circle(330, 125, 45, "violet")
+draw_line(40, 220, 420, 220, "white")
+
+draw_text("draw_rect()", 55, 135, 18, "black")
+draw_text("draw_circle()", 285, 130, 16, "white")
+draw_text("draw_line()", 175, 245, 18, "white")
+
+wait(3)
