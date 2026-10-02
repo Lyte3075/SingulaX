@@ -179,6 +179,8 @@ const builtins = [
   'gamepad_axis',
   'joystick_x',
   'joystick_y',
+  'joystick2_x',
+  'joystick2_y',
   'joystick_left',
   'joystick_right',
   'joystick_up',
@@ -1156,6 +1158,12 @@ async function run() {
 
   runtime.env.joystick_y = () =>
     runtime?.gamepads?.[0]?.axes?.[1] || 0;
+
+  runtime.env.joystick2_x = () =>
+    runtime?.gamepads?.[0]?.axes?.[2] || 0;
+
+  runtime.env.joystick2_y = () =>
+    runtime?.gamepads?.[0]?.axes?.[3] || 0;
 
   runtime.env.joystick_left = () =>
     runtime.env.joystick_x() < -0.25;
