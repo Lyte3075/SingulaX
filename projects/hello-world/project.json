@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "hello-world",
+  "name": "Hello World",
+  "description": "A tiny first SingulaX project. Learn variables, text output, and the main loop.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "main.sglx",
+  "files": [
+    "main.sglx"
+  ]
+}
