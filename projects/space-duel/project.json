@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "space-duel",
+  "name": "Space Duel",
+  "description": "A tiny arcade duel sample with two ships, projectiles, and score tracking.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "projects/space-duel/files/main.sglx",
+  "files": [
+    "projects/space-duel/files/main.sglx"
+  ],
+  "category": "Arcade"
+}
