@@ -683,10 +683,11 @@ $('newFileBtn').onclick = () => {
     n += '.sglx';
   }
 
-  if (!isSingulaXFileName(n)) {
+  if (!n.endsWith('.sglx')) {
     alert(
-      'Scripts must use a supported SingulaX source extension: .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.'
+      'Scripts should use the .sglx extension.'
     );
+
     return;
   }
 
@@ -2858,7 +2859,7 @@ async function exportProject() {
       '10': '.lyte3075'
     };
     const ext = extensions[choice];
-    let base = current;\n    while (/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(base)) {\n      base = base.replace(/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');\n    }
+    const base = current.replace(/\.(?:sglx|txt|vlln|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (choice === '11') {
     save();
