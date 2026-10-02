@@ -1,48 +1,47 @@
 // 12_data_and_lists.sglx //
-// TOPIC: Lists, dictionaries, indexing, iteration, and data updates. //
-// This is a complete data lesson that keeps all related operations in one script. //
+// TOPIC: Lists, dictionaries, list methods, and practical data processing. //
+// Use this file as a reference when working with collections. //
 
-say("=== Data and Lists ===")
-
-// Lists are ordered collections. //
-let inventory = ["sword", "shield", "potion"]
+let inventory = ["apple", "banana", "orange"]
+inventory.push("pear")
 say("Inventory:", inventory)
-say("First item:", inventory[0])
+say("First:", inventory[0])
+say("Count:", len(inventory))
 
-// push adds an item to the end. //
-inventory.push("key")
-say("After push:", inventory)
+// Common list operations. //
+inventory.insert(1, "grape")
+say("After insert:", inventory)
+say("Contains banana:", inventory.contains("banana"))
+say("Index of orange:", inventory.index_of("orange"))
+inventory.remove("banana")
+say("After remove:", inventory)
+inventory.reverse()
+say("Reversed:", inventory)
+inventory.sort()
+say("Sorted:", inventory)
 
-// pop removes and returns the last item. //
-let last_item = inventory.pop()
-say("Popped item:", last_item)
-say("Inventory now:", inventory)
-
-// Lists can be processed with a for each loop. //
-for each item in inventory do
-  say("Item:", item)
-end
-
-// Dictionaries store named fields. //
+// Dictionaries group related named data. //
 let player = {
   name: "Nova",
-  health: 100,
-  score: 250
+  score: 1250,
+  level: 7
 }
+player.score += 250
+say("Player:", player)
+say("Score:", player.score)
 
-say("Player:", player.name)
-say("Health:", player.health)
+// Data can be transformed with map, filter, and reduce. //
+let scores = [10, 20, 35, 40, 55]
+let boosted = scores.map(function(score)
+  return score + 5
+end)
+let passing = scores.filter(function(score)
+  return score >= 35
+end)
+let total = scores.reduce(function(a, b)
+  return a + b
+end, 0)
 
-// Fields can be changed after the dictionary is created. //
-player.health = player.health - 25
-player.score = player.score + 50
-
-say("Updated health:", player.health)
-say("Updated score:", player.score)
-
-// Dictionaries can be visited as key/value pairs. //
-for each key, value in player do
-  say(key, "=", value)
-end
-
-say("=== Data and Lists complete ===")
+say("Boosted:", boosted)
+say("Passing:", passing)
+say("Total:", total)
