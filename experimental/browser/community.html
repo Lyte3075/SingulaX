@@ -177,9 +177,10 @@ async function openCommunityProject(p){
       const apiPath='/repos/Lyte3075/SingulaX/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(COMMUNITY_BRANCH);
       const d=await github(apiPath);
       const raw=atob((d.content||'').replace(/\s/g,''));
-      files[path]=decodeURIComponent(escape(raw));
+      const rel=path.indexOf('/files/')>=0?path.split('/files/').slice(1).join('/'):path;
+      files[rel]=decodeURIComponent(escape(raw));
     }
-    const mainPath=p.main||Object.keys(files).find(x=>/\.(sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(x))||Object.keys(files)[0];
+    const mainPath=(p.main&&p.main.split('/files/').pop())||Object.keys(files).find(x=>/\.(sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(x))||Object.keys(files)[0];
     currentProject={community:p,src:{path:mainPath,text:files[mainPath]},files};
     $('viewerTitle').textContent=(p.name||p._id)+' · '+mainPath;
     $('code').textContent=files[mainPath]||'';
@@ -245,7 +246,8 @@ async function testSource(){
   const c=$('preview'),ctx=c.getContext('2d');ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);frame=[];
   runtime=new SingulaxRuntime({output:console.log,frame:f=>frame=f.slice(),input:async()=>'',fileRead:async()=>'',fileWrite:async()=>true,playAudio:()=>{},mode3d:()=>{}});
   runtime.setInput({keys:[],buttons:[],mouse:{x:0,y:0},touch:{x:0,y:0,active:false},gamepads:{}});
-  const project={name:currentProject.community?.name||currentProject.repo?.name||'Community Project',files:{[currentProject.src.path]:currentProject.src.text},assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
+  const projectFiles=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  const project={name:currentProject.community?.name||currentProject.repo?.name||'Community Project',files:projectFiles,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
   try{await runtime.runProject(project);if(runId===generation)drawFrame();}catch(e){ctx.fillStyle='#ff6b8a';ctx.font='16px system-ui';ctx.fillText('Test error: '+e.message,18,30);}
 }
 function drawFrame(){
@@ -276,12 +278,13 @@ async function publishProject(){
     const id=slugify(name)+'-'+Date.now().toString(36);
     const root=COMMUNITY_ROOT+'/'+id;
     const me=await githubAuth('/user',token);
-    const manifest={schema:1,id,name,description,version,author:me.login||'Unknown',published:new Date().toISOString(),main:root+'/files/'+main.split('/').pop(),files:Object.keys(files).map(p=>root+'/files/'+p.split('/').pop())};
+    const cleanPath=p=>String(p).replace(/^\/+/, '').replace(/\.\.(\/|\\)/g,'').replace(/\\/g,'/');
+    const manifest={schema:1,id,name,description,version,author:me.login||'Unknown',published:new Date().toISOString(),downloads:0,likes:0,main:root+'/files/'+cleanPath(main),files:Object.keys(files).map(p=>root+'/files/'+cleanPath(p))};
     $('uploadStatus').textContent='Publishing project.json to community-projects…';
     await githubAuth('/repos/Lyte3075/SingulaX/contents/'+root+'/project.json',token,{method:'PUT',body:JSON.stringify({message:'Publish SingulaX project: '+name,content:btoa(unescape(encodeURIComponent(JSON.stringify(manifest,null,2)))),branch:COMMUNITY_BRANCH})});
     let i=0;const entries=Object.entries(files);
     for(const [originalPath,content] of entries){
-      i++;const filename=originalPath.split('/').pop()||('file-'+i+'.sglx');
+      i++;const filename=cleanPath(originalPath)||('file-'+i+'.sglx');
       const dest=root+'/files/'+filename;
       $('uploadStatus').textContent='Uploading project files ('+i+'/'+entries.length+')…';
       await githubAuth('/repos/Lyte3075/SingulaX/contents/'+dest,token,{method:'PUT',body:JSON.stringify({message:'Add '+name+' project file '+filename,content:btoa(unescape(encodeURIComponent(content))),branch:COMMUNITY_BRANCH})});
