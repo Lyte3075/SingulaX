@@ -502,7 +502,7 @@ $('tree').onclick = e => {
 
     if (n) {
       if (!isSingulaXFileName(n)) {
-        alert('SingulaX files must use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.');
+        alert('SingulaX files must use .sglx, .txt, or .cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075.');
         return;
       }
 
@@ -2858,10 +2858,7 @@ async function exportProject() {
       '10': '.lyte3075'
     };
     const ext = extensions[choice];
-    let base = current;
-    while (/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(base)) {
-      base = base.replace(/\.(?:sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');
-    }
+    const base = current.replace(/\.(?:sglx|txt|vlln|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');
     download(project.files[current] || '', base + ext, 'text/plain');
   } else if (choice === '11') {
     save();
