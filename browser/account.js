@@ -1,69 +1,87 @@
 import { supabase } from './supabase.js';
 
 const $ = id => document.getElementById(id);
+const syntheticDomain = 'users.singulax.local';
 
-function message(text, error = false) {
-  $('status').textContent = text;
-  $('status').className = error ? 'status error' : 'status';
+function authEmail(username) {
+  return username.trim().toLowerCase() + '@' + syntheticDomain;
 }
-
+function message(text, error=false) {
+  $('status').textContent=text;
+  $('status').className=error?'status error':'status';
+}
+async function getProfile(userId) {
+  const {data,error}=await supabase.from('profiles').select('username,email').eq('id',userId).maybeSingle();
+  if(error) throw error;
+  return data;
+}
 async function refresh() {
-  const { data } = await supabase.auth.getSession();
-  const session = data?.session;
-  $('signedIn').hidden = !session;
-  $('authForm').hidden = !!session;
-  if (session) {
-    $('email').textContent = session.user.email || 'Signed-in account';
+  const {data} = await supabase.auth.getSession();
+  const session=data?.session;
+  $('signedIn').hidden=!session;
+  $('authForm').hidden=!!session;
+  if(session){
+    const profile=await getProfile(session.user.id);
+    $('username').textContent=profile?.username || session.user.user_metadata?.username || 'SingulaX user';
+    $('verifiedEmail').textContent=profile?.email ? 'Email added: '+profile.email : 'No verification email added';
+    $('emailSettings').hidden=!!profile?.email;
   }
 }
-
-$('authForm').addEventListener('submit', async event => {
+$('authForm').addEventListener('submit',async event=>{
   event.preventDefault();
-  const email = $('emailInput').value.trim();
-  const password = $('passwordInput').value;
-  const mode = $('mode').value;
-  if (!email || !password) {
-    message('Enter your email and password.', true);
-    return;
+  const username=$('usernameInput').value.trim();
+  const password=$('passwordInput').value;
+  const mode=$('mode').value;
+  if(!/^[A-Za-z0-9_]{3,24}$/.test(username)){
+    message('Username must be 3–24 characters using letters, numbers, or _.',true); return;
   }
-  $('submit').disabled = true;
-  message(mode === 'signup' ? 'Creating your account…' : 'Signing you in…');
-  try {
-    if (mode === 'signup') {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
-      if (!data.session) {
-        message('Account created. Check your email to confirm your address, then sign in.');
-      } else {
-        message('Account created and signed in.');
-        location.href = 'my-projects.html';
+  if(password.length<6){message('Password must be at least 6 characters.',true);return;}
+  $('submit').disabled=true;
+  message(mode==='signup'?'Creating your account…':'Signing you in…');
+  try{
+    if(mode==='signup'){
+      const email=authEmail(username);
+      const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username}}});
+      if(error) throw error;
+      if(!data.user) throw new Error('Account creation failed.');
+      const {error:profileError}=await supabase.from('profiles').insert({id:data.user.id,username,email:null});
+      if(profileError){
+        await supabase.auth.signOut();
+        if(profileError.code==='23505') throw new Error('That username is already taken.');
+        throw profileError;
       }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      location.href = 'my-projects.html';
+      if(data.session) location.href='my-projects.html';
+      else message('Account created. You can now sign in with your username.');
+    }else{
+      const {data:profile,error:profileError}=await supabase.from('profiles').select('email').eq('username',username.toLowerCase()).maybeSingle();
+      if(profileError) throw profileError;
+      if(!profile) throw new Error('Username not found.');
+      const loginEmail=profile.email || authEmail(username);
+      const {error}=await supabase.auth.signInWithPassword({email:loginEmail,password});
+      if(error) throw error;
+      location.href='my-projects.html';
     }
-  } catch (error) {
-    message(error.message || 'Authentication failed.', true);
-  } finally {
-    $('submit').disabled = false;
-  }
+  }catch(error){message(error.message||'Authentication failed.',true);}
+  finally{$('submit').disabled=false;}
 });
-
-$('mode').addEventListener('change', () => {
-  $('submit').textContent = $('mode').value === 'signup' ? 'Create account' : 'Sign in';
-  $('passwordInput').autocomplete = $('mode').value === 'signup' ? 'new-password' : 'current-password';
+$('mode').addEventListener('change',()=>{
+  $('submit').textContent=$('mode').value==='signup'?'Create account':'Sign in';
+  $('passwordInput').autocomplete=$('mode').value==='signup'?'new-password':'current-password';
 });
-
-$('signOut').onclick = async () => {
-  await supabase.auth.signOut();
-  await refresh();
-  message('Signed out.');
+$('addEmail').onclick=async()=>{
+  const email=$('emailInput').value.trim();
+  if(!email || !email.includes('@')){message('Enter a valid email address.',true);return;}
+  try{
+    const {data:sessionData}=await supabase.auth.getSession();
+    if(!sessionData?.session) return;
+    const {error}=await supabase.auth.updateUser({email});
+    if(error) throw error;
+    const {error:profileError}=await supabase.from('profiles').update({email}).eq('id',sessionData.session.user.id);
+    if(profileError) throw profileError;
+    message('Verification email sent. Confirm it to verify your email.');
+    await refresh();
+  }catch(error){message(error.message||'Could not add email.',true);}
 };
-
-$('projects').onclick = () => {
-  location.href = 'my-projects.html';
-};
-
-$('emailInput').focus();
+$('signOut').onclick=async()=>{await supabase.auth.signOut();await refresh();message('Signed out.');};
+$('projects').onclick=()=>location.href='my-projects.html';
 await refresh();
