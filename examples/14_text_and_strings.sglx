@@ -1,0 +1,40 @@
+// 14_text_and_strings.sglx //
+// TOPIC: Strings, concatenation, interpolation, and text-oriented program output. //
+// This file keeps the complete text workflow in one copyable example. //
+
+say("=== Text and Strings ===")
+
+// A string is text inside quotation marks. //
+let first = "SingulaX"
+let second = "Studio"
+
+// + joins strings together. //
+let title = first + " " + second
+say(title)
+
+// {name} interpolation inserts a variable into a string. //
+let user = "Coder"
+let version = 1
+say("Welcome, {user}!")
+say("You are using {first} version {version}.")
+
+// Numbers can be combined with text through interpolation. //
+let score = 1250
+say("Score: {score}")
+
+// A function can build reusable text. //
+function make_status(name, health)
+  return "{name} has {health} health."
+end
+
+say(make_status("Nova", 80))
+
+// Strings can also be used in comparisons. //
+let command = "run"
+if command == "run" then
+  say("The command was run.")
+else
+  say("The command was not run.")
+end
+
+say("=== Text and Strings complete ===")
