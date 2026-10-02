@@ -23,9 +23,13 @@ let current = 'main.sglx';
 const SINGULAX_EXTENSIONS = [
   '.sglx',
   '.txt',
-  '.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075',
   '.vlln',
-  '.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075'
+  '.cyln',
+  '.smsc',
+  '.wsc',
+  '.ctrsc',
+  '.ezsc',
+  '.lyte3075'
 ];
 
 function isSingulaXFileName(name) {
@@ -2821,47 +2825,43 @@ async function exportProject() {
       '1 = SingulaX project (.sglxproj)\n' +
       '2 = Single script (.sglx)\n' +
       '3 = Single script (.txt)\n' +
-      '4 = Single script (.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075)\n' +
-      '5 = Single script (.vlln)\n' +
-      '6 = Single script (.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075)\n' +
-      '7 = Standalone HTML game\n' +
-      '8 = Project JSON backup\n' +
-      '9 = Full project ZIP',
-      '5'
+      '4 = Single script (.vlln)\n' +
+      '5 = Single script (.cyln)\n' +
+      '6 = Single script (.smsc)\n' +
+      '7 = Single script (.wsc)\n' +
+      '8 = Single script (.ctrsc)\n' +
+      '9 = Single script (.ezsc)\n' +
+      '10 = Single script (.lyte3075)\n' +
+      '11 = Standalone HTML game\n' +
+      '12 = Project JSON backup\n' +
+      '13 = Full project ZIP',
+      '13'
     );
 
   if (choice === '1') {
     save();
-
     download(
-      JSON.stringify(
-        project,
-        null,
-        2
-      ),
-      project.name +
-        '.sglxproj',
+      JSON.stringify(project, null, 2),
+      project.name + '.sglxproj',
       'application/json'
     );
-  } else if (
-    choice === '2'
-  ) {
+  } else if (['2','3','4','5','6','7','8','9','10'].includes(choice)) {
     save();
-
-    download(
-      project.files[current] ||
-        '',
-      current,
-      'text/plain'
-    );
-  } else if (['2','3','4','5','6'].includes(choice)) {
-    save();
-    const ext = ({'2':'.sglx','3':'.txt','4':'.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075','5':'.vlln','6':'.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075'})[choice];
-    const base = current.replace(/\.(?:sglx|vlla|clyn|vlln|cyln)$/i, '');
+    const extensions = {
+      '2': '.sglx',
+      '3': '.txt',
+      '4': '.vlln',
+      '5': '.cyln',
+      '6': '.smsc',
+      '7': '.wsc',
+      '8': '.ctrsc',
+      '9': '.ezsc',
+      '10': '.lyte3075'
+    };
+    const ext = extensions[choice];
+    const base = current.replace(/\.(?:sglx|txt|vlln|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i, '');
     download(project.files[current] || '', base + ext, 'text/plain');
-  } else if (
-    choice === '7'
-  ) {
+  } else if (choice === '11') {
     save();
 
     const code =
@@ -2889,9 +2889,7 @@ async function exportProject() {
         '.html',
       'text/html'
     );
-  } else if (
-    choice === '8'
-  ) {
+  } else if (choice === '12') {
     save();
 
     download(
@@ -2909,13 +2907,10 @@ async function exportProject() {
         '.json',
       'application/json'
     );
-  } else if (
-    choice === '9'
-  ) {
+  } else if (choice === '13') {
     await exportZip();
   }
 }
-
 async function exportZip() {
   save();
 
