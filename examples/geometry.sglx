@@ -1,6 +1,6 @@
-// geometry.sglx
-// TOPIC: Reusable module logic.
-// This file is imported by 05_modules.sglx.
+// geometry.sglx //
+// TOPIC: Reusable module logic. //
+// This file is imported by 05_modules.sglx. //
 // It intentionally contains only geometry calculations. //
 
 let pi = 3.14159
