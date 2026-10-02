@@ -1,11 +1,11 @@
-// 06_todo_app.sglx
-// TOPIC: Building a complete interactive command-line application.
-// This single script contains the data, functions, command loop, and validation. //
-// Try: add, list, done, remove, clear, help, quit. //
+// 06_todo_app.sglx //
+// TOPIC: A complete interactive command-line application. //
+// This one script contains its data, functions, validation, commands, and main loop. //
+// Commands: add, list, done, remove, clear, help, quit. //
 
 let tasks = []
 
-// Add a new task to the list. //
+// Add validates the title before storing a task. //
 function add_task(title)
   if title.trim() == "" then
     say("Task title cannot be empty.")
@@ -20,7 +20,7 @@ function add_task(title)
   say("Added:", title.trim())
 end
 
-// Print every task with its completion state. //
+// List prints every task and its completion state. //
 function show_tasks()
   if len(tasks) == 0 then
     say("No tasks yet.")
@@ -28,20 +28,17 @@ function show_tasks()
   end
 
   let index = 0
-
   for each task in tasks do
     let mark = "[ ]"
-
     if task.complete then
       mark = "[x]"
     end
-
     say(index, mark, task.title)
     index = index + 1
   end
 end
 
-// Mark one task as complete. //
+// Done validates an index before changing the task. //
 function complete_task(index)
   if index < 0 or index >= len(tasks) then
     say("That task does not exist.")
@@ -52,7 +49,7 @@ function complete_task(index)
   say("Completed:", tasks[index].title)
 end
 
-// Remove one task from the list. //
+// Remove deletes a task only when its index is valid. //
 function remove_task(index)
   if index < 0 or index >= len(tasks) then
     say("That task does not exist.")
@@ -64,64 +61,53 @@ function remove_task(index)
   say("Removed:", removed)
 end
 
-// Mark every task as incomplete. //
+// Clear removes completed tasks and keeps unfinished tasks. //
 function clear_completed()
   let remaining = []
-
   for each task in tasks do
     if not task.complete then
       remaining.push(task)
     end
   end
-
   tasks = remaining
   say("Completed tasks cleared.")
 end
 
+// Help documents every command directly inside the program. //
 function show_help()
   say("Commands:")
-  say("  add    - create a task")
-  say("  list   - show tasks")
-  say("  done   - complete a task")
-  say("  remove - delete a task")
-  say("  clear  - remove completed tasks")
-  say("  help   - show this help")
-  say("  quit   - exit")
+  say("add    - create a task")
+  say("list   - show tasks")
+  say("done   - complete a task")
+  say("remove - delete a task")
+  say("clear  - remove completed tasks")
+  say("help   - show this help")
+  say("quit   - exit")
 end
 
 say("=== SingulaX To-Do App ===")
 show_help()
 
+// The command loop keeps the application alive until quit is entered. //
 let running = true
-
 while running do
   let command = ask("> ").trim().lower()
 
   if command == "add" then
-    let title = ask("Task title: ")
-    add_task(title)
-
-  otherwise if command == "list" then
+    add_task(ask("Task title: "))
+  elseif command == "list" then
     show_tasks()
-
-  otherwise if command == "done" then
-    let index = to_number(ask("Task number: "))
-    complete_task(index)
-
-  otherwise if command == "remove" then
-    let index = to_number(ask("Task number: "))
-    remove_task(index)
-
-  otherwise if command == "clear" then
+  elseif command == "done" then
+    complete_task(to_number(ask("Task number: ")))
+  elseif command == "remove" then
+    remove_task(to_number(ask("Task number: ")))
+  elseif command == "clear" then
     clear_completed()
-
-  otherwise if command == "help" then
+  elseif command == "help" then
     show_help()
-
-  otherwise if command == "quit" then
+  elseif command == "quit" then
     running = false
-
-  otherwise
+  else
     say("Unknown command. Type help for commands.")
   end
 end
