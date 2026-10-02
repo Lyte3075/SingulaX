@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "singulax-controller-arena-muri9tnx-0991796a",
+  "name": "SingulaX Controller Arena",
+  "description": "A SingulaX project",
+  "version": "1.0.0",
+  "author": "SingulaX Community User",
+  "author_id": null,
+  "published": "2026-10-02T21:59:18.381Z",
+  "downloads": 0,
+  "likes": 0,
+  "main": "projects/singulax-controller-arena-muri9tnx-0991796a/files/main.sglx",
+  "files": [
+    "projects/singulax-controller-arena-muri9tnx-0991796a/files/main.sglx"
+  ]
+}

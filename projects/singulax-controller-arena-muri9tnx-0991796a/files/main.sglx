@@ -1,0 +1,173 @@
+// SingulaX Controller Arena //
+
+local player_x = 400
+local player_y = 300
+
+local drone_x = 600
+local drone_y = 200
+
+local score = 0
+local speed = 4
+local flash = 0
+
+// Show every controller input //
+controls.all()
+
+forever do
+
+  clear_screen()
+
+  // Space arena //
+  draw_rect(0, 0, 800, 450, "midnightblue")
+
+  // LEFT JOYSTICK //
+  player_x += joystick_x() * speed
+  player_y += joystick_y() * speed
+
+  // D-PAD //
+  if key_down("ArrowUp") then
+    player_y -= speed
+  end
+
+  if key_down("ArrowDown") then
+    player_y += speed
+  end
+
+  if key_down("ArrowLeft") then
+    player_x -= speed
+  end
+
+  if key_down("ArrowRight") then
+    player_x += speed
+  end
+
+  // Keep player inside arena //
+  if player_x < 30 then
+    player_x = 30
+  end
+
+  if player_x > 770 then
+    player_x = 770
+  end
+
+  if player_y < 100 then
+    player_y = 100
+  end
+
+  if player_y > 410 then
+    player_y = 410
+  end
+
+  // RIGHT JOYSTICK //
+  drone_x += joystick2_x() * speed
+  drone_y += joystick2_y() * speed
+
+  if drone_x < 30 then
+    drone_x = 30
+  end
+
+  if drone_x > 770 then
+    drone_x = 770
+  end
+
+  if drone_y < 100 then
+    drone_y = 100
+  end
+
+  if drone_y > 410 then
+    drone_y = 410
+  end
+
+  // A BUTTON //
+  if button_down("a") then
+    score += 1
+    flash = 5
+  end
+
+  // B BUTTON //
+  if button_down("b") then
+    score += 2
+    flash = 5
+  end
+
+  // X BUTTON //
+  if button_down("x") then
+    score += 3
+    flash = 5
+  end
+
+  // Y BUTTON //
+  if button_down("y") then
+    score += 4
+    flash = 5
+  end
+
+  // LEFT BUMPER //
+  if button_down("lb") then
+    speed = 2
+  end
+
+  // RIGHT BUMPER //
+  if button_down("rb") then
+    speed = 8
+  end
+
+  if not button_down("lb") and not button_down("rb") then
+    speed = 4
+  end
+
+  // LEFT TRIGGER //
+  if trigger_value("lt") > 0 then
+    drone_x -= 3
+  end
+
+  // RIGHT TRIGGER //
+  if trigger_value("rt") > 0 then
+    drone_x += 3
+  end
+
+  // Collision //
+  if abs(player_x - drone_x) < 35 then
+    if abs(player_y - drone_y) < 35 then
+      score += 10
+      flash = 10
+
+      drone_x = random_int(80, 720)
+      drone_y = random_int(120, 390)
+    end
+  end
+
+  // PLAYER SHIP //
+  draw_rect(player_x - 18, player_y - 12, 36, 24, "deepskyblue")
+  draw_rect(player_x - 8, player_y - 22, 16, 10, "deepskyblue")
+  draw_rect(player_x - 25, player_y + 8, 10, 7, "orange")
+  draw_rect(player_x + 15, player_y + 8, 10, 7, "orange")
+
+  // DRONE //
+  draw_circle(drone_x, drone_y, 20, "orange")
+  draw_circle(drone_x, drone_y, 8, "white")
+
+  // HUD //
+  draw_text("SINGULAX CONTROLLER ARENA", 225, 30, 22, "white")
+
+  draw_text("LEFT STICK / D-PAD = SHIP", 270, 55, 15, "cyan")
+  draw_text("RIGHT STICK = DRONE", 305, 77, 15, "orange")
+
+  draw_text("A +1   B +2   X +3   Y +4", 280, 105, 18, "white")
+
+  draw_text("LB = SLOW", 260, 132, 16, "white")
+  draw_text("RB = FAST", 450, 132, 16, "white")
+
+  draw_text("LT / RT = DRONE BOOST", 300, 158, 16, "white")
+
+  draw_text("SCORE: " .. score, 20, 425, 20, "white")
+  draw_text("SPEED: " .. speed, 700, 425, 18, "white")
+
+  if flash > 0 then
+    draw_text("INPUT DETECTED!", 315, 220, 28, "yellow")
+    flash -= 1
+  end
+
+  wait(0.016)
+
+end
