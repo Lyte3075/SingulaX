@@ -185,6 +185,10 @@ const builtins = [
   'joystick_right',
   'joystick_up',
   'joystick_down',
+  'joystick2_left',
+  'joystick2_right',
+  'joystick2_up',
+  'joystick2_down',
   'asset',
   'asset_url',
   'play_audio',
@@ -1164,6 +1168,18 @@ async function run() {
 
   runtime.env.joystick2_y = () =>
     runtime?.gamepads?.[0]?.axes?.[3] || 0;
+
+  runtime.env.joystick2_left = () =>
+    runtime.env.joystick2_x() < -0.25;
+
+  runtime.env.joystick2_right = () =>
+    runtime.env.joystick2_x() > 0.25;
+
+  runtime.env.joystick2_up = () =>
+    runtime.env.joystick2_y() < -0.25;
+
+  runtime.env.joystick2_down = () =>
+    runtime.env.joystick2_y() > 0.25;
 
   runtime.env.joystick_left = () =>
     runtime.env.joystick_x() < -0.25;
