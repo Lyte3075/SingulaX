@@ -179,7 +179,7 @@ async function openCommunityProject(p){
     $('status').textContent='Loading '+(p.name||'project')+'…';
     const files={};
     for(const path of (p.files||[])){
-      const normalizedPath=String(path).replace(/^projects\//,'');
+      const normalizedPath=String(path).replace(/^\/+/, '');
       const rawUrl=COMMUNITY_RAW_BASE+normalizedPath.split('/').map(encodeURIComponent).join('/')+'?t='+Date.now();
       const r=await fetch(rawUrl);
       if(!r.ok)throw new Error('Source HTTP '+r.status);
