@@ -98,21 +98,14 @@ function tabSearch(tab){
   return null;
 }
 
+const COMMUNITY_INDEX_RAW='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/projects/index.json';
+const COMMUNITY_RAW_BASE='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/';
+
 async function getCommunityProjects(){
-  const root=await github('/repos/Lyte3075/SingulaX/contents/'+COMMUNITY_ROOT+'?ref='+encodeURIComponent(COMMUNITY_BRANCH));
-  const dirs=(Array.isArray(root)?root:[]).filter(x=>x.type==='dir');
-  const projects=[];
-  for(const dir of dirs){
-    try{
-      const meta=await github('/repos/Lyte3075/SingulaX/contents/'+COMMUNITY_ROOT+'/'+encodeURIComponent(dir.name)+'/project.json?ref='+encodeURIComponent(COMMUNITY_BRANCH));
-      const text=atob(meta.content.replace(/\s/g,''));
-      const p=JSON.parse(decodeURIComponent(escape(text)));
-      p._path=COMMUNITY_ROOT+'/'+dir.name;
-      p._id=dir.name;
-      projects.push(p);
-    }catch(e){}
-  }
-  return projects;
+  const r=await fetch(COMMUNITY_INDEX_RAW+'?t='+Date.now());
+  if(!r.ok)throw new Error('Community index HTTP '+r.status);
+  const data=await r.json();
+  return Array.isArray(data.projects)?data.projects:[];
 }
 
 async function loadTab(tab){
@@ -174,11 +167,11 @@ async function openCommunityProject(p){
     $('status').textContent='Loading '+(p.name||'project')+'…';
     const files={};
     for(const path of (p.files||[])){
-      const apiPath='/repos/Lyte3075/SingulaX/contents/'+path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(COMMUNITY_BRANCH);
-      const d=await github(apiPath);
-      const raw=atob((d.content||'').replace(/\s/g,''));
+      const rawUrl=COMMUNITY_RAW_BASE+path.split('/').map(encodeURIComponent).join('/')+'?t='+Date.now();
+      const r=await fetch(rawUrl);
+      if(!r.ok)throw new Error('Source HTTP '+r.status);
       const rel=path.indexOf('/files/')>=0?path.split('/files/').slice(1).join('/'):path;
-      files[rel]=decodeURIComponent(escape(raw));
+      files[rel]=await r.text();
     }
     const mainPath=(p.main&&p.main.split('/files/').pop())||Object.keys(files).find(x=>/\.(sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(x))||Object.keys(files)[0];
     currentProject={community:p,src:{path:mainPath,text:files[mainPath]},files};
@@ -288,6 +281,17 @@ async function publishProject(){
       const dest=root+'/files/'+filename;
       $('uploadStatus').textContent='Uploading project files ('+i+'/'+entries.length+')…';
       await githubAuth('/repos/Lyte3075/SingulaX/contents/'+dest,token,{method:'PUT',body:JSON.stringify({message:'Add '+name+' project file '+filename,content:btoa(unescape(encodeURIComponent(content))),branch:COMMUNITY_BRANCH})});
+    }
+    // Keep the public index updated so browsing/searching does not hit GitHub's unauthenticated API rate limit.
+    try{
+      const indexResponse=await fetch(COMMUNITY_INDEX_RAW+'?t='+Date.now());
+      const indexData=indexResponse.ok?await indexResponse.json():{schema:1,projects:[]};
+      const indexProject={...manifest,_path:root,_id:id};
+      indexData.projects=(indexData.projects||[]).filter(x=>x.id!==id);
+      indexData.projects.push(indexProject);
+      await githubAuth('/repos/Lyte3075/SingulaX/contents/'+COMMUNITY_ROOT+'/index.json',token,{method:'PUT',body:JSON.stringify({message:'Update community project index: '+name,content:btoa(unescape(encodeURIComponent(JSON.stringify(indexData,null,2)))),branch:COMMUNITY_BRANCH})});
+    }catch(indexError){
+      console.warn('Project published, but community index update failed:',indexError);
     }
     const published={id,name,description,version,full_name:'Lyte3075/SingulaX',html_url:'https://github.com/Lyte3075/SingulaX/tree/'+COMMUNITY_BRANCH+'/'+root};
     const list=getPublished().filter(x=>x.id!==id);list.push(published);localStorage.setItem('singulax-community-published',JSON.stringify(list));
