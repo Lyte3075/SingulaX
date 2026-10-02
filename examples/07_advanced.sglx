@@ -1,18 +1,19 @@
-// 07_advanced.sglx
-// TOPIC: Advanced data processing with comprehensions, higher-order functions,
-// destructuring, variadic arguments, pattern matching, assertions, and JSON. //
-// Each section produces a real result so the file is a runnable lesson. //
+// 07_advanced.sglx //
+// TOPIC: Advanced language features and data processing. //
+// This file keeps every advanced feature in one runnable lesson. //
 
 say("=== SingulaX Advanced Features ===")
 
-// List comprehensions create new lists from existing data. //
+// range creates a sequence of numbers for later processing. //
 let numbers = range(1, 11)
 
+// A comprehension builds a new list from another list. //
 let squares = [
   x * x
   for each x in numbers
 ]
 
+// where keeps only values that pass its condition. //
 let evens = [
   x
   for each x in numbers
@@ -30,39 +31,36 @@ end)
 
 say("Doubled:", doubled)
 
-// filter keeps only items that pass a condition. //
+// filter keeps matching items. //
 let large = numbers.filter(function(x)
   return x > 7
 end)
 
 say("Numbers over 7:", large)
 
-// reduce combines many values into one result. //
+// reduce combines many items into one value. //
 let total = numbers.reduce(function(accumulator, value)
   return accumulator + value
 end, 0)
 
 say("Sum:", total)
 
-// Destructuring can unpack multiple values. //
+// Multiple assignment can unpack values. //
 let first, second = 10, 20
 say("Before swap:", first, second)
-
 first, second = second, first
-
 say("After swap:", first, second)
 
-// A function can return a list that can be unpacked. //
+// A function can return a list that is unpacked by the caller. //
 function min_and_max(values)
   return [min(values), max(values)]
 end
 
 let lowest, highest = min_and_max(numbers)
-
 say("Lowest:", lowest)
 say("Highest:", highest)
 
-// Variadic parameters collect any number of arguments into one list. //
+// Variadic parameters collect extra arguments into one list. //
 function total_of(...values)
   return values.reduce(function(accumulator, value)
     return accumulator + value
@@ -71,14 +69,14 @@ end
 
 say("total_of:", total_of(1, 2, 3, 4))
 
-// Pattern matching selects behavior from a value. //
+// match selects a result from a value. //
 function describe_day(day)
   match day
     when "Saturday" then
       return "Weekend"
     when "Sunday" then
       return "Weekend"
-    otherwise
+    else
       return "Weekday"
   end
 end
@@ -86,10 +84,10 @@ end
 say("Saturday:", describe_day("Saturday"))
 say("Tuesday:", describe_day("Tuesday"))
 
-// Assertions are useful for checking assumptions while developing. //
+// assert is useful for checking assumptions while developing. //
 assert(total_of(1, 2, 3) == 6, "total_of failed")
 
-// JSON converts structured SingulaX data into text and back. //
+// JSON converts structured data to text and back. //
 let profile = {
   name: "Ada",
   skills: ["math", "engineering"],
@@ -100,7 +98,6 @@ let json_text = to_json(profile)
 say("JSON:", json_text)
 
 let restored = from_json(json_text)
-
 say("Restored name:", restored.name)
 say("Restored skills:", restored.skills)
 
