@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b14">
+<title>SingulaX Community</title>
+<style>
+:root{color-scheme:dark;--bg:#080a12;--panel:#111522;--panel2:#151a2a;--text:#edf1ff;--muted:#8e98b8;--accent:#7d7cff;--accent2:#b04cff;--border:#272e47}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0%,#19142d 0,#080a12 42%);color:var(--text);font:15px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(8,10,18,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.brand{font-weight:900;font-size:20px;letter-spacing:.2px}.brand span{background:linear-gradient(90deg,#4cc9ff,#7d7cff,#b04cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+header a,button{border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:10px;padding:9px 12px;text-decoration:none;cursor:pointer}header a{margin-left:auto}
+main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:clamp(30px,6vw,54px);margin:0 0 8px}.hero p{color:var(--muted);max-width:760px;line-height:1.6}
+.search{display:flex;gap:10px;margin:22px 0}.search input{flex:1;min-width:0;background:#0e1220;border:1px solid var(--border);color:var(--text);border-radius:12px;padding:13px 14px;font-size:16px}.search button{background:linear-gradient(135deg,#595cff,#a448ff);border:0;font-weight:800}
+#status{color:var(--muted);margin:10px 0 18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}.card{background:linear-gradient(180deg,rgba(21,26,42,.96),rgba(13,16,27,.96));border:1px solid var(--border);border-radius:16px;padding:17px;box-shadow:0 12px 35px rgba(0,0,0,.18)}.card h3{margin:0 0 7px}.card p{color:var(--muted);min-height:42px;line-height:1.45}.meta{font-size:12px;color:#737d9c;margin-bottom:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button.primary{background:linear-gradient(135deg,#5d62ff,#a849ff);border:0;font-weight:800}
+.viewer{display:none;margin-top:24px;background:#0d111d;border:1px solid var(--border);border-radius:16px;overflow:hidden}.viewer.show{display:block}.viewerHead{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}.viewerHead strong{flex:1}.viewerBody{display:grid;grid-template-columns:1fr 1fr;min-height:500px}.code{margin:0;padding:16px;overflow:auto;white-space:pre;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:#080b13}.preview{border:0;border-left:1px solid var(--border);width:100%;min-height:500px;background:#000}
+.empty{padding:30px;border:1px dashed var(--border);border-radius:14px;color:var(--muted)}
+@media(max-width:760px){header{flex-wrap:wrap}.viewerBody{grid-template-columns:1fr}.preview{border-left:0;border-top:1px solid var(--border);min-height:320px}.code{min-height:320px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">◆ <span>SingulaX Community</span></div>
+  <a href="lite-ide.html">Open Experimental IDE</a>
+</header>
+<main>
+  <section class="hero">
+    <h1>Discover. Test. Remix. 🚀</h1>
+    <p>Browse public SingulaX projects on GitHub, run their source in this experimental sandbox, and remix a project into your local SingulaX Studio workspace.</p>
+  </section>
+
+  <div class="search">
+    <input id="query" placeholder="Search GitHub for SingulaX projects..." value="SingulaX">
+    <button id="searchBtn">Search</button>
+  </div>
+  <div id="status">Loading community projects…</div>
+  <div id="grid" class="grid"></div>
+
+  <section id="viewer" class="viewer">
+    <div class="viewerHead">
+      <strong id="viewerTitle">Project</strong>
+      <button id="remixBtn" class="primary">Remix</button>
+      <button id="closeBtn">Close</button>
+    </div>
+    <div class="viewerBody">
+      <pre id="code" class="code"></pre>
+      <canvas id="preview" class="preview" width="800" height="450"></canvas>
+    </div>
+  </section>
+</main>
+
+<script src="runtime.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let currentProject=null;
+let runtime=null;
+let frame=[];
+let generation=0;
+
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function github(path){
+  const r=await fetch('https://api.github.com'+path,{headers:{Accept:'application/vnd.github+json'}});
+  if(!r.ok) throw new Error('GitHub API '+r.status);
+  return r.json();
+}
+
+async function searchProjects(){
+  const rawQuery=$('query').value.trim()||'SingulaX';
+  const q=/singulax/i.test(rawQuery)?rawQuery:rawQuery+' SingulaX';
+  $('status').textContent='Searching public GitHub repositories…';
+  $('grid').innerHTML='';
+  try{
+    const data=await github('/search/repositories?q='+encodeURIComponent(q)+'&sort=updated&order=desc&per_page=18');
+    const repos=data.items||[];
+    if(!repos.length){$('status').textContent='No public repositories found.';return;}
+    $('status').textContent=repos.length+' public repositories found.';
+    for(const repo of repos) addRepo(repo);
+  }catch(e){
+    $('status').textContent='Could not load GitHub projects: '+e.message;
+  }
+}
+
+async function addRepo(repo){
+  const card=document.createElement('article');
+  card.className='card';
+  card.innerHTML='<h3>'+esc(repo.name)+'</h3><p>'+esc(repo.description||'No description.')+'</p><div class="meta">'+esc(repo.full_name)+' · ★ '+repo.stargazers_count+'</div><div class="actions"><button class="primary">Test project</button><a href="'+esc(repo.html_url)+'" target="_blank" rel="noopener">GitHub</a></div>';
+  $('grid').appendChild(card);
+  card.querySelector('button').onclick=()=>loadRepo(repo,card);
+}
+
+async function findSource(repo){
+  const tree=await github('/repos/'+encodeURIComponent(repo.full_name)+'/git/trees/'+encodeURIComponent(repo.default_branch)+'?recursive=1');
+  const files=(tree.tree||[]).filter(x=>x.type==='blob' && /\.(sglx|vlla|clyn)$/i.test(x.path));
+  if(!files.length) throw new Error('No .sglx, .vlla, or .clyn source file found.');
+  const preferred=files.find(x=>/^(main|index)\.(sglx|vlla|clyn)$/i.test(x.path))||files[0];
+  const raw='https://raw.githubusercontent.com/'+repo.full_name+'/'+encodeURIComponent(repo.default_branch).replace(/%2F/g,'/')+'/'+preferred.path.split('/').map(encodeURIComponent).join('/');
+  const text=await fetch(raw).then(r=>{if(!r.ok)throw new Error('Source HTTP '+r.status);return r.text()});
+  return {path:preferred.path,text,files};
+}
+
+async function loadRepo(repo,card){
+  const btn=card.querySelector('button');
+  btn.disabled=true;btn.textContent='Loading…';
+  try{
+    const src=await findSource(repo);
+    currentProject={repo,src};
+    $('viewerTitle').textContent=repo.full_name+' / '+src.path;
+    $('code').textContent=src.text;
+    $('viewer').classList.add('show');
+    await testSource();
+    $('viewer').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){alert('Could not load this project: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Test project';}
+}
+
+async function testSource(){
+  generation++;const runId=generation;
+  if(runtime) runtime.running=false;
+  const c=$('preview'),ctx=c.getContext('2d');
+  ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);
+  frame=[];
+  runtime=new SingulaxRuntime({
+    output:s=>console.log(s),
+    frame:f=>frame=f.slice(),
+    input:async p=>{console.log(p);return '';},
+    fileRead:async()=> '',
+    fileWrite:async()=>true,
+    playAudio:()=>{},
+    mode3d:v=>{}
+  });
+  runtime.setInput({keys:[],buttons:[],mouse:{x:0,y:0},touch:{x:0,y:0,active:false},gamepads:{}});
+  const project={name:currentProject.repo.name,files:{[currentProject.src.path]:currentProject.src.text},assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
+  try{
+    await runtime.runProject(project);
+    if(runId===generation) drawFrame();
+  }catch(e){
+    ctx.fillStyle='#ff6b8a';ctx.font='16px system-ui';ctx.fillText('Test error: '+e.message,18,30);
+  }
+}
+function drawFrame(){
+  const c=$('preview'),ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);
+  for(const x of frame){
+    ctx.fillStyle=x.fill||'white';ctx.strokeStyle=x.fill||'white';
+    if(x.type==='rect')ctx.fillRect(x.x,x.y,x.w,x.h);
+    else if(x.type==='circle'){ctx.beginPath();ctx.arc(x.x,x.y,x.r,0,Math.PI*2);ctx.fill();}
+    else if(x.type==='line'){ctx.lineWidth=x.width||2;ctx.beginPath();ctx.moveTo(x.x1,x.y1);ctx.lineTo(x.x2,x.y2);ctx.stroke();}
+    else if(x.type==='text'){ctx.font=(x.size||20)+'px sans-serif';ctx.fillText(x.text,x.x,x.y);}
+  }
+  if(runtime&&generation) requestAnimationFrame(drawFrame);
+}
+
+$('searchBtn').onclick=searchProjects;
+$('query').addEventListener('keydown',e=>{if(e.key==='Enter')searchProjects();});
+$('closeBtn').onclick=()=>{$('viewer').classList.remove('show');generation++;if(runtime)runtime.running=false;runtime=null;};
+$('remixBtn').onclick=()=>{
+  if(!currentProject)return;
+  const p={name:currentProject.repo.name+' Remix',files:{[currentProject.src.path]:currentProject.src.text},assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:true}};
+  localStorage.setItem('singulax-project',JSON.stringify(p));
+  location.href='lite-ide.html';
+};
+searchProjects();
+</script>
+</body>
+</html>
