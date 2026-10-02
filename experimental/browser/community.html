@@ -78,7 +78,7 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
   <div class="modalBox">
     <h2>Publish a SingulaX Project 🚀</h2>
     <p class="hint">Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.</p>
-    <div class="field"><label>Project package</label><input id="projectFile" type="file" accept=".sglxproj,.sglx,.txt,.vlla,.cyln,.smsc,.wsc,.ctrsc,.ezsc,.lyte3075"></div>
+    <div class="field"><label>Project package</label><input id="projectFile" type="file" accept="*/*"></div>
     <div class="field"><label>Project name</label><input id="repoName" placeholder="My SingulaX Project"></div>
     <div class="field"><label>Description</label><input id="repoDescription" placeholder="A SingulaX project"></div>
     <div class="field"><label>Version</label><input id="projectVersion" value="1.0.0" placeholder="1.0.0"></div>
@@ -278,6 +278,7 @@ async function publishProject(){
       main=p.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
     }else{
       const ext=sourceExt(file.name);
+      if(!EXTENSIONS.includes(ext)) throw new Error('Unsupported file type. Use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.');
       main='main.'+ext;
       files[main]=raw;
     }
