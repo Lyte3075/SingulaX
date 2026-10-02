@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "3d-starter",
+  "name": "3D Starter Guide",
+  "description": "A minimal introduction to SingulaX's built-in 3D engine.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "main.sglx",
+  "files": [
+    "main.sglx"
+  ]
+}
