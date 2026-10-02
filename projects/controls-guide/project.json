@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "id": "controls-guide",
+  "name": "Input & Controls Guide",
+  "description": "A practical example showing keyboard input, movement, and button presses in SingulaX.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "main.sglx",
+  "files": [
+    "main.sglx"
+  ]
+}
