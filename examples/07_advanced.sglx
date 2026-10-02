@@ -1,76 +1,107 @@
-# 07_advanced.sglx
-# The "advanced but still simple" side of Singulax: inline conditionals,
-# list comprehensions, functional list methods, destructuring, variadic
-# functions, pattern matching, and JSON.
+// 07_advanced.sglx
+// TOPIC: Advanced data processing with comprehensions, higher-order functions,
+// destructuring, variadic arguments, pattern matching, assertions, and JSON. //
+// Each section produces a real result so the file is a runnable lesson. //
 
-# --- inline conditional expressions ---
-let n = 7
-let parity = if n % 2 == 0 then "even" otherwise "odd"
-say("{n} is {parity}")
+say("=== SingulaX Advanced Features ===")
 
-# they chain naturally:
-function grade(score)
-  return if score >= 90 then "A" otherwise
-         if score >= 80 then "B" otherwise
-         if score >= 70 then "C" otherwise "F"
+// List comprehensions create new lists from existing data. //
+let numbers = range(1, 11)
+
+let squares = [
+  x * x
+  for each x in numbers
+]
+
+let evens = [
+  x
+  for each x in numbers
+  where x % 2 == 0
+]
+
+say("Numbers:", numbers)
+say("Squares:", squares)
+say("Evens:", evens)
+
+// map transforms every item. //
+let doubled = numbers.map(function(x)
+  return x * 2
+end)
+
+say("Doubled:", doubled)
+
+// filter keeps only items that pass a condition. //
+let large = numbers.filter(function(x)
+  return x > 7
+end)
+
+say("Numbers over 7:", large)
+
+// reduce combines many values into one result. //
+let total = numbers.reduce(function(accumulator, value)
+  return accumulator + value
+end, 0)
+
+say("Sum:", total)
+
+// Destructuring can unpack multiple values. //
+let first, second = 10, 20
+say("Before swap:", first, second)
+
+first, second = second, first
+
+say("After swap:", first, second)
+
+// A function can return a list that can be unpacked. //
+function min_and_max(values)
+  return [min(values), max(values)]
 end
-say("Score 84 gets a", grade(84))
 
-# --- list comprehensions ---
-let nums = range(1, 11)                          # 1..10
-let squares = [x * x for each x in nums]
-let evens = [x for each x in nums where x % 2 == 0]
-say("squares:", squares)
-say("evens:", evens)
+let lowest, highest = min_and_max(numbers)
 
-# --- functional list methods (map / filter / reduce / each) ---
-let doubled = nums.map(function(x) return x * 2 end)
-let big = nums.filter(function(x) return x > 7 end)
-let total = nums.reduce(function(acc, x) return acc + x end, 0)
-say("doubled:", doubled)
-say("over 7:", big)
-say("sum 1..10:", total)
+say("Lowest:", lowest)
+say("Highest:", highest)
 
-# --- destructuring / multiple values ---
-let a, b = 1, 2
-say("before:", a, b)
-a, b = b, a                     # swap, no temp variable needed
-say("after swap:", a, b)
-
-function min_and_max(list)
-  return [min(list), max(list)]     # "return" a pair as a 2-item list
-end
-let lowest, highest = min_and_max(nums)
-say("range:", lowest, "to", highest)
-
-# --- variadic parameters & spread ---
+// Variadic parameters collect any number of arguments into one list. //
 function total_of(...values)
-  return values.reduce(function(acc, x) return acc + x end, 0)
+  return values.reduce(function(accumulator, value)
+    return accumulator + value
+  end, 0)
 end
-say("total_of(1,2,3):", total_of(1, 2, 3))
 
-let more_numbers = [4, 5, 6]
-say("with spread:", total_of(1, 2, 3, ...more_numbers))
+say("total_of:", total_of(1, 2, 3, 4))
 
-# --- pattern matching ---
+// Pattern matching selects behavior from a value. //
 function describe_day(day)
   match day
     when "Saturday" then
-      return "Weekend!"
+      return "Weekend"
     when "Sunday" then
-      return "Weekend!"
+      return "Weekend"
     otherwise
-      return "Just a weekday"
+      return "Weekday"
   end
 end
-say(describe_day("Saturday"), "/", describe_day("Tuesday"))
 
-# --- assert (great for quick self-checks) ---
-assert(total_of(1, 2, 3) == 6, "total_of is broken")
+say("Saturday:", describe_day("Saturday"))
+say("Tuesday:", describe_day("Tuesday"))
 
-# --- JSON in and out ---
-let profile = {name: "Ada", skills: ["math", "engineering"], active: true}
-let as_json = to_json(profile)
-say("as JSON:", as_json)
-let round_tripped = from_json(as_json)
-say("back to Singulax:", round_tripped.name, round_tripped.skills)
+// Assertions are useful for checking assumptions while developing. //
+assert(total_of(1, 2, 3) == 6, "total_of failed")
+
+// JSON converts structured SingulaX data into text and back. //
+let profile = {
+  name: "Ada",
+  skills: ["math", "engineering"],
+  active: true
+}
+
+let json_text = to_json(profile)
+say("JSON:", json_text)
+
+let restored = from_json(json_text)
+
+say("Restored name:", restored.name)
+say("Restored skills:", restored.skills)
+
+say("=== Advanced features complete ===")
