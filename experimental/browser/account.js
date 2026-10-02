@@ -18,6 +18,9 @@ async function getProfile(userId) {
 async function refresh() {
   const {data} = await supabase.auth.getSession();
   const session=data?.session;
+  if(session && session.user?.email && !session.user.email.endsWith('@'+syntheticDomain)) {
+    await supabase.from('profiles').update({email:session.user.email}).eq('id',session.user.id);
+  }
   $('signedIn').hidden=!session;
   $('authForm').hidden=!!session;
   if(session){
@@ -44,7 +47,7 @@ $('authForm').addEventListener('submit',async event=>{
       const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username}}});
       if(error) throw error;
       if(!data.user) throw new Error('Account creation failed.');
-      const {error:profileError}=await supabase.from('profiles').insert({id:data.user.id,username,email:null});
+      const {error:profileError}=await supabase.from('profiles').insert({id:data.user.id,username:username.toLowerCase(),email:null});
       if(profileError){
         await supabase.auth.signOut();
         if(profileError.code==='23505') throw new Error('That username is already taken.');
@@ -76,8 +79,6 @@ $('addEmail').onclick=async()=>{
     if(!sessionData?.session) return;
     const {error}=await supabase.auth.updateUser({email});
     if(error) throw error;
-    const {error:profileError}=await supabase.from('profiles').update({email}).eq('id',sessionData.session.user.id);
-    if(profileError) throw profileError;
     message('Verification email sent. Confirm it to verify your email.');
     await refresh();
   }catch(error){message(error.message||'Could not add email.',true);}
