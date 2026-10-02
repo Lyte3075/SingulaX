@@ -1,5 +1,5 @@
 import { withSupabase } from "npm:@supabase/server@1";
-import { SignJWT, importPKCS8 } from "npm:jose@6.1.0";
+import { SignJWT, importPKCS1, importPKCS8 } from "npm:jose@6.1.0";
 
 const OWNER = "Lyte3075";
 const REPO = "SingulaX";
@@ -64,7 +64,10 @@ async function appToken() {
   const privateKey = Deno.env.get("GITHUB_APP_PRIVATE_KEY");
   if (!appId || !privateKey) throw new Error("GitHub App is not configured on the publisher.");
 
-  const key = await importPKCS8(privateKey.replace(/\\n/g, "\n"), "RS256");
+  const pem = privateKey.replace(/\\n/g, "\n").trim();
+  const key = pem.includes("BEGIN RSA PRIVATE KEY")
+    ? await importPKCS1(pem, "RS256")
+    : await importPKCS8(pem, "RS256");
   const now = Math.floor(Date.now() / 1000);
   const jwt = await new SignJWT({})
     .setProtectedHeader({ alg: "RS256", typ: "JWT" })
