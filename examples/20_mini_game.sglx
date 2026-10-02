@@ -1,52 +1,46 @@
 // 20_mini_game.sglx //
-// TOPIC: Combining variables, input, collision, drawing, and a game loop. //
-// This is a complete tiny game example that shows how the pieces fit together. //
+// TOPIC: Combining variables, input, drawing, collision, scoring, and a game loop. //
+// This is a small complete game pattern you can expand into a larger project. //
 
-let player_x = 360
-let player_y = 380
-let player_speed = 5
+let player_x = 380
+let player_y = 390
 let coin_x = 200
-let coin_y = 180
+let coin_y = 200
 let score = 0
+let speed = 5
 
 forever do
   clear_screen()
 
-  // Read keyboard input and move the player. //
-  if key_down("ArrowLeft") then
-    player_x -= player_speed
-  end
-  if key_down("ArrowRight") then
-    player_x += player_speed
-  end
-  if key_down("ArrowUp") then
-    player_y -= player_speed
-  end
-  if key_down("ArrowDown") then
-    player_y += player_speed
-  end
+  // Read keyboard movement. //
+  if key_down("ArrowLeft") then player_x -= speed end
+  if key_down("ArrowRight") then player_x += speed end
+  if key_down("ArrowUp") then player_y -= speed end
+  if key_down("ArrowDown") then player_y += speed end
 
-  // Keep the player inside the preview area. //
-  player_x = clamp(player_x, 20, 730)
-  player_y = clamp(player_y, 20, 400)
+  // Read the first joystick too, so the same game works with touch controls. //
+  player_x += joystick_x() * speed
+  player_y += joystick_y() * speed
 
-  // Move the coin slowly toward a new position after collection. //
+  // Keep the player inside the preview. //
+  player_x = clamp(player_x, 20, 780)
+  player_y = clamp(player_y, 20, 430)
+
+  // Draw the player and collectible. //
+  draw_rect(player_x - 20, player_y - 20, 40, 40, "cyan")
+  draw_circle(coin_x, coin_y, 14, "gold")
+
+  // Simple distance collision. //
   let dx = player_x - coin_x
   let dy = player_y - coin_y
   let distance = sqrt(dx * dx + dy * dy)
 
-  if distance < 45 then
+  if distance < 34 then
     score += 1
-    coin_x = random_int(40, 760)
-    coin_y = random_int(80, 380)
+    coin_x = random(30, 770)
+    coin_y = random(30, 420)
   end
 
-  // Draw the game world. //
-  draw_rect(0, 0, 800, 450, "#08111f")
-  draw_circle(coin_x, coin_y, 18, "gold")
-  draw_rect(player_x, player_y, 50, 50, "cyan")
-
-  draw_text("MINI GAME", 20, 30, 22, "white")
-  draw_text("Collect the gold circle.", 20, 58, 16, "white")
-  draw_text("Score: {score}", 20, 84, 16, "white")
+  draw_text("Mini Game", 20, 28, 24, "white")
+  draw_text("Score: {score}", 20, 58, 18, "white")
 end
