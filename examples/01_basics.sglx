@@ -1,55 +1,74 @@
-# 01_basics.sglx
-# A tour of variables, math, strings, conditionals, and loops.
+// 01_basics.sglx
+// TOPIC: Variables, values, operators, strings, lists, and dictionaries.
+// This script is intentionally self-contained. Run it from SingulaX Studio. //
 
-let name = "Singulax"
+say("=== SingulaX Basics ===")
+
+// Variables store values. SingulaX can infer the value's type for you. //
+let name = "Ada"
+let age = 30
+let learning = true
+let nothing_here = nothing
+
+say("Name:", name)
+say("Age:", age)
+say("Learning:", learning)
+say("Nothing:", nothing_here)
+
+// Math operators work directly on numbers. //
+let a = 17
+let b = 5
+
+say("a + b =", a + b)
+say("a - b =", a - b)
+say("a * b =", a * b)
+say("a / b =", a / b)
+say("a // b =", a // b)
+say("a % b =", a % b)
+say("a ^ 2 =", a ^ 2)
+
+// Strings can be joined with + or use {name} interpolation. //
 say("Hello, " + name + "!")
-say("Hello, {name}!")            # string interpolation does the same thing
+say("Hello, {name}! You are {age}.")
 
-# numbers
-let a = 7
-let b = 2
-say(a + b, a - b, a * b, a / b, a // b, a % b, a ^ 2)
-
-# booleans and "nothing" (null)
-let is_ready = true
-let winner = nothing
-say(is_ready, winner, winner or "no winner yet")
-
-# conditionals
+// Conditions choose which code runs. //
 let score = 82
+
 if score >= 90 then
   say("Grade: A")
 otherwise if score >= 80 then
   say("Grade: B")
+otherwise if score >= 70 then
+  say("Grade: C")
 otherwise
-  say("Grade: C or below")
+  say("Grade: F")
 end
 
-# while loop
-let countdown = 3
-while countdown > 0 do
-  say(countdown, "...")
-  countdown = countdown - 1
-end
-say("Liftoff!")
-
-# repeat N times (with a 1-based loop counter)
-repeat 3 times as i
-  say("Repetition #", i)
-end
-
-# lists
+// Lists hold ordered values and can be changed. //
 let colors = ["red", "green", "blue"]
+colors.push("purple")
+
+say("Colors:", colors)
+say("Color count:", len(colors))
+
 for each color in colors do
   say("Color:", color)
 end
-colors.push("purple")
-say("All colors:", colors, "- count:", len(colors))
 
-# dictionaries
-let person = {name: "Ada", age: 30}
+// Dictionaries store named values. //
+let person = {
+  name: "Ada",
+  age: 30,
+  job: "Engineer"
+}
+
+say("Person name:", person.name)
+say("Person job:", person.job)
+
+person.city = "Baltimore"
+
 for each key, value in person do
   say(key, "->", value)
 end
-person.job = "Engineer"
-say(person)
+
+say("=== Basics complete ===")
