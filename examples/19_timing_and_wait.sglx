@@ -1,0 +1,45 @@
+// 19_timing_and_wait.sglx //
+// TOPIC: wait and wait.until for timed or state-based work. //
+// This file demonstrates pauses and a state transition in one complete script. //
+
+say("=== Timing and Waiting ===")
+
+// wait pauses the current SingulaX task for the requested amount of time. //
+say("Starting...")
+wait(0.5)
+say("Half a second later.")
+wait(0.5)
+say("One second later.")
+
+// A state function can report whether a task is ready. //
+let progress = 0
+
+function ready()
+  return progress >= 5
+end
+
+// wait.until keeps checking a function until it reaches the requested state. //
+forever do
+  progress += 1
+  say("Progress:", progress)
+
+  if ready() then
+    break
+  end
+
+  wait(0.2)
+end
+
+say("The task is ready.")
+
+// The same idea can be expressed with a repeat.until statement when the loop body changes state. //
+let health = 100
+
+repeat.until.statement(health <= 50, true)
+  health -= 20
+  say("Health:", health)
+  wait(0.1)
+end
+
+say("Health target reached.")
+say("=== Timing complete ===")
