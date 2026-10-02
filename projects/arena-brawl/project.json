@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "id": "arena-brawl",
+  "name": "Arena Brawl",
+  "description": "A simple top-down fighting game sample with movement, attacks, health, and an enemy fighter.",
+  "version": "1.0.0",
+  "author": "SingulaX",
+  "published": true,
+  "downloads": 0,
+  "likes": 0,
+  "main": "projects/arena-brawl/files/main.sglx",
+  "files": [
+    "projects/arena-brawl/files/main.sglx"
+  ],
+  "category": "Fighting"
+}
