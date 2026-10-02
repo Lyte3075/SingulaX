@@ -1,0 +1,31 @@
+local x = 400
+local y = 380
+local score = 0
+local speed = 4
+local rockX = 200
+local rockY = -40
+
+forever do
+  clear_screen()
+  draw_text("MOBILE DODGE", 24, 32, 28, "white")
+  draw_text("Score: " .. score, 24, 64, 20, "cyan")
+  draw_text("Touch/Arrow keys: move", 24, 92, 16, "white")
+
+  if key_down("ArrowLeft") then
+    x -= 5
+  end
+  if key_down("ArrowRight") then
+    x += 5
+  end
+
+  rockY += speed
+  if rockY > 500 then
+    rockY = -40
+    rockX = random(40, 760)
+    score += 1
+  end
+
+  draw_rect(x - 24, y - 24, 48, 48, "cyan")
+  draw_circle(rockX, rockY, 22, "orange")
+  wait(0.016)
+end
