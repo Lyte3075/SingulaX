@@ -1,6 +1,11 @@
-# 03_blueprints.sglx
-# "blueprint" is Singulax's word for a class. Objects are made with "new".
+// 03_blueprints.sglx
+// TOPIC: Blueprints, objects, initialization, methods, and inheritance.
+// A blueprint is SingulaX's class-like object definition. //
 
+say("=== SingulaX Blueprints ===")
+
+// Animal is the base blueprint.
+// init() runs when a new Animal is created. //
 blueprint Animal
   function init(self, name, sound)
     self.name = name
@@ -12,7 +17,8 @@ blueprint Animal
   end
 end
 
-# "is" means inheritance: a Dog is an Animal, plus its own behavior
+// Dog inherits Animal.
+// It keeps the basic animal data and adds dog-specific behavior. //
 blueprint Dog is Animal
   function init(self, name)
     self.name = name
@@ -30,10 +36,21 @@ blueprint Dog is Animal
   end
 end
 
-let generic = new Animal("Creature", "...")
-say(generic.speak())
+// Create an object from the base blueprint. //
+let animal = new Animal("Creature", "...")
 
+say(animal.speak())
+
+// Create an object from the child blueprint. //
 let rex = new Dog("Rex")
+
 rex.learn_trick("sit")
 rex.learn_trick("roll over")
+rex.learn_trick("shake")
+
 rex.show_off()
+
+say("Dog name:", rex.name)
+say("Dog sound:", rex.sound)
+
+say("=== Blueprints complete ===")
