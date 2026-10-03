@@ -1,7 +1,11 @@
 (() => {
   const STORAGE_KEY = "singulax-easter-theme";
   const THEME = "caitlyn";
-  const CAITLYN_LOGO = new URL("../icons/caitlyn-logo.png", document.currentScript?.src || location.href).href;
+  const SCRIPT_URL = document.currentScript?.src || new URL("browser/easter-theme.js", location.href).href;
+  const CAITLYN_LOGO = new URL("../icons/caitlyn-logo.png", SCRIPT_URL).href;
+  const DEFAULT_LOGO = new URL("../icons/logo.png", SCRIPT_URL).href;
+  const DEFAULT_MANIFEST = new URL("../manifest.webmanifest", SCRIPT_URL).href;
+  const CAITLYN_MANIFEST = new URL("../manifest-caitlyn.webmanifest", SCRIPT_URL).href;
 
   const css = `
     html.sgx-easter-theme, body.sgx-easter-theme {
@@ -202,13 +206,16 @@
   }
 
 
-  function swapThemeLogos(active) {
-    document.querySelectorAll('img, link[rel~="icon"]').forEach(el => {
+  function swapThemeIcons(active) {
+    document.querySelectorAll('img, link[rel~="icon"], link[rel="apple-touch-icon"]').forEach(el => {
       const attr = el.tagName === "IMG" ? "src" : "href";
       const value = el.getAttribute(attr);
       if (!value) return;
+
       if (active) {
-        if (!el.dataset.sgxOriginalLogo && /(?:^|\/)icons\/logo\.png(?:[?#].*)?$/.test(new URL(value, location.href).pathname)) {
+        const url = new URL(value, location.href);
+        const isDefaultLogo = /(?:^|\/)icons\/logo\.png(?:[?#].*)?$/.test(url.pathname);
+        if (!el.dataset.sgxOriginalLogo && isDefaultLogo) {
           el.dataset.sgxOriginalLogo = value;
           el.setAttribute(attr, CAITLYN_LOGO);
         }
@@ -217,6 +224,32 @@
         delete el.dataset.sgxOriginalLogo;
       }
     });
+
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    if (manifestLink) {
+      if (!manifestLink.dataset.sgxOriginalManifest) {
+        manifestLink.dataset.sgxOriginalManifest = manifestLink.getAttribute("href") || DEFAULT_MANIFEST;
+      }
+      manifestLink.setAttribute("href", active ? CAITLYN_MANIFEST : manifestLink.dataset.sgxOriginalManifest);
+    }
+
+    let themeColor = document.querySelector('meta[name="theme-color"]');
+    if (!themeColor) {
+      themeColor = document.createElement("meta");
+      themeColor.name = "theme-color";
+      document.head.appendChild(themeColor);
+    }
+    themeColor.dataset.sgxOriginalThemeColor ||= themeColor.getAttribute("content") || "#080a12";
+    themeColor.setAttribute("content", active ? "#ef3b45" : themeColor.dataset.sgxOriginalThemeColor);
+
+    let appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!appleTitle) {
+      appleTitle = document.createElement("meta");
+      appleTitle.name = "apple-mobile-web-app-title";
+      document.head.appendChild(appleTitle);
+    }
+    appleTitle.dataset.sgxOriginalTitle ||= appleTitle.getAttribute("content") || "SingulaX";
+    appleTitle.setAttribute("content", active ? "Caitlyn" : appleTitle.dataset.sgxOriginalTitle);
   }
 
   function apply() {
@@ -227,10 +260,10 @@
     if (active) {
       document.body?.setAttribute("data-easter-theme", THEME);
       replaceBranding();
-      swapThemeLogos(true);
+      swapThemeIcons(true);
     } else {
       document.body?.removeAttribute("data-easter-theme");
-      swapThemeLogos(false);
+      swapThemeIcons(false);
     }
   }
 
@@ -260,7 +293,7 @@
         document.documentElement.classList.add("sgx-easter-theme");
         document.body?.classList.add("sgx-easter-theme");
         replaceBranding();
-        swapThemeLogos(true);
+        swapThemeIcons(true);
       }
     });
   }).observe(document.documentElement, {subtree:true, childList:true});
