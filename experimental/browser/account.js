@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 // Supabase password auth requires an email or phone internally.
 // This address is never shown to users and is only an internal auth identifier.
 // Confirm Email must be disabled so username signup does not send an email.
-const syntheticDomain = 'users.singulax.local';
+const syntheticDomain = 'users.singulax.dev';
 const EMAIL_REDIRECT = 'https://lyte3075.github.io/SingulaX/browser/account.html';
 
 function authEmail(username) {
