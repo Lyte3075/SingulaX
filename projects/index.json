@@ -140,42 +140,6 @@
       "category": "Arcade",
       "_path": "projects/space-duel",
       "_id": "space-duel"
-    },
-    {
-      "schema": 1,
-      "id": "singulax-controller-arena-muri9tnx-0991796a",
-      "name": "SingulaX Controller Arena",
-      "description": "A SingulaX project",
-      "version": "1.0.0",
-      "author": "SingulaX Community User",
-      "author_id": "3a9c1dcf-e074-4d4a-8623-bc3131c9df56",
-      "published": "2026-10-02T21:59:18.381Z",
-      "downloads": 0,
-      "likes": 0,
-      "main": "projects/singulax-controller-arena-muri9tnx-0991796a/files/main.sglx",
-      "files": [
-        "projects/singulax-controller-arena-muri9tnx-0991796a/files/main.sglx"
-      ],
-      "_path": "projects/singulax-controller-arena-muri9tnx-0991796a",
-      "_id": "singulax-controller-arena-muri9tnx-0991796a"
-    },
-    {
-      "schema": 1,
-      "id": "slam-battles-musf2fck-b6b60100",
-      "name": "Slam Battles",
-      "description": "A 2D fighting platformer game where you slam your opponent of the platform to win. Controls: WASD or Left Joystick for player 1 and Arrow Keys or Right Joystick for player 2.",
-      "version": "1.0.0",
-      "author": "SingulaX Community User",
-      "author_id": "3a9c1dcf-e074-4d4a-8623-bc3131c9df56",
-      "published": "2026-10-03T13:17:20.564Z",
-      "downloads": 0,
-      "likes": 0,
-      "main": "projects/slam-battles-musf2fck-b6b60100/files/main.cyln",
-      "files": [
-        "projects/slam-battles-musf2fck-b6b60100/files/main.cyln"
-      ],
-      "_path": "projects/slam-battles-musf2fck-b6b60100",
-      "_id": "slam-battles-musf2fck-b6b60100"
     }
   ]
 }
