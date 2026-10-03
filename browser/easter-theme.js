@@ -147,6 +147,14 @@
       color:var(--sgx-red-2)!important;
     }
 
+    body.sgx-easter-theme .glow,
+    body.sgx-easter-theme .glow.cyan,
+    body.sgx-easter-theme .glow.purple {
+      background:var(--sgx-red)!important;
+      box-shadow:0 0 80px var(--sgx-red), 0 0 140px var(--sgx-red-2)!important;
+      filter:none!important;
+    }
+
     body.sgx-easter-theme img {
       filter:none;
     }
