@@ -1,73 +1,1054 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#090b14">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080a12">
+
 <link rel="apple-touch-icon" sizes="180x180" href="browser/logo.png">
 <link rel="icon" type="image/png" sizes="512x512" href="browser/logo.png">
 <link rel="shortcut icon" href="browser/logo.png">
 <link rel="manifest" href="manifest.webmanifest">
-<title>⚛️Use SingulaX⚛️</title>
+
+<title>⚛️ Use SingulaX ⚛️</title>
 
 <style>
-body{font-family:system-ui;background:#080a12;color:#fff;padding:24px}
-a{color:#72eaff}
-code{background:#171c2d;padding:3px 6px;border-radius:5px}
+/* =========================================================
+   SINGULAX HOMEPAGE
+   ---------------------------------------------------------
+   This file is intentionally organized so you can easily
+   add more cards, sections, colors, or effects later.
+   ========================================================= */
+
+:root {
+  --background: #080a12;
+  --card: #10131d;
+  --card-hover: #151a27;
+
+  --text: #f5f7ff;
+  --muted: #9ba5b9;
+
+  --cyan: #4be0e3;
+  --purple: #9b6cff;
+  --pink: #fccaee;
+
+  --border: rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   BASIC PAGE SETUP
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    system-ui,
+    sans-serif;
+
+  color: var(--text);
+  background: var(--background);
+
+  overflow-x: hidden;
+}
+
+/* Background grid */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: -3;
+}
+
+/* Large background glow */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(75,224,227,0.12), transparent 35%),
+    radial-gradient(circle at 80% 70%, rgba(155,108,255,0.09), transparent 30%);
+
+  pointer-events: none;
+  z-index: -2;
+}
+
+/* =========================================================
+   FLOATING BACKGROUND LIGHTS
+   ========================================================= */
+
+.glow {
+  position: fixed;
+  width: 420px;
+  height: 420px;
+
+  border-radius: 50%;
+  filter: blur(100px);
+
+  pointer-events: none;
+  opacity: 0.12;
+  z-index: -1;
+}
+
+.glow.cyan {
+  top: -180px;
+  left: -150px;
+  background: var(--cyan);
+}
+
+.glow.purple {
+  right: -180px;
+  bottom: -180px;
+  background: var(--purple);
+}
+
+/* =========================================================
+   TOP NAVIGATION
+   ========================================================= */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  padding: 14px 20px;
+
+  background: rgba(8, 10, 18, 0.55);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  border-bottom: 1px solid transparent;
+
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.topbar.scrolled {
+  background: rgba(8, 10, 18, 0.82);
+  border-color: var(--border);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+}
+
+.topbar-inner {
+  max-width: 1100px;
+  margin: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logo {
+  color: var(--text);
+  text-decoration: none;
+
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+
+  transition: transform 0.25s ease;
+}
+
+.logo:hover {
+  transform: scale(1.04);
+}
+
+.navigate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 9px 15px;
+
+  color: #071013;
+  background: var(--cyan);
+
+  border-radius: 999px;
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  box-shadow: 0 8px 25px rgba(75,224,227,0.16);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.navigate:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(75,224,227,0.24);
+}
+
+/* =========================================================
+   MAIN CONTENT
+   ========================================================= */
+
+main {
+  width: min(1100px, calc(100% - 32px));
+  margin: auto;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero {
+  min-height: 78vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  padding: 80px 0 100px;
+}
+
+.hero-content {
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.hero-stars {
+  margin-bottom: 20px;
+
+  color: var(--pink);
+  font-size: 18px;
+  letter-spacing: 14px;
+
+  opacity: 0.9;
+}
+
+.hero h1 {
+  margin: 0;
+
+  font-size: clamp(48px, 10vw, 100px);
+  line-height: 0.95;
+  letter-spacing: -0.065em;
+
+  background: linear-gradient(
+    110deg,
+    var(--cyan),
+    var(--purple),
+    var(--pink)
+  );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero p {
+  max-width: 650px;
+  margin: 26px auto 0;
+
+  color: var(--muted);
+
+  font-size: clamp(18px, 3vw, 24px);
+  line-height: 1.45;
+}
+
+/* =========================================================
+   SECTIONS
+   ========================================================= */
+
+.section {
+  padding: 100px 0;
+}
+
+.section-heading {
+  margin-bottom: 36px;
+}
+
+.section-heading .eyebrow {
+  margin-bottom: 10px;
+
+  color: var(--cyan);
+
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.section-heading h2 {
+  margin: 0;
+
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.section-heading p {
+  max-width: 620px;
+  margin: 16px 0 0;
+
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.card {
+  position: relative;
+
+  min-height: 250px;
+  padding: 28px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  color: var(--text);
+  text-decoration: none;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,0.045),
+      rgba(255,255,255,0.015)
+    ),
+    var(--card);
+
+  border: 1px solid var(--border);
+  border-radius: 28px;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.45s cubic-bezier(.2,.8,.2,1),
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.card::before {
+  content: "";
+
+  position: absolute;
+  inset: -100px;
+
+  background:
+    radial-gradient(
+      circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      rgba(75,224,227,0.14),
+      transparent 24%
+    );
+
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.card:hover {
+  transform: translateY(-7px) scale(1.01);
+
+  background: var(--card-hover);
+  border-color: rgba(255,255,255,0.14);
+
+  box-shadow:
+    0 24px 60px rgba(0,0,0,0.25),
+    0 0 40px rgba(75,224,227,0.04);
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+.card-content,
+.card-arrow {
+  position: relative;
+  z-index: 1;
+}
+
+.card-icon {
+  margin-bottom: 24px;
+
+  font-size: 32px;
+}
+
+.card h3 {
+  margin: 0 0 10px;
+
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.card p {
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.card-arrow {
+  align-self: flex-end;
+
+  margin-top: 25px;
+
+  font-size: 24px;
+
+  transition: transform 0.3s ease;
+}
+
+.card:hover .card-arrow {
+  transform: translateX(6px);
+}
+
+/* =========================================================
+   EXPERIMENTAL SECTION
+   ========================================================= */
+
+.experimental .section-heading .eyebrow {
+  color: var(--pink);
+}
+
+.experimental .card:hover {
+  box-shadow:
+    0 24px 60px rgba(0,0,0,0.25),
+    0 0 45px rgba(252,202,238,0.06);
+}
+
+/* =========================================================
+   REPOSITORY SECTION
+   ========================================================= */
+
+.repository {
+  padding: 110px 0 130px;
+}
+
+.repository-card {
+  display: block;
+
+  padding: 45px;
+
+  color: var(--text);
+  text-decoration: none;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(75,224,227,0.08),
+      rgba(155,108,255,0.08)
+    ),
+    var(--card);
+
+  border: 1px solid var(--border);
+  border-radius: 34px;
+
+  transition:
+    transform 0.4s ease,
+    border-color 0.3s ease;
+}
+
+.repository-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.repository-card h2 {
+  margin: 0 0 12px;
+
+  font-size: clamp(32px, 6vw, 54px);
+  letter-spacing: -0.05em;
+}
+
+.repository-card p {
+  margin: 0;
+
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* =========================================================
+   MYSTERY / ??? SECTION
+   ========================================================= */
+
+.mystery {
+  padding: 90px 0 70px;
+
+  text-align: center;
+}
+
+.mystery a {
+  display: inline-block;
+
+  color: rgba(255,255,255,0.32);
+
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+
+  text-decoration: none;
+
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.mystery a:hover {
+  color: var(--pink);
+  transform: scale(1.08);
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+footer {
+  padding: 35px 20px 50px;
+
+  color: rgba(255,255,255,0.38);
+
+  text-align: center;
+  font-size: 13px;
+}
+
+/* =========================================================
+   SCROLL REVEAL
+   ========================================================= */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(45px);
+
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s cubic-bezier(.2,.8,.2,1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 800px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    min-height: 72vh;
+    padding-top: 60px;
+  }
+
+  .section {
+    padding: 75px 0;
+  }
+
+  .repository-card {
+    padding: 30px;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
 </style>
 </head>
 
 <body>
 
-<h1>⚛️Use SingulaX⚛️</h1>
+<!-- Background decorations -->
+<div class="glow cyan"></div>
+<div class="glow purple"></div>
 
-<h2>🚀 Stable</h2>
+<!-- =======================================================
+     TOP NAVIGATION
+     ======================================================= -->
 
-<p>Open <a href="browser/full-ide.html">SingulaX Studio</a>.</p>
-<p>This edition is best for computers and larger devices with decent performance.</p>
+<header class="topbar" id="topbar">
+  <div class="topbar-inner">
 
-<p>Open <a href="browser/lite-ide.html">SingulaX Studio Lite</a>.</p>
-<p>This edition is best for mobile devices and smaller screens.</p>
+    <a class="logo" href="./">
+      ⚛️ SingulaX
+    </a>
+
+    <!-- Main IDE button -->
+    <a class="navigate" href="browser/full-ide.html">
+      Navigate →
+    </a>
+
+  </div>
+</header>
 
 
-<p>Open <a href="browser/community.html">Community Projects</a>.</p>
-<p>This is where you can see what other users have published and check things out for yourself.</p>
+<main>
 
-<h2>🧪 Experimental</h2>
+<!-- =======================================================
+     HERO
+     ======================================================= -->
 
-<p>
-<a href="experimental/browser/full-ide.html">
-Launch Experimental IDE
-</a>
-</p>
+<section class="hero">
+  <div class="hero-content" id="heroContent">
 
-<p>
-<a href="experimental/browser/lite-ide.html">
-Launch Experimental IDE (Lite)
-</a>
-</p>
+    <div class="hero-stars">
+      ✦ ✦ ✦
+    </div>
 
-<p>
-<a href="experimental/browser/community.html">
-Community (Experimental)
-</a>
-</p>
+    <h1>Use SingulaX.</h1>
 
-<h2>📦 Repositories</h2>
+    <p>
+      Pick a version. Make something cool.
+      Explore, build, experiment, and create with SingulaX.
+    </p>
 
-<p>
-<a href="https://github.com/Lyte3075/SingulaX/">
-GitHub Repository
-</a>
-</p>
+  </div>
+</section>
 
-<p>This is the main branch of the official Github repository for SingulaX.</p>
 
-<p>
-<a href="browser/easter-eggs.html">
-???
-</a>
-</p>
+<!-- =======================================================
+     STABLE
+     ======================================================= -->
+
+<section class="section reveal">
+
+  <div class="section-heading">
+    <div class="eyebrow">Stable</div>
+
+    <h2>Ready when you are.</h2>
+
+    <p>
+      The normal SingulaX tools. Built for actually making things.
+    </p>
+  </div>
+
+
+  <div class="card-grid">
+
+    <!-- ===================================================
+         STABLE CARD 1
+         =================================================== -->
+
+    <a class="card" href="browser/full-ide.html">
+      <div class="card-content">
+
+        <div class="card-icon">🖥️</div>
+
+        <h3>SingulaX Studio</h3>
+
+        <p>
+          The full SingulaX IDE for larger screens and more powerful devices.
+        </p>
+
+      </div>
+
+      <div class="card-arrow">↗</div>
+    </a>
+
+
+    <!-- ===================================================
+         STABLE CARD 2
+         =================================================== -->
+
+    <a class="card" href="browser/lite-ide.html">
+      <div class="card-content">
+
+        <div class="card-icon">📱</div>
+
+        <h3>SingulaX Studio Lite</h3>
+
+        <p>
+          A lighter version designed for phones, tablets, and smaller screens.
+        </p>
+
+      </div>
+
+      <div class="card-arrow">↗</div>
+    </a>
+
+
+    <!-- ===================================================
+         STABLE CARD 3
+         =================================================== -->
+
+    <a class="card" href="browser/community.html">
+      <div class="card-content">
+
+        <div class="card-icon">🌐</div>
+
+        <h3>Community Projects</h3>
+
+        <p>
+          See what people have made with SingulaX and explore their projects.
+        </p>
+
+      </div>
+
+      <div class="card-arrow">↗</div>
+    </a>
+
+
+    <!-- ===================================================
+         ADD ANOTHER STABLE CARD HERE
+
+         Copy this:
+
+         <a class="card" href="YOUR-LINK-HERE">
+           <div class="card-content">
+             <div class="card-icon">✨</div>
+             <h3>Your Title</h3>
+             <p>Your description.</p>
+           </div>
+           <div class="card-arrow">↗</div>
+         </a>
+
+         =================================================== -->
+
+  </div>
+</section>
+
+
+<!-- =======================================================
+     EXPERIMENTAL
+     ======================================================= -->
+
+<section class="section experimental reveal">
+
+  <div class="section-heading">
+    <div class="eyebrow">Experimental</div>
+
+    <h2>Try the weird stuff.</h2>
+
+    <p>
+      Newer builds, experiments, and features that are still being cooked.
+    </p>
+  </div>
+
+
+  <div class="card-grid">
+
+    <!-- ===================================================
+         EXPERIMENTAL CARD 1
+         =================================================== -->
+
+    <a class="card" href="experimental/browser/full-ide.html">
+      <div class="card-content">
+
+        <div class="card-icon">🧪</div>
+
+        <h3>Experimental IDE</h3>
+
+        <p>
+          Try the newest experimental SingulaX IDE build.
+        </p>
+
+      </div>
+
+      <div class="card-arrow">↗</div>
+    </a>
+
+
+    <!-- ===================================================
+         EXPERIMENTAL CARD 2
+         =================================================== -->
+
+    <a class="card" href="experimental/browser/lite-ide.html">
+      <div class="card-content">
+
+        <div class="card-icon">🧬</div>
+
+        <h3>Experimental IDE Lite</h3>
+
+        <p>
+          Explore experimental features in a lighter interface.
+        </p>
+
+      </div>
+
+      <div class="card-arrow">↗</div>
+    </a>
+
+
+    <!-- ===================================================
+         EXPERIMENTAL CARD 3
+         =================================================== -->
+
+    <a class="card" href="experimental/browser/community.html">
+      <div class="card-content">
+
+        <div class="card-icon">🛰️</div>
+
+        <h3>Experimental Community</h3>
+
+        <p>
+          Check out community projects using the experimental build.
+        </p>
+
+      </div>
+
+      <div class="card-arrow">↗</div>
+    </a>
+
+
+    <!-- ===================================================
+         ADD ANOTHER EXPERIMENTAL CARD HERE
+         =================================================== -->
+
+  </div>
+</section>
+
+
+<!-- =======================================================
+     REPOSITORY
+     ======================================================= -->
+
+<section class="repository reveal">
+
+  <a
+    class="repository-card"
+    href="https://github.com/Lyte3075/SingulaX/"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+
+    <h2>Built in the open. ↗</h2>
+
+    <p>
+      Explore the official SingulaX repository, source code,
+      experiments, and everything that makes the project tick.
+    </p>
+
+  </a>
+
+</section>
+
+
+<!-- =======================================================
+     MYSTERY
+     ======================================================= -->
+
+<div class="mystery reveal">
+
+  <a href="browser/easter-eggs.html">
+    ???
+  </a>
+
+</div>
+
+</main>
+
+
+<!-- =======================================================
+     FOOTER
+     ======================================================= -->
+
+<footer>
+  SingulaX · 2026
+</footer>
+
+
+<script>
+/* =========================================================
+   SCROLL REVEAL
+   ---------------------------------------------------------
+   Elements with .reveal smoothly appear when they enter
+   the screen.
+   ========================================================= */
+
+const revealElements = document.querySelectorAll(".reveal");
+
+const revealObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+      }
+
+    });
+  },
+  {
+    threshold: 0.12
+  }
+);
+
+revealElements.forEach((element) => {
+  revealObserver.observe(element);
+});
+
+
+/* =========================================================
+   NAVBAR SCROLL EFFECT
+   ========================================================= */
+
+const topbar = document.getElementById("topbar");
+
+function updateNavbar() {
+
+  if (window.scrollY > 20) {
+    topbar.classList.add("scrolled");
+  } else {
+    topbar.classList.remove("scrolled");
+  }
+
+}
+
+window.addEventListener("scroll", updateNavbar, {
+  passive: true
+});
+
+updateNavbar();
+
+
+/* =========================================================
+   APPLE-STYLE HERO SCROLL EFFECT
+   ---------------------------------------------------------
+   The hero gently shrinks and fades as you scroll away.
+   ========================================================= */
+
+const heroContent = document.getElementById("heroContent");
+
+function updateHero() {
+
+  const scroll = Math.min(window.scrollY / 500, 1);
+
+  const scale = 1 - (scroll * 0.12);
+  const opacity = 1 - (scroll * 0.75);
+
+  heroContent.style.transform =
+    "scale(" + scale + ")";
+
+  heroContent.style.opacity = opacity;
+
+}
+
+window.addEventListener("scroll", updateHero, {
+  passive: true
+});
+
+updateHero();
+
+
+/* =========================================================
+   CARD MOUSE LIGHT
+   ---------------------------------------------------------
+   Gives desktop users a tiny moving light inside cards.
+   ========================================================= */
+
+document.querySelectorAll(".card").forEach((card) => {
+
+  card.addEventListener("pointermove", (event) => {
+
+    const rect = card.getBoundingClientRect();
+
+    const x =
+      ((event.clientX - rect.left) / rect.width) * 100;
+
+    const y =
+      ((event.clientY - rect.top) / rect.height) * 100;
+
+    card.style.setProperty("--mouse-x", x + "%");
+    card.style.setProperty("--mouse-y", y + "%");
+
+  });
+
+});
+
+
+/* =========================================================
+   OPTIONAL CARD PARALLAX
+   ---------------------------------------------------------
+   Very subtle movement while scrolling.
+   ========================================================= */
+
+function updateCardParallax() {
+
+  if (
+    window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+  ) {
+    return;
+  }
+
+  document.querySelectorAll(".card").forEach((card) => {
+
+    if (card.matches(":hover")) {
+      return;
+    }
+
+    const rect = card.getBoundingClientRect();
+
+    const distance =
+      (rect.top + rect.height / 2) -
+      (window.innerHeight / 2);
+
+    const movement =
+      Math.max(-4, Math.min(4, distance * -0.008));
+
+    card.style.transform =
+      "translateY(" + movement + "px)";
+
+  });
+
+}
+
+window.addEventListener("scroll", updateCardParallax, {
+  passive: true
+});
+
+updateCardParallax();
+</script>
 
 </body>
 </html>
