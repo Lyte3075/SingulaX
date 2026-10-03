@@ -77,20 +77,20 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
   <div class="manageBox">
     <div class="manageTop">
       <div><div class="manageEyebrow">YOUR COMMUNITY PROJECT</div><h2 id="manageTitle">Manage project</h2><p id="manageSubtitle">Project settings and publishing controls.</p></div>
-      <button id="closeManage" aria-label="Close">×</button>
+      <button type="button" id="closeManage" aria-label="Close">×</button>
     </div>
     <div class="manageProjectHead">
       <div id="manageIcon" class="manageIcon">✦</div>
       <div><strong id="manageName"></strong><span id="manageMeta"></span></div>
     </div>
     <div class="manageSections">
-      <button class="manageOption" id="manageUpdate"><span class="manageOptionIcon">↻</span><span><strong>Update project</strong><small>Publish a new version while keeping this project and its community stats.</small></span><b>›</b></button>
-      <button class="manageOption" id="manageDetails"><span class="manageOptionIcon">✎</span><span><strong>Edit project details</strong><small>Change the name, description, and version shown on Community.</small></span><b>›</b></button>
-      <button class="manageOption" id="manageVersions"><span class="manageOptionIcon">◷</span><span><strong>Version history</strong><small id="manageVersionsHint">View the versions published for this project.</small></span><b>›</b></button>
-      <button class="manageOption" id="manageOpen"><span class="manageOptionIcon">▶</span><span><strong>Open project</strong><small>Test the currently published version.</small></span><b>›</b></button>
+      <button type="button" class="manageOption" id="manageUpdate"><span class="manageOptionIcon">↻</span><span><strong>Update project</strong><small>Publish a new version while keeping this project and its community stats.</small></span><b>›</b></button>
+      <button type="button" class="manageOption" id="manageDetails"><span class="manageOptionIcon">✎</span><span><strong>Edit project details</strong><small>Change the name, description, and version shown on Community.</small></span><b>›</b></button>
+      <button type="button" class="manageOption" id="manageVersions"><span class="manageOptionIcon">◷</span><span><strong>Version history</strong><small id="manageVersionsHint">View the versions published for this project.</small></span><b>›</b></button>
+      <button type="button" class="manageOption" id="manageOpen"><span class="manageOptionIcon">▶</span><span><strong>Open project</strong><small>Test the currently published version.</small></span><b>›</b></button>
     </div>
     <div id="managePanel" class="managePanel"></div>
-    <div class="modalActions"><button id="closeManageBottom">Done</button></div>
+    <div class="modalActions"><button type="button" id="closeManageBottom">Done</button></div>
   </div>
 </div>
 <div id="uploadModal" class="modal">
@@ -642,9 +642,9 @@ function resetUploadModal(){
   $('uploadHint').innerHTML = 'Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.';
   $('publishBtn').textContent = 'Publish';
 }
-$('manageUpdate').onclick=()=>{ if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
-$('manageDetails').onclick=()=>{ if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
-$('manageVersions').onclick=showManageHistory;
+$('manageUpdate').onclick=(event)=>{ event.preventDefault(); event.stopPropagation(); if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
+$('manageDetails').onclick=(event)=>{ event.preventDefault(); event.stopPropagation(); if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
+$('manageVersions').onclick=(event)=>{ event.preventDefault(); event.stopPropagation(); showManageHistory(); };
 $('manageOpen').onclick=()=>{ if(communityManageProject){ const p=communityManageProject; closeManageModal(); openCommunityProject(p); } };
 $('closeManage').onclick=closeManageModal;
 $('closeManageBottom').onclick=closeManageModal;
