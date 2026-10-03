@@ -113,11 +113,11 @@ function tabSearch(tab){
   return null;
 }
 
-const COMMUNITY_INDEX_RAW='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/projects/index.json';
-const COMMUNITY_RAW_BASE='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/';
+const COMMUNITY_INDEX_RAW='https://github.com/Lyte3075/SingulaX/raw/refs/heads/'+COMMUNITY_BRANCH+'/projects/index.json';
+const COMMUNITY_RAW_BASE='https://github.com/Lyte3075/SingulaX/raw/refs/heads/'+COMMUNITY_BRANCH+'/';
 
 async function getCommunityProjects(){
-  const urls=['https://cdn.jsdelivr.net/gh/Lyte3075/SingulaX@community-projects/projects/index.json?'+Date.now(),COMMUNITY_INDEX_RAW+'?'+Date.now()];
+  const urls=[COMMUNITY_INDEX_RAW+'?'+Date.now(),'https://cdn.jsdelivr.net/gh/Lyte3075/SingulaX@community-projects/projects/index.json?'+Date.now()];
   let lastError=null;
   for(const url of urls){
     try{
@@ -259,12 +259,7 @@ async function renderYourProjects(){
       return;
     }
     const projects=await getCommunityProjects();
-    let published=projects.filter(p=>String(p.author_id||'')===String(user.id));
-    try{
-      const local=JSON.parse(localStorage.getItem('singulax-community-published')||'[]');
-      const ids=new Set(local.map(x=>String(x.id)));
-      published=projects.filter(p=>published.some(x=>x._id===p._id)||ids.has(String(p._id||p.id)));
-    }catch{}
+    const published=projects.filter(p=>String(p.author_id||'')===String(user.id));
     $('status').textContent=published.length+' projects you have published.';
     if(!published.length){
       $('grid').innerHTML='<div class="empty">You have not published any projects yet. Publish one with Upload Project.</div>';
@@ -277,6 +272,7 @@ async function renderYourProjects(){
     $('grid').innerHTML='<div class="empty">Could not load your published projects: '+esc(e.message||'Unknown error')+'</div>';
   }
 }
+
 function getPublished(){try{return JSON.parse(localStorage.getItem('singulax-community-published')||'[]')}catch{return[]}}
 
 async function findSource(repo){
