@@ -546,56 +546,6 @@ function drawFrame(){
   if(runtime&&generation)requestAnimationFrame(drawFrame);
 }
 
-async function getAnonymousAccessToken(){
-  const response=await fetch(SUPABASE_URL+'/auth/v1/signup',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY},
-    body:JSON.stringify({})
-  });
-  let result=null;try{result=await response.json()}catch{}
-  if(!response.ok)throw new Error(result?.msg||result?.message||result?.error_description||'Anonymous sign-in failed. Enable Anonymous Sign-Ins in Supabase Auth settings.');
-  if(!result?.access_token)throw new Error('Supabase did not return an anonymous access token.');
-  return result.access_token;
-}
-
-async function publishProject(){
-  const file=$('projectFile').files[0],name=$('repoName').value.trim(),description=$('repoDescription').value.trim()||'A SingulaX project',version=$('projectVersion').value.trim()||'1.0.0';
-  if(!file||!name){$('uploadStatus').textContent='Choose a project file and project name.';return;}
-  $('publishBtn').disabled=true;$('uploadStatus').textContent='Reading project…';
-  try{
-    const raw=await file.text();
-    let files={},main='';
-    if(/\.sglxproj$/i.test(file.name)){
-      let p;try{p=JSON.parse(raw)}catch{throw new Error('The project package is not valid JSON.')}
-      for(const [path,value] of Object.entries(p.files||{})){
-        if(typeof value==='string')files[path.replace(/^\/+/, '')]=value;
-      }
-      main=p.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
-    }else{
-      const ext=sourceExt(file.name);
-      if(!EXTENSIONS.includes(ext)) throw new Error('Unsupported file type. Use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.');
-      main='main.'+ext;
-      files[main]=raw;
-    }
-    if(!Object.keys(files).length)throw new Error('The project contains no source files.');
-    const payload={name,description,version,main,files:Object.entries(files).map(([path,content])=>({path,content}))};
-    $('uploadStatus').textContent='Publishing securely…';
-    const accessToken=await getAnonymousAccessToken();
-    const response=await fetch(SUPABASE_URL+'/functions/v1/community-publish',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPABASE_PUBLISHABLE_KEY,'Authorization':'Bearer '+accessToken},
-      body:JSON.stringify(payload)
-    });
-    let result=null;try{result=await response.json()}catch{}
-    if(!response.ok)throw new Error(result?.error||'Community publisher returned HTTP '+response.status);
-    const id=result.id;
-    const published={id,name,description,version,full_name:'Lyte3075/SingulaX',html_url:'https://github.com/Lyte3075/SingulaX/tree/'+COMMUNITY_BRANCH+'/projects/'+id};
-    const list=getPublished().filter(x=>x.id!==id);list.push(published);localStorage.setItem('singulax-community-published',JSON.stringify(list));
-    $('uploadStatus').textContent='Published to Community! 🎉';
-    setTimeout(()=>{$('uploadModal').classList.remove('show');loadTab('yours');},900);
-  }catch(e){$('uploadStatus').textContent='Publish failed: '+e.message;}
-  finally{$('publishBtn').disabled=false;}
-}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>loadTab(b.dataset.tab));
 $('searchBtn').onclick=async()=>{
   const q=$('query').value.trim().toLowerCase();
@@ -634,7 +584,6 @@ $('uploadBtn').onclick=()=>{$('uploadModal').classList.add('show');$('uploadStat
 $('cancelUpload').onclick=()=>{$('uploadModal').classList.remove('show');};
 $('publishBtn').onclick=publishProject;
 loadTab('trending');
-</script>
 </script>
 </body>
 </html>
