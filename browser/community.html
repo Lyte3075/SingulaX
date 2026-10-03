@@ -334,6 +334,10 @@ async function loadTab(tab){
     let projects = await getCommunityProjects();
     await loadSocialState(projects);
     const cloudLikes = p => socialState.likeCounts[String(p._id || p.id)] || 0;
+    projects = projects.filter(p =>
+      String(p.author || '').trim().toLowerCase() !== 'singulax' &&
+      (tab !== 'trending' && tab !== 'recommended' || cloudLikes(p) > 0)
+    );
     if(tab === 'trending'){
       projects.sort((a,b) =>
         ((b.downloads || 0) * 2 + cloudLikes(b)) -
