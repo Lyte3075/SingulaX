@@ -376,6 +376,13 @@ main {
   transform: scale(1.08);
 }
 
+.nav-overlay{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;padding:20px;background:rgba(2,4,10,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.nav-overlay.open{display:flex;animation:navFadeIn .22s ease both}
+.nav-menu{width:min(520px,100%);padding:20px;background:linear-gradient(145deg,rgba(20,25,40,.98),rgba(11,14,24,.98));border:1px solid rgba(255,255,255,.11);border-radius:24px;box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 70px rgba(75,224,227,.06);animation:navSlideUp .28s cubic-bezier(.2,.8,.2,1) both}
+.nav-menu-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}.nav-menu-eyebrow{color:var(--cyan);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.16em;margin-bottom:5px}.nav-menu h2{margin:0;font-size:24px;letter-spacing:-.035em}.nav-close{width:38px;height:38px;padding:0;flex:0 0 auto;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.055);color:var(--text);font-size:26px;line-height:1;cursor:pointer;transition:background .2s ease,transform .2s ease}.nav-close:hover{background:rgba(255,255,255,.1);transform:scale(1.04)}
+.nav-options{display:grid;gap:9px}.navChoice{width:100%;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;min-height:64px;padding:10px 13px;border:1px solid rgba(255,255,255,.075);border-radius:15px;background:rgba(255,255,255,.035);color:var(--text);text-align:left;font:inherit;cursor:pointer;transition:transform .22s ease,background .22s ease,border-color .22s ease,box-shadow .22s ease}.navChoice:hover{transform:translateX(3px);background:rgba(255,255,255,.075);border-color:rgba(75,224,227,.22);box-shadow:0 8px 25px rgba(0,0,0,.16)}.navChoice.nav-primary{background:linear-gradient(135deg,rgba(75,224,227,.12),rgba(155,108,255,.1));border-color:rgba(75,224,227,.22)}
+.nav-option-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:rgba(255,255,255,.065);color:var(--cyan);font-size:20px;font-weight:800}.nav-primary .nav-option-icon{color:#071013;background:var(--cyan);box-shadow:0 7px 22px rgba(75,224,227,.18)}.nav-option-text{min-width:0;display:grid;gap:3px}.nav-option-text strong{font-size:15px}.nav-option-text small{color:var(--muted);font-size:12px;line-height:1.35}.nav-option-arrow{color:rgba(255,255,255,.42);font-size:27px;transition:transform .2s ease,color .2s ease}.navChoice:hover .nav-option-arrow{color:var(--cyan);transform:translateX(3px)}.nav-cancel{width:100%;margin-top:13px;padding:11px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.04);color:var(--muted);font:inherit;cursor:pointer;transition:background .2s ease,color .2s ease}.nav-cancel:hover{background:rgba(255,255,255,.075);color:var(--text)}
+@keyframes navFadeIn{from{opacity:0}to{opacity:1}}@keyframes navSlideUp{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 footer {
   padding: 35px 20px 50px;
   color: rgba(255,255,255,0.38);
@@ -406,6 +413,7 @@ footer {
   .topbar-inner { gap: 10px; }
   .nav-actions { gap: 6px; }
   .navigate, .account { padding: 8px 11px; font-size: 13px; }
+  .nav-menu{padding:16px;border-radius:20px}.nav-menu h2{font-size:21px}.navChoice{grid-template-columns:38px 1fr auto;min-height:60px;padding:9px 11px}.nav-option-icon{width:38px;height:38px;font-size:18px}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -440,20 +448,16 @@ footer {
 </header>
 
 <!-- Navigate menu -->
-<div id="navModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px">
-  <div style="width:min(500px,100%);background:#111522;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.35)">
-    <h2 style="margin:0 0 16px">Where do you want to go?</h2>
-
-    <div style="display:grid;gap:10px">
-      <button class="navChoice" data-go="browser/full-ide.html">SingulaX IDE</button>
-      <button class="navChoice" data-go="browser/community.html">Community</button>
-      <button class="navChoice" data-go="browser/my-projects.html">My Projects</button>
-      <button class="navChoice" data-go="./">Homepage</button>
+<div class="nav-overlay" id="navModal">
+  <div class="nav-menu" role="dialog" aria-modal="true" aria-labelledby="navTitle">
+    <div class="nav-menu-top"><div><div class="nav-menu-eyebrow">SingulaX</div><h2 id="navTitle">Where do you want to go?</h2></div><button class="nav-close" id="closeNav" aria-label="Close navigation">×</button></div>
+    <div class="nav-options">
+      <button class="navChoice nav-primary" data-go="browser/full-ide.html"><span class="nav-option-icon">⌘</span><span class="nav-option-text"><strong>SingulaX IDE</strong><small>Build with the full studio</small></span><span class="nav-option-arrow">›</span></button>
+      <button class="navChoice" data-go="browser/community.html"><span class="nav-option-icon">◎</span><span class="nav-option-text"><strong>Community</strong><small>Explore projects and creations</small></span><span class="nav-option-arrow">›</span></button>
+      <button class="navChoice" data-go="browser/my-projects.html"><span class="nav-option-icon">▦</span><span class="nav-option-text"><strong>My Projects</strong><small>Open your saved projects</small></span><span class="nav-option-arrow">›</span></button>
+      <button class="navChoice" data-go="./"><span class="nav-option-icon">⌂</span><span class="nav-option-text"><strong>Homepage</strong><small>Return to the SingulaX home page</small></span><span class="nav-option-arrow">›</span></button>
     </div>
-
-    <button id="closeNav" style="margin-top:14px;width:100%;border:1px solid rgba(255,255,255,.08);background:#151a2a;color:#f5f7ff;border-radius:11px;padding:11px 14px;font:inherit;cursor:pointer">
-      Cancel
-    </button>
+    <button class="nav-cancel" id="cancelNav">Cancel</button>
   </div>
 </div>
 
@@ -577,14 +581,12 @@ footer {
 const navModal = document.getElementById("navModal");
 const navigateBtn = document.getElementById("navigateBtn");
 const closeNav = document.getElementById("closeNav");
-
-navigateBtn.addEventListener("click", () => {
-  navModal.style.display = "flex";
-});
-
-closeNav.addEventListener("click", () => {
-  navModal.style.display = "none";
-});
+const cancelNav = document.getElementById("cancelNav");
+function openNavigation(){navModal.classList.add("open");document.body.style.overflow="hidden"}
+function closeNavigation(){navModal.classList.remove("open");document.body.style.overflow=""}
+navigateBtn.addEventListener("click",openNavigation);
+closeNav.addEventListener("click",closeNavigation);
+cancelNav.addEventListener("click",closeNavigation);
 
 document.querySelectorAll(".navChoice").forEach((button) => {
   button.addEventListener("click", () => {
@@ -593,10 +595,9 @@ document.querySelectorAll(".navChoice").forEach((button) => {
 });
 
 navModal.addEventListener("click", (event) => {
-  if (event.target === navModal) {
-    navModal.style.display = "none";
-  }
+  if (event.target === navModal) closeNavigation();
 });
+document.addEventListener("keydown",(event)=>{if(event.key==="Escape"&&navModal.classList.contains("open"))closeNavigation()});
 
 const revealElements = document.querySelectorAll(".reveal");
 
