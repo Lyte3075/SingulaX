@@ -171,7 +171,8 @@
         .replaceAll("SingulaX", "Caitlyn")
         .replaceAll("Singulax", "Caitlyn")
         .replaceAll("singulax", "caitlyn")
-        .replaceAll("✦", "♥");
+        .replaceAll("✦", "♥")
+        .replaceAll("⚛️", "❤️‍🔥");
     }
 
     document.title = document.title
