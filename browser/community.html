@@ -38,6 +38,7 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
     <button class="tab" data-tab="new">New</button>
     <button class="tab" data-tab="following">Following</button>
     <button class="tab" data-tab="yours">Your Projects</button>
+    <button class="tab" data-tab="templates">Templates</button>
   </nav>
 
   <div id="searchBox" class="search" hidden>
@@ -101,6 +102,9 @@ const $ = id => document.getElementById(id);
 const COMMUNITY_BRANCH = 'community-projects';
 const COMMUNITY_INDEX = 'https://raw.githubusercontent.com/Lyte3075/SingulaX/' + COMMUNITY_BRANCH + '/projects/index.json';
 const COMMUNITY_BASE = 'https://raw.githubusercontent.com/Lyte3075/SingulaX/' + COMMUNITY_BRANCH + '/';
+const TEMPLATES_BRANCH = 'community-templates';
+const TEMPLATES_INDEX = 'https://raw.githubusercontent.com/Lyte3075/SingulaX/' + TEMPLATES_BRANCH + '/projects/index.json';
+const TEMPLATES_BASE = 'https://raw.githubusercontent.com/Lyte3075/SingulaX/' + TEMPLATES_BRANCH + '/';
 const EXTENSIONS = ['sglx','txt','vlla','cyln','smsc','wsc','ctrsc','ezsc','lyte3075'];
 
 let currentProject = null;
@@ -139,6 +143,24 @@ async function getCommunityProjects(){
   throw new Error('Community branch could not be loaded: ' + (lastError?.message || 'unknown error'));
 }
 
+
+async function getTemplateProjects(){
+  const urls=[
+    TEMPLATES_INDEX+'?t='+Date.now(),
+    'https://cdn.jsdelivr.net/gh/Lyte3075/SingulaX@'+TEMPLATES_BRANCH+'/projects/index.json?t='+Date.now()
+  ];
+  let lastError=null;
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{cache:'no-store'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const data=await r.json();
+      if(!Array.isArray(data.projects)) throw new Error('Invalid Templates index.');
+      return data.projects.filter(p=>String(p.author||'').trim().toLowerCase()==='singulax');
+    }catch(e){lastError=e;}
+  }
+  throw new Error('Templates could not be loaded: '+(lastError?.message||'unknown error'));
+}
 
 async function getProfileMap(projects){
   const ids=[...new Set(projects.map(p=>p.author_id).filter(Boolean).map(String))];
@@ -235,6 +257,7 @@ function addCommunityCard(project,profileMap={}){
     '</div>';
   $('grid').appendChild(card);
   card.querySelector('.primary').onclick = () => openCommunityProject(project);
+  if(project._templateOnly) card.dataset.template='true';
   card.querySelector('.filesBtn').onclick = () => openCommunityProject(project);
   card.querySelector('.followBtn').onclick = () => toggleFollowing(project);
   card.querySelector('.likeBtn').onclick = () => toggleLike(project);
@@ -284,6 +307,25 @@ async function loadTab(tab){
   }
   if(tab === 'yours'){
     await renderYourProjects();
+    return;
+  }
+  if(tab === 'templates'){
+    $('searchBox').hidden = true;
+    $('status').textContent = 'Loading SingulaX templates…';
+    try{
+      const projects = await getTemplateProjects();
+      $('status').textContent = projects.length + ' SingulaX templates.';
+      if(!projects.length){
+        $('grid').innerHTML = '<div class="empty">No SingulaX templates are available yet.</div>';
+        return;
+      }
+      currentProfileMap = await getProfileMap(projects);
+      projects.forEach(p => p._templateOnly = true);
+      await showProjects(projects);
+    }catch(e){
+      $('status').textContent = 'Could not load templates: '+e.message;
+      $('grid').innerHTML = '<div class="empty">Could not load the SingulaX template store.</div>';
+    }
     return;
   }
 
@@ -378,7 +420,8 @@ async function openCommunityProject(project){
     for(const path of (project.files || [])){
       const normalized = String(path).replace(/^\/+/, '');
       const relative = normalized;
-      const url = COMMUNITY_BASE + relative.split('/').map(encodeURIComponent).join('/') + '?t=' + Date.now();
+      const base = currentProject?.source === 'templates' ? TEMPLATES_BASE : COMMUNITY_BASE;
+      const url = base + relative.split('/').map(encodeURIComponent).join('/') + '?t=' + Date.now();
       const r = await fetch(url, {cache:'no-store'});
       if(!r.ok) throw new Error('Source HTTP ' + r.status);
       const name = relative.includes('/files/') ? relative.split('/files/').slice(1).join('/') : relative;
@@ -389,7 +432,7 @@ async function openCommunityProject(project){
       Object.keys(files).find(x => new RegExp('\\.(' + EXTENSIONS.join('|') + ')$','i').test(x)) ||
       Object.keys(files)[0];
     if(!mainPath || !files[mainPath]) throw new Error('This project has no readable source file.');
-    currentProject = {community:project,src:{path:mainPath,text:files[mainPath]},files};
+    currentProject = {community:project,source:project._templateOnly?'templates':'community',src:{path:mainPath,text:files[mainPath]},files};
     $('viewerTitle').textContent = (project.name || project._id) + ' · ' + mainPath;
     $('code').textContent = files[mainPath];
     $('viewer').classList.add('show');
