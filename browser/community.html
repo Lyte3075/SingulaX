@@ -290,13 +290,15 @@ async function loadTab(tab){
   $('status').textContent = 'Loading published SingulaX projects…';
   try{
     let projects = await getCommunityProjects();
+    await loadSocialState(projects);
+    const cloudLikes = p => socialState.likeCounts[String(p._id || p.id)] || 0;
     if(tab === 'trending'){
       projects.sort((a,b) =>
-        ((b.downloads || 0) * 2 + (b.likes || 0)) -
-        ((a.downloads || 0) * 2 + (a.likes || 0))
+        ((b.downloads || 0) * 2 + cloudLikes(b)) -
+        ((a.downloads || 0) * 2 + cloudLikes(a))
       );
     }else if(tab === 'recommended'){
-      projects.sort((a,b) => (b.likes || 0) - (a.likes || 0));
+      projects.sort((a,b) => cloudLikes(b) - cloudLikes(a));
     }else{
       projects.sort((a,b) => String(b.published || '').localeCompare(String(a.published || '')));
     }
