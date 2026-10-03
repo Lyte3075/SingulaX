@@ -4193,7 +4193,7 @@ async function openHelp() {
     try {
       let text =
         await fetch(
-          'https://raw.githubusercontent.com/Lyte3075/SingulaX/main/examples/' +
+          'https://lyte3075.github.io/SingulaX/examples/' +
             encodeURIComponent(name)
         ).then(
           r => {
