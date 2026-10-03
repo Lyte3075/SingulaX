@@ -117,15 +117,18 @@ const COMMUNITY_INDEX_RAW='https://raw.githubusercontent.com/Lyte3075/SingulaX/'
 const COMMUNITY_RAW_BASE='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/';
 
 async function getCommunityProjects(){
-  const api='https://api.github.com/repos/Lyte3075/SingulaX/contents/projects/index.json?ref='+encodeURIComponent(COMMUNITY_BRANCH);
-  const r=await fetch(api,{headers:{Accept:'application/vnd.github+json'}});
-  if(!r.ok)throw new Error('Community index HTTP '+r.status);
-  const data=await r.json();
-  if(!data?.content)throw new Error('Community index is empty.');
-  const raw=atob(String(data.content).replace(/\\s/g,''));
-  const bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
-  const parsed=JSON.parse(new TextDecoder().decode(bytes));
-  return Array.isArray(parsed.projects)?parsed.projects:[];
+  const urls=['https://cdn.jsdelivr.net/gh/Lyte3075/SingulaX@community-projects/projects/index.json?'+Date.now(),COMMUNITY_INDEX_RAW+'?'+Date.now()];
+  let lastError=null;
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{cache:'no-store'});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const parsed=await r.json();
+      if(!Array.isArray(parsed.projects))throw new Error('Invalid Community index.');
+      return parsed.projects;
+    }catch(e){lastError=e;}
+  }
+  throw new Error('Community branch could not be loaded: '+(lastError?.message||'unknown error'));
 }
 
 async function loadTab(tab){
@@ -201,9 +204,11 @@ async function openCommunityProject(p){
     }else{
       for(const path of (p.files||[])){
         const normalizedPath=String(path).replace(/^\\/+/, '');
-        const rawUrl=COMMUNITY_RAW_BASE+normalizedPath.split('/').map(encodeURIComponent).join('/')+'?t='+Date.now();
-        const r=await fetch(rawUrl);
-        if(!r.ok)throw new Error('Source HTTP '+r.status);
+        const relPath=normalizedPath.split('/').map(encodeURIComponent).join('/');
+        const urls=['https://cdn.jsdelivr.net/gh/Lyte3075/SingulaX@community-projects/'+relPath+'?'+Date.now(),COMMUNITY_RAW_BASE+relPath+'?'+Date.now()];
+        let r=null,lastError=null;
+        for(const url of urls){try{r=await fetch(url,{cache:'no-store'});if(r.ok)break;lastError=new Error('HTTP '+r.status);}catch(e){lastError=e;}}
+        if(!r?.ok)throw new Error('Source could not be loaded: '+(lastError?.message||'unknown error'));
         const rel=normalizedPath.indexOf('/files/')>=0?normalizedPath.split('/files/').slice(1).join('/'):normalizedPath;
         files[rel]=await r.text();
       }
