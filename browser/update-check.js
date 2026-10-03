@@ -12,10 +12,6 @@
       #sgx-update-notice{position:fixed;right:18px;bottom:18px;z-index:99999;width:min(390px,calc(100vw - 36px));padding:16px;border:1px solid rgba(75,224,227,.25);border-radius:16px;background:rgba(13,17,29,.97);color:#f5f7ff;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 35px rgba(75,224,227,.08);font:14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backdrop-filter:blur(18px)}
       #sgx-update-notice strong{display:block;font-size:15px;margin-bottom:5px}
       #sgx-update-notice p{margin:0;color:#9ba5b9;line-height:1.45}
-      #sgx-update-actions{display:flex;gap:8px;margin-top:12px}
-      #sgx-update-actions button{border:0;border-radius:10px;padding:9px 12px;font:inherit;font-weight:750;cursor:pointer}
-      #sgx-update-now{background:#4be0e3;color:#071013}
-      #sgx-update-later{background:rgba(255,255,255,.08);color:#f5f7ff}
     `;
     document.head.appendChild(style);
 
@@ -23,25 +19,34 @@
     notice.id = "sgx-update-notice";
     notice.hidden = true;
     notice.innerHTML = `
-      <strong>✨ SingulaX has been updated</strong>
-      <p>A newer version is available. Refresh to load the latest files and features.</p>
-      <div id="sgx-update-actions">
-        <button id="sgx-update-now">Update now</button>
-        <button id="sgx-update-later">Later</button>
-      </div>
+      <strong>✨ SingulaX is out of date</strong>
+      <p>A newer version is available. This page will refresh automatically in a few seconds.</p>
+      <div id="sgx-update-countdown" style="margin-top:10px;color:#4be0e3;font-weight:750">Refreshing in 5 seconds…</div>
     `;
     document.body.appendChild(notice);
 
-    notice.querySelector("#sgx-update-now").addEventListener("click", updateNow);
-    notice.querySelector("#sgx-update-later").addEventListener("click", () => {
-      notice.hidden = true;
-    });
+    // The update is automatic. No action buttons are needed.
     return notice;
   }
 
   function showUpdate() {
     if (!document.body) return;
-    makeNotice().hidden = false;
+    const notice = makeNotice();
+    notice.hidden = false;
+
+    // Prevent the refreshed page from detecting the same commit again.
+    if (latestSha) localStorage.setItem(STORAGE_KEY, latestSha);
+
+    let seconds = 5;
+    const countdown = notice.querySelector("#sgx-update-countdown");
+    const timer = setInterval(() => {
+      seconds -= 1;
+      if (countdown) countdown.textContent = `Refreshing in ${seconds} second${seconds === 1 ? "" : "s"}…`;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        updateNow();
+      }
+    }, 1000);
   }
 
   async function updateNow() {
