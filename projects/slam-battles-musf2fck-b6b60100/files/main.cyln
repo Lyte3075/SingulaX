@@ -1,0 +1,271 @@
+//Slam Battles//
+say("Loading")
+
+//Variables//
+//Player 1//
+local x = 125
+local y = 150
+local sizeX = 50
+local sizeY = 50
+local plrColor = "red"
+local plrColorChoice = 1
+local move = 8
+local jp = 20
+local plrCanJump = true
+local playerOneScore = 0
+say("vars plr 1 loaded")
+
+//Player 2//
+local X = 625
+local Y = 150
+local SizeX = 50
+local SizeY = 50
+local PlrColor = "dodgerblue"
+local PlrColorChoice = 1
+local Move = 8
+local JP = 20
+local PlrTwoCanJump = true
+local playerTwoScore = 0
+say("vars plr 2 loaded")
+
+//Other Variables//
+local score = "Score: ", playerOneScore, " - ", playerTwoScore
+
+say("Variables Loaded")
+
+//Mobile Controls Visibility//
+controls.show("right_joystick")
+controls.hide("a")
+controls.hide("b")
+
+//Functions//
+function drawMap()
+  draw_rect(112.5, 300, 575, 50, "green")
+  draw_rect(245, 129, 300, 25, "green")
+  draw_rect(0, 375, 1000, 1000, "blue")
+  draw_text(playerOneScore, 250, 50, 50, "red")
+  draw_text(playerTwoScore, 500, 50, 50, "dodgerblue")
+  draw_text("-", 380, 47, 50, "white")
+end
+function drawPlrs()
+  draw_rect(0, 0, 1000, 1000, "lightblue")
+  draw_circle(750, 50, 75, "yellow")
+  draw_rect(x, y, sizeX, sizeY, plrColor)
+  draw_rect(X, Y, SizeX, SizeY, PlrColor)
+  drawMap()
+end
+function draw()
+  clear_screen()
+  drawMap()
+  drawPlrs()
+end
+function collisionBorderPlr()
+  //if x < 0 then
+    x = 0
+  end//
+  //if x > 750 then
+    x = 750
+  end//
+  //if y < 0 then
+    y = 0
+  end//
+  if y > 400 then
+    y = 400
+  end
+
+  //if X < 0 then
+    X = 0
+  end//
+  //if X > 750 then
+    X = 750
+  end//
+  //if Y < 0 then
+    Y = 0
+  end//
+  if Y > 400 then
+    Y = 400
+  end
+end
+function plr2plrCollision()
+  say("x: ", x, "y: ", y)
+  say("x2: ", X, "y2: ", Y)
+end
+function mapCollision()
+  if x > 50 and x < 700 then
+    if y < 250 then
+      if x > 195 and x < 545 and y > 71 and y < 135 then
+        y = 71
+        plrCanJump = true
+      end
+      y = y + 8
+    end
+    if y > 250 and y < 350 then
+      y = 251
+      plrCanJump = true
+    end
+  elseif true then
+    y = y + 8
+  end
+  
+  if X > 50 and X < 700 then
+    if Y < 250 then
+      if X > 195 and X < 545 and Y > 71 and Y < 135 then
+        Y = 71
+        PlrTwoCanJump = true
+      end
+      Y = Y + 8
+    end
+    if Y > 250 and Y < 350 then
+      Y = 251
+      PlrTwoCanJump = true
+    end
+  elseif true then
+    Y = Y + 8
+  end
+end
+function collisions()
+  collisionBorderPlr()
+  plr2plrCollision()
+  mapCollision()
+end
+function attackPlr1()
+  if x - X > - 75 and x - X < 75 then
+    if y - Y < 75 and y - Y > 0 then
+      Y = Y - 200
+      if x - X < 0 //and y - Y < 75 and y - Y > 0// then
+        repeat(10)
+          Y = Y - 25
+          X = X + 40
+          plrMove()
+          jump()
+          draw()
+        end
+      elseif x - X > 0 //and y - Y < 75 and y - Y > 0// then
+        repeat(10)
+          Y = Y - 25
+          X = X - 40
+          plrMove()
+          jump()
+          draw()
+        end
+      end
+    end
+  end
+end
+function attackPlr2()
+  if X - x > - 75 and X - x < 75 then
+    if Y - y < 75 and Y - y > 0 then
+      if X - x < 0 //and Y - y < 75 and Y - y > 0// then
+        repeat(10)
+          y = y - 25
+          x = x + 40
+          plrMove()
+          jump()
+          draw()
+        end
+      elseif X - x > 0 //and Y - y < 75 and Y - y > 0// then
+        repeat(10)
+          y = y - 25
+          x = x - 40
+          plrMove()
+          jump()
+          draw()
+        end
+      end
+    end
+  end
+end
+function plrMove()
+  if key_down("a") or joystick_left() then
+    x = x - move
+  end
+  if key_down("d") or joystick_right() then
+    x = x + move
+  end
+  if key_down("ArrowLeft") or joystick2_left() then
+    X = X - Move
+  end
+  if key_down("ArrowRight") or joystick2_right() then
+    X = X + Move
+  end
+end
+function jump()
+  if (key_down("w") or joystick_up()) and plrCanJump = true and y < 255 then
+    repeat(10)
+      collisions()
+      plrMove()
+      draw()
+      y = y - jp
+      down()
+      plrCanJump = false
+    end
+  end
+  if (key_down("ArrowUp") or joystick2_up()) and PlrTwoCanJump = true and Y < 255 then
+    repeat(10)
+      collisions()
+      plrMove()
+      draw()
+      down()
+      Y = Y - JP
+      PlrTwoCanJump = false
+    end
+  end
+end
+function down()
+  if (key_down("s") or joystick_down()) and plrCanJump = false then
+    repeat(10)
+      collisions()
+      plrMove()
+      draw()
+      y = y + jp
+     // attackPlr1()//
+    end
+    attackPlr1()
+  end
+  if (key_down("ArrowDown") or joystick2_down()) and PlrTwoCanJump = false then
+    repeat(10)
+      collisions()
+      plrMove()
+      draw()
+      Y = Y + JP
+      //attackPlr2()//
+    end
+    attackPlr2()
+  end
+end
+function spawn()
+  x = 125
+  y = 150
+  X = 625
+  Y = 150
+end
+function roundLoop()
+  if y > 350 then
+    repeat(15)
+      y = y - jp
+      draw()
+    end
+    playerTwoScore = playerTwoScore + 1
+    spawn()
+  end
+  if Y > 350 then
+    repeat(15)
+      Y = Y - JP
+      draw()
+    end
+    playerOneScore = playerOneScore + 1
+    spawn()
+  end
+end
+
+//Game Logic//
+
+forever do
+  clear_screen()
+  jump()
+  down()
+  plrMove()
+  collisions()
+  roundLoop()
+  draw()
+end
