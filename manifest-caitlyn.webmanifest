@@ -1,0 +1,16 @@
+{
+  "name": "Caitlyn",
+  "short_name": "Caitlyn",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0c0b0d",
+  "theme_color": "#ef3b45",
+  "icons": [
+    {
+      "src": "icons/caitlyn-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
