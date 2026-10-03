@@ -114,6 +114,9 @@ async function blob(token: string, content: string) {
 }
 
 async function publish(req: Request, ctx: any) {
+  const userId = ctx.userClaims?.sub;
+  if (!userId) throw new Error("You must be signed in to publish a Community project.");
+  const { data: profile } = await ctx.supabase.from("profiles").select("username").eq("id", userId).maybeSingle();
   const body = await req.json();
   const name = String(body.name || "").trim();
   const description = String(body.description || "A SingulaX project").trim().slice(0, 500);
@@ -156,8 +159,8 @@ async function publish(req: Request, ctx: any) {
     name,
     description,
     version,
-    author: "SingulaX Community User",
-    author_id: null,
+    author: profile?.username || ctx.userClaims?.email || "SingulaX User",
+    author_id: userId,
     published: new Date().toISOString(),
     downloads: 0,
     likes: 0,
