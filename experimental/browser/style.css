@@ -59,9 +59,9 @@ aside,.panel,.studioTabs,.codeShell textarea,#diagnostics{scrollbar-width:auto;s
 
 /* Custom SingulaX themes */
 body[data-theme="pretty-scene"]{
-  --theme-accent:#ef9fbe;
-  --theme-accent-strong:#e982aa;
-  --theme-secondary:#a9dcf5;
+  --theme-accent:#fccaee;
+  --theme-accent-strong:#f4a9d6;
+  --theme-secondary:#4be0e3;
   --theme-bg:#fff4f8;
   --theme-panel:#fff9fc;
   --theme-panel2:#e9f6fd;
@@ -111,7 +111,7 @@ body[data-theme="pretty-scene"] .previewPanel canvas{border-color:#c8dce8}
 body[data-theme="pretty-scene"] #suggestions{background:#fff9fc;border-color:#e7b8ce;color:var(--theme-text)}
 body[data-theme="pretty-scene"] #suggestions button.selected,
 body[data-theme="pretty-scene"] #suggestions button:hover{background:#e9f6fd}
-body[data-theme="pretty-scene"] .brand span{background:linear-gradient(90deg,#ef9fbe,#a9dcf5);background-clip:text;-webkit-background-clip:text}
+body[data-theme="pretty-scene"] .brand span{background:linear-gradient(90deg,#fccaee,#4be0e3);background-clip:text;-webkit-background-clip:text}
 body[data-theme="pretty-scene"] .touchPad button{background:#e9f6fd}
 
 body[data-theme="matcha"]{
@@ -121,8 +121,8 @@ body[data-theme="matcha"]{
   --theme-bg:#202a23;
   --theme-panel:#28352c;
   --theme-panel2:#e5efd8;
-  --theme-text:#e5eee7;
-  --theme-muted:#a8b8aa;
+  --theme-text:#f4fff7;
+  --theme-muted:#c5d8c9;
   --theme-border:#465a4c;
   background:var(--theme-bg);
   color:var(--theme-text);
@@ -146,7 +146,7 @@ body[data-theme="matcha"] button:hover,
 body[data-theme="matcha"] .studioTab.active,
 body[data-theme="matcha"] .treeitem.active{
   background:var(--theme-accent);
-  color:#173018;
+  color:#102216;
   border-color:var(--theme-accent-strong);
 }
 body[data-theme="matcha"] #projectName,
