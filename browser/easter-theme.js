@@ -220,11 +220,17 @@
 
   apply();
 
+  let queued = false;
   new MutationObserver(() => {
-    if (localStorage.getItem(STORAGE_KEY) === THEME) {
-      document.documentElement.classList.add("sgx-easter-theme");
-      document.body?.classList.add("sgx-easter-theme");
-      replaceBranding();
-    }
-  }).observe(document.documentElement, {subtree:true, childList:true, attributes:true});
+    if (localStorage.getItem(STORAGE_KEY) !== THEME || queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      if (localStorage.getItem(STORAGE_KEY) === THEME) {
+        document.documentElement.classList.add("sgx-easter-theme");
+        document.body?.classList.add("sgx-easter-theme");
+        replaceBranding();
+      }
+    });
+  }).observe(document.documentElement, {subtree:true, childList:true});
 })();
