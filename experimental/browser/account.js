@@ -1,6 +1,10 @@
 import { supabase } from './supabase.js';
 
 const $ = id => document.getElementById(id);
+
+// Supabase password auth requires an email or phone internally.
+// This address is never shown to users and is only an internal auth identifier.
+// Confirm Email must be disabled so username signup does not send an email.
 const syntheticDomain = 'users.singulax.local';
 const EMAIL_REDIRECT = 'https://lyte3075.github.io/SingulaX/browser/account.html';
 
@@ -41,9 +45,12 @@ $('authForm').addEventListener('submit',async event=>{
   }
   if(password.length<6){message('Password must be at least 6 characters.',true);return;}
   $('submit').disabled=true;
-  message(mode==='signup'?'Creating your account…':'Signing you in…');
+  message(mode==='signup'?'Creating your username account…':'Signing you in…');
   try{
     if(mode==='signup'){
+      // The user supplies only a username and password.
+      // Supabase receives the hidden internal identifier above because
+      // password auth requires email or phone; it must not require verification.
       const email=authEmail(username);
       const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username}}});
       if(error) throw error;
@@ -55,11 +62,14 @@ $('authForm').addEventListener('submit',async event=>{
         throw profileError;
       }
       if(data.session) location.href='my-projects.html';
-      else message('Account created. You can now sign in with your username.');
+      else message('Account created. Sign in with your username and password.');
     }else{
       const {data:profile,error:profileError}=await supabase.from('profiles').select('email').eq('username',username.toLowerCase()).maybeSingle();
       if(profileError) throw profileError;
       if(!profile) throw new Error('Username not found.');
+      // Username is the only credential the user enters.
+      // If a real verification email was later added, it becomes the
+      // internal Supabase login address while the username stays unchanged.
       const loginEmail=profile.email || authEmail(username);
       const {error}=await supabase.auth.signInWithPassword({email:loginEmail,password});
       if(error) throw error;
