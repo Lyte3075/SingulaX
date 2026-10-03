@@ -273,7 +273,7 @@ function addCommunityCard(project,profileMap={}){
       '<button class="primary">Test project</button>' +
       '<button class="followBtn">' + (followed ? 'Following' : 'Follow') + '</button>' +
       '<button class="likeBtn">' + (liked ? '♥ Liked' : '♡ Like') + ' · ' + likeCount + '</button>' +
-      (currentTab === 'yours' && !project._templateOnly ? '<button class="manageBtn">Manage</button>' : '') +
+      (currentTab === 'yours' && !project._templateOnly ? '<button type="button" class="manageBtn">Manage</button>' : '') +
       '<button class="filesBtn">Files</button>' +
     '</div>';
   $('grid').appendChild(card);
@@ -642,13 +642,40 @@ function resetUploadModal(){
   $('uploadHint').innerHTML = 'Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.';
   $('publishBtn').textContent = 'Publish';
 }
-$('manageUpdate').onclick=(event)=>{ event.preventDefault(); event.stopPropagation(); if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
-$('manageDetails').onclick=(event)=>{ event.preventDefault(); event.stopPropagation(); if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
-$('manageVersions').onclick=(event)=>{ event.preventDefault(); event.stopPropagation(); showManageHistory(); };
-$('manageOpen').onclick=()=>{ if(communityManageProject){ const p=communityManageProject; closeManageModal(); openCommunityProject(p); } };
-$('closeManage').onclick=closeManageModal;
-$('closeManageBottom').onclick=closeManageModal;
-$('manageModal').addEventListener('click',e=>{if(e.target===$('manageModal'))closeManageModal();});
+function handleManageAction(event){
+  event.preventDefault();
+  event.stopPropagation();
+  const action=event.currentTarget?.dataset?.action || event.target?.closest?.('.manageOption')?.dataset?.action;
+  const project=communityManageProject;
+  if(!project) return false;
+  if(action==='update' || action==='details'){
+    openUpdateModal(project);
+    $('manageModal').classList.remove('show');
+    return false;
+  }
+  if(action==='versions'){
+    showManageHistory();
+    return false;
+  }
+  if(action==='open'){
+    $('manageModal').classList.remove('show');
+    openCommunityProject(project);
+    return false;
+  }
+  return false;
+}
+$('manageUpdate').dataset.action='update';
+$('manageDetails').dataset.action='details';
+$('manageVersions').dataset.action='versions';
+$('manageOpen').dataset.action='open';
+document.querySelectorAll('#manageModal .manageOption').forEach(button=>{
+  button.onclick=handleManageAction;
+});
+$('closeManage').onclick=(event)=>{event.preventDefault();event.stopPropagation();closeManageModal();};
+$('closeManageBottom').onclick=(event)=>{event.preventDefault();event.stopPropagation();closeManageModal();};
+$('manageModal').onclick=(event)=>{
+  if(event.target===$('manageModal')) closeManageModal();
+};
 let idePickerMode = 'open';
 function openIdePicker(mode='open'){
   idePickerMode = mode;
