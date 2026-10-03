@@ -18,7 +18,7 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
 .viewer{display:none;margin-top:24px;background:#0d111d;border:1px solid var(--border);border-radius:16px;overflow:hidden}.viewer.show{display:block}.viewerHead{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}.viewerHead strong{flex:1}.viewerBody{display:grid;grid-template-columns:1fr 1fr;min-height:500px}.code{margin:0;padding:16px;overflow:auto;white-space:pre;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:#080b13}.preview{border:0;border-left:1px solid var(--border);width:100%;min-height:500px;background:#000}
 .modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modalBox{width:min(620px,100%);background:#111522;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.modalBox h2{margin-top:0}.field{display:grid;gap:7px;margin:14px 0}.field input,.field textarea{width:100%;background:#0b0f1a;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.hint{color:var(--muted);font-size:13px;line-height:1.5}
 .idePicker{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px}.idePicker.show{display:flex}.idePickerBox{width:min(560px,100%);background:#111522;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.55)}.idePickerBox h2{margin:0 0 7px}.idePickerBox>p{color:var(--muted);margin-top:0}.ideOptions{display:grid;gap:10px;margin-top:16px}.ideOption{display:flex;align-items:center;gap:14px;text-align:left;padding:14px;border-radius:13px;background:#0d111d;border:1px solid var(--border)}.ideOption:hover{border-color:#6f70ff;background:#151a2a}.ideOption strong{display:block}.ideOption span{display:block;color:var(--muted);font-size:13px;margin-top:3px}.idePickerActions{display:flex;justify-content:flex-end;margin-top:16px}@media(max-width:760px){header{flex-wrap:wrap}.viewerBody{grid-template-columns:1fr}.preview{border-left:0;border-top:1px solid var(--border);min-height:320px}.code{min-height:320px}.tabs{margin-top:18px}}
-</style>
+.manageBox{width:min(700px,100%);max-height:min(88vh,760px);overflow:auto;background:linear-gradient(180deg,#121728,#0d111d);border:1px solid var(--border);border-radius:22px;padding:20px;box-shadow:0 30px 100px rgba(0,0,0,.6)}.manageTop{display:flex;gap:15px;align-items:flex-start}.manageTop>div{flex:1}.manageTop h2{margin:2px 0 5px}.manageTop p{margin:0;color:var(--muted)}.manageEyebrow{font-size:11px;font-weight:900;letter-spacing:.14em;color:#8e91ff}.manageProjectHead{display:flex;align-items:center;gap:13px;margin:20px 0 15px;padding:14px;border:1px solid var(--border);background:#0c101b;border-radius:15px}.manageIcon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#4be0e3,#9b6cff,#b04cff);color:white;font-size:21px;font-weight:900}.manageProjectHead strong{display:block;font-size:17px}.manageProjectHead span{display:block;color:var(--muted);font-size:12px;margin-top:3px}.manageSections{display:grid;gap:9px}.manageOption{width:100%;display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:12px;text-align:left;padding:14px;border-radius:14px;background:#0d111d;border:1px solid var(--border)}.manageOption:hover{border-color:#6f70ff;background:#151a2a}.manageOptionIcon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#171d31;color:#b9bbff;font-size:17px}.manageOption strong{display:block}.manageOption small{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:3px}.manageOption>b{font-size:22px;color:#737d9c}.managePanel{margin-top:12px}.manageHistory{display:grid;gap:8px}.manageVersion{display:flex;justify-content:space-between;gap:12px;padding:11px 13px;border:1px solid var(--border);border-radius:12px;background:#0b0f1a}.manageVersion strong{font-size:14px}.manageVersion span{color:var(--muted);font-size:12px}.managePanel .hint{margin:0}.manageClose{font-size:22px;line-height:1}@media(max-width:600px){.manageBox{padding:15px;border-radius:18px}.manageOption{grid-template-columns:36px 1fr auto;padding:12px}}</style>
 </head>
 <body>
 <header>
@@ -73,6 +73,26 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
   </div>
 </div>
 
+<div id="manageModal" class="modal">
+  <div class="manageBox">
+    <div class="manageTop">
+      <div><div class="manageEyebrow">YOUR COMMUNITY PROJECT</div><h2 id="manageTitle">Manage project</h2><p id="manageSubtitle">Project settings and publishing controls.</p></div>
+      <button id="closeManage" aria-label="Close">×</button>
+    </div>
+    <div class="manageProjectHead">
+      <div id="manageIcon" class="manageIcon">✦</div>
+      <div><strong id="manageName"></strong><span id="manageMeta"></span></div>
+    </div>
+    <div class="manageSections">
+      <button class="manageOption" id="manageUpdate"><span class="manageOptionIcon">↻</span><span><strong>Update project</strong><small>Publish a new version while keeping this project and its community stats.</small></span><b>›</b></button>
+      <button class="manageOption" id="manageDetails"><span class="manageOptionIcon">✎</span><span><strong>Edit project details</strong><small>Change the name, description, and version shown on Community.</small></span><b>›</b></button>
+      <button class="manageOption" id="manageVersions"><span class="manageOptionIcon">◷</span><span><strong>Version history</strong><small id="manageVersionsHint">View the versions published for this project.</small></span><b>›</b></button>
+      <button class="manageOption" id="manageOpen"><span class="manageOptionIcon">▶</span><span><strong>Open project</strong><small>Test the currently published version.</small></span><b>›</b></button>
+    </div>
+    <div id="managePanel" class="managePanel"></div>
+    <div class="modalActions"><button id="closeManageBottom">Done</button></div>
+  </div>
+</div>
 <div id="uploadModal" class="modal">
   <div class="modalBox">
     <h2 id="uploadTitle">Publish a SingulaX Project 🚀</h2>
@@ -253,7 +273,7 @@ function addCommunityCard(project,profileMap={}){
       '<button class="primary">Test project</button>' +
       '<button class="followBtn">' + (followed ? 'Following' : 'Follow') + '</button>' +
       '<button class="likeBtn">' + (liked ? '♥ Liked' : '♡ Like') + ' · ' + likeCount + '</button>' +
-      (currentTab === 'yours' && !project._templateOnly ? '<button class="updateBtn">Update</button>' : '') +
+      (currentTab === 'yours' && !project._templateOnly ? '<button class="manageBtn">Manage</button>' : '') +
       '<button class="filesBtn">Files</button>' +
     '</div>';
   $('grid').appendChild(card);
@@ -262,7 +282,7 @@ function addCommunityCard(project,profileMap={}){
   card.querySelector('.filesBtn').onclick = () => openCommunityProject(project);
   card.querySelector('.followBtn').onclick = () => toggleFollowing(project);
   card.querySelector('.likeBtn').onclick = () => toggleLike(project);
-  card.querySelector('.updateBtn')?.addEventListener('click', () => openUpdateModal(project));
+  card.querySelector('.manageBtn')?.addEventListener('click', () => openManageModal(project));
 }
 
 function renderPagination(total){
@@ -572,12 +592,40 @@ function openUpdateModal(project){
   $('projectFile').value = '';
   loadMyCloudProjects();
 }
+function openManageModal(project){
+  communityManageProject=project;
+  $('manageTitle').textContent='Manage project';
+  $('manageSubtitle').textContent='Settings and publishing controls for your Community project.';
+  $('manageName').textContent=project.name||project._id||'Community project';
+  $('manageMeta').textContent='v'+(project.version||'1.0.0')+' · '+(project.author||'You');
+  $('manageIcon').textContent=(project.name||'S').charAt(0).toUpperCase();
+  $('managePanel').innerHTML='';
+  $('manageVersionsHint').textContent=(project.versions?.length||1)+' version'+((project.versions?.length||1)===1?'':'s')+' published for this project.';
+  $('manageModal').classList.add('show');
+}
+function closeManageModal(){
+  $('manageModal').classList.remove('show');
+  communityManageProject=null;
+}
+function showManageHistory(){
+  const p=communityManageProject;
+  const versions=Array.isArray(p?.versions)&&p.versions.length?p.versions:[{version:p?.version||'1.0.0',published:p?.published}];
+  $('managePanel').innerHTML='<div class="manageHistory">'+versions.slice().reverse().map(v=>'<div class="manageVersion"><strong>v'+esc(v.version||'1.0.0')+'</strong><span>'+esc(v.updated||v.published||'Published')+'</span></div>').join('')+'</div>';
+}
+let communityManageProject=null;
 function resetUploadModal(){
   communityUpdateProject = null;
   $('uploadTitle').textContent = 'Publish a SingulaX Project 🚀';
   $('uploadHint').innerHTML = 'Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.';
   $('publishBtn').textContent = 'Publish';
 }
+$('manageUpdate').onclick=()=>{ if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
+$('manageDetails').onclick=()=>{ if(communityManageProject){ closeManageModal(); openUpdateModal(communityManageProject); } };
+$('manageVersions').onclick=showManageHistory;
+$('manageOpen').onclick=()=>{ if(communityManageProject){ const p=communityManageProject; closeManageModal(); openCommunityProject(p); } };
+$('closeManage').onclick=closeManageModal;
+$('closeManageBottom').onclick=closeManageModal;
+$('manageModal').addEventListener('click',e=>{if(e.target===$('manageModal'))closeManageModal();});
 let idePickerMode = 'open';
 function openIdePicker(mode='open'){
   idePickerMode = mode;
