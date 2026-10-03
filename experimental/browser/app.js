@@ -4406,7 +4406,8 @@ if (
 ) {
   navigator.serviceWorker
     .register(
-      'sw.js?v=10'
+      'sw.js?v=10',
+      { updateViaCache: 'none' }
     )
     .catch(
       () => {}
