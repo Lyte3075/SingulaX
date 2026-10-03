@@ -203,7 +203,7 @@
 
 
   function swapThemeLogos(active) {
-    document.querySelectorAll("img, link[rel~="icon"]").forEach(el => {
+    document.querySelectorAll('img, link[rel~="icon"]').forEach(el => {
       const attr = el.tagName === "IMG" ? "src" : "href";
       const value = el.getAttribute(attr);
       if (!value) return;
