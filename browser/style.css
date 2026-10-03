@@ -269,3 +269,83 @@ body[data-theme] select:focus-visible{
   border-color:var(--theme-accent-strong, var(--theme-button-border));
 }
 body[data-theme] button:disabled{opacity:.55;}
+
+/* IDE navigation controls */
+:root{
+  --theme-button-bg:#171c2d;
+  --theme-button-text:#edf2ff;
+  --theme-button-hover:#222943;
+  --theme-button-border:#343b58;
+}
+body[data-theme] .ide-nav-button,
+body[data-theme] #navigateBtn,
+.ide-nav-button,
+#navigateBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  font:inherit;
+  font-weight:inherit;
+  line-height:normal;
+  text-decoration:none;
+  cursor:pointer;
+  background:var(--theme-button-bg);
+  color:var(--theme-button-text);
+  border:1px solid var(--theme-button-border);
+  border-radius:8px;
+  padding:7px 10px;
+}
+body[data-theme] .ide-nav-button:hover,
+body[data-theme] #navigateBtn:hover,
+.ide-nav-button:hover,
+#navigateBtn:hover{
+  background:var(--theme-button-hover);
+  color:var(--theme-button-text);
+  border-color:var(--theme-accent-strong,var(--theme-button-border));
+}
+body[data-theme="matcha"] .ide-nav-button,
+body[data-theme="matcha"] #navigateBtn{
+  color:#000 !important;
+}
+body[data-theme="matcha"] .ide-nav-button:hover,
+body[data-theme="matcha"] #navigateBtn:hover{
+  color:#000 !important;
+}
+.ide-account-nav{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-left:auto;
+  flex-wrap:wrap;
+}
+body[data-theme="nebula"]{
+  --theme-button-bg:#24123a;
+  --theme-button-text:#f5eaff;
+  --theme-button-hover:#352052;
+  --theme-button-border:#5b3b7a;
+}
+body[data-theme="light"]{
+  --theme-button-bg:#e4eaf3;
+  --theme-button-text:#182033;
+  --theme-button-hover:#d5deeb;
+  --theme-button-border:#b9c5d6;
+}
+body[data-theme="pretty-scene"]{
+  --theme-button-bg:var(--theme-panel2);
+  --theme-button-text:#352737;
+  --theme-button-hover:#dff8fa;
+  --theme-button-border:var(--theme-border);
+}
+body[data-theme="matcha"]{
+  --theme-button-bg:var(--theme-panel2);
+  --theme-button-text:#000;
+  --theme-button-hover:var(--theme-accent);
+  --theme-button-border:var(--theme-border);
+}
+body[data-theme="caitlyn"]{
+  --theme-button-bg:var(--theme-panel2);
+  --theme-button-text:#f7eef0;
+  --theme-button-hover:var(--theme-accent);
+  --theme-button-border:var(--theme-border);
+}
