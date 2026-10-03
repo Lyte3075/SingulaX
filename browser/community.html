@@ -75,8 +75,8 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
 
 <div id="uploadModal" class="modal">
   <div class="modalBox">
-    <h2>Publish a SingulaX Project 🚀</h2>
-    <p class="hint">Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.</p>
+    <h2 id="uploadTitle">Publish a SingulaX Project 🚀</h2>
+    <p id="uploadHint" class="hint">Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.</p>
     <div class="field"><label>My Projects</label><select id="cloudProject"><option value="">Choose a project from your SingulaX account…</option></select></div><div class="field"><label>Or upload a project file</label><input id="projectFile" type="file" accept="*/*"></div>
     <div class="field"><label>Project name</label><input id="repoName" placeholder="My SingulaX Project"></div>
     <div class="field"><label>Description</label><input id="repoDescription" placeholder="A SingulaX project"></div>
@@ -253,6 +253,7 @@ function addCommunityCard(project,profileMap={}){
       '<button class="primary">Test project</button>' +
       '<button class="followBtn">' + (followed ? 'Following' : 'Follow') + '</button>' +
       '<button class="likeBtn">' + (liked ? '♥ Liked' : '♡ Like') + ' · ' + likeCount + '</button>' +
+      (currentTab === 'yours' && !project._templateOnly ? '<button class="updateBtn">Update</button>' : '') +
       '<button class="filesBtn">Files</button>' +
     '</div>';
   $('grid').appendChild(card);
@@ -261,6 +262,7 @@ function addCommunityCard(project,profileMap={}){
   card.querySelector('.filesBtn').onclick = () => openCommunityProject(project);
   card.querySelector('.followBtn').onclick = () => toggleFollowing(project);
   card.querySelector('.likeBtn').onclick = () => toggleLike(project);
+  card.querySelector('.updateBtn')?.addEventListener('click', () => openUpdateModal(project););
 }
 
 function renderPagination(total){
@@ -556,6 +558,26 @@ $('closeBtn').onclick = () => {
   runtime = null;
 };
 
+let communityUpdateProject = null;
+function openUpdateModal(project){
+  communityUpdateProject = project;
+  $('uploadTitle').textContent = 'Update ' + (project.name || 'Community Project') + ' 🔄';
+  $('uploadHint').innerHTML = 'Update this existing Community project without creating a duplicate. Its project ID, likes, follows, and download count stay attached to it.';
+  $('publishBtn').textContent = 'Publish Update';
+  $('uploadModal').classList.add('show');
+  $('uploadStatus').textContent = '';
+  $('repoName').value = project.name || '';
+  $('repoDescription').value = project.description || '';
+  $('projectVersion').value = project.version || '1.0.0';
+  $('projectFile').value = '';
+  loadMyCloudProjects();
+}
+function resetUploadModal(){
+  communityUpdateProject = null;
+  $('uploadTitle').textContent = 'Publish a SingulaX Project 🚀';
+  $('uploadHint').innerHTML = 'Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.';
+  $('publishBtn').textContent = 'Publish';
+}
 let idePickerMode = 'open';
 function openIdePicker(mode='open'){
   idePickerMode = mode;
@@ -586,11 +608,12 @@ document.querySelectorAll('.ideOption').forEach(button => {
 $('cancelIdePicker').onclick = closeIdePicker;
 
 $('uploadBtn').onclick = () => {
+  resetUploadModal();
   $('uploadModal').classList.add('show');
   $('uploadStatus').textContent = '';
   loadMyCloudProjects();
 };
-$('cancelUpload').onclick = () => $('uploadModal').classList.remove('show');
+$('cancelUpload').onclick = () => { resetUploadModal(); $('uploadModal').classList.remove('show'); };
 
 async function loadMyCloudProjects(){
   const select = $('cloudProject');
@@ -684,6 +707,7 @@ async function publishProject(){
 
     const payload = {
       name,description,version,main,
+      project_id: communityUpdateProject?.id || communityUpdateProject?._id || undefined,
       files:Object.entries(files).map(([path,content]) => ({path,content}))
     };
 
@@ -692,8 +716,9 @@ async function publishProject(){
     if(functionError) throw new Error(functionError.message || 'Community publisher failed.');
     if(result?.error) throw new Error(result.error);
 
-    $('uploadStatus').textContent = 'Published to Community! 🎉';
+    $('uploadStatus').textContent = communityUpdateProject ? 'Community project updated! 🎉' : 'Published to Community! 🎉';
     setTimeout(() => {
+      resetUploadModal();
       $('uploadModal').classList.remove('show');
       loadTab('yours');
     }, 900);
