@@ -14,7 +14,7 @@ header a,button{border:1px solid var(--border);background:var(--panel2);color:va
 main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:clamp(30px,6vw,54px);margin:0 0 8px}.hero p{color:var(--muted);max-width:760px;line-height:1.6}
 .tabs{display:flex;gap:8px;overflow:auto;margin:24px 0 16px;padding-bottom:3px}.tab{white-space:nowrap;font-weight:800}.tab.active{background:linear-gradient(135deg,#595cff,#a448ff);border-color:transparent}
 .search{display:flex;gap:10px;margin:0 0 18px}.search input{flex:1;min-width:0;background:#0e1220;border:1px solid var(--border);color:var(--text);border-radius:12px;padding:13px 14px;font-size:16px}.search button,.primary{background:linear-gradient(135deg,#595cff,#a448ff)!important;border:0;font-weight:800}
-#status{color:var(--muted);margin:10px 0 18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}.card{background:linear-gradient(180deg,rgba(21,26,42,.96),rgba(13,16,27,.96));border:1px solid var(--border);border-radius:16px;padding:17px;box-shadow:0 12px 35px rgba(0,0,0,.18)}.card h3{margin:0 0 7px}.author{display:flex;align-items:center;gap:9px;margin-bottom:9px}.authorAvatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#4be0e3,#9b6cff);display:grid;place-items:center;font-size:12px;font-weight:900;border:1px solid #363d5c}.card p{color:var(--muted);min-height:42px;line-height:1.45}.meta{font-size:12px;color:#737d9c;margin-bottom:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.empty{padding:30px;border:1px dashed var(--border);border-radius:14px;color:var(--muted)}
+#status{color:var(--muted);margin:10px 0 18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}.card{background:linear-gradient(180deg,rgba(21,26,42,.96),rgba(13,16,27,.96));border:1px solid var(--border);border-radius:16px;padding:17px;box-shadow:0 12px 35px rgba(0,0,0,.18)}.card h3{margin:0 0 7px}.author{display:flex;align-items:center;gap:9px;margin-bottom:9px}.authorAvatar{width:30px;height:30px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#4be0e3,#9b6cff);display:grid;place-items:center;font-size:12px;font-weight:900;border:1px solid #363d5c}.card p{color:var(--muted);min-height:42px;line-height:1.45}.meta{font-size:12px;color:#737d9c;margin-bottom:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}.empty{padding:30px;border:1px dashed var(--border);border-radius:14px;color:var(--muted)}.pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin:24px 0 4px}.pagination button{min-width:44px}.pagination button:disabled{opacity:.4;cursor:not-allowed}.pageInfo{color:var(--muted);font-size:13px}
 .viewer{display:none;margin-top:24px;background:#0d111d;border:1px solid var(--border);border-radius:16px;overflow:hidden}.viewer.show{display:block}.viewerHead{display:flex;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border)}.viewerHead strong{flex:1}.viewerBody{display:grid;grid-template-columns:1fr 1fr;min-height:500px}.code{margin:0;padding:16px;overflow:auto;white-space:pre;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:#080b13}.preview{border:0;border-left:1px solid var(--border);width:100%;min-height:500px;background:#000}
 .modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.65);align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modalBox{width:min(620px,100%);background:#111522;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.5)}.modalBox h2{margin-top:0}.field{display:grid;gap:7px;margin:14px 0}.field input,.field textarea{width:100%;background:#0b0f1a;border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px}.modalActions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.hint{color:var(--muted);font-size:13px;line-height:1.5}
 .idePicker{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px}.idePicker.show{display:flex}.idePickerBox{width:min(560px,100%);background:#111522;border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 25px 80px rgba(0,0,0,.55)}.idePickerBox h2{margin:0 0 7px}.idePickerBox>p{color:var(--muted);margin-top:0}.ideOptions{display:grid;gap:10px;margin-top:16px}.ideOption{display:flex;align-items:center;gap:14px;text-align:left;padding:14px;border-radius:13px;background:#0d111d;border:1px solid var(--border)}.ideOption:hover{border-color:#6f70ff;background:#151a2a}.ideOption strong{display:block}.ideOption span{display:block;color:var(--muted);font-size:13px;margin-top:3px}.idePickerActions{display:flex;justify-content:flex-end;margin-top:16px}@media(max-width:760px){header{flex-wrap:wrap}.viewerBody{grid-template-columns:1fr}.preview{border-left:0;border-top:1px solid var(--border);min-height:320px}.code{min-height:320px}.tabs{margin-top:18px}}
@@ -105,6 +105,10 @@ const EXTENSIONS = ['sglx','txt','vlla','cyln','smsc','wsc','ctrsc','ezsc','lyte
 
 let currentProject = null;
 let currentTab = 'trending';
+let currentPage = 1;
+const PAGE_SIZE = 10;
+let currentRuntimeProjects = [];
+let socialState = {following:new Set(),liked:new Set(),likeCounts:{}};
 let runtime = null;
 let frame = [];
 let generation = 0;
@@ -147,25 +151,65 @@ async function getProfileMap(projects){
   }catch{return {};}
 }
 
-function followingKey(id){
-  return 'community:' + id;
-}
-function getFollowing(){
-  try{return JSON.parse(localStorage.getItem('singulax-community-following') || '[]');}
-  catch{return [];}
-}
-function isFollowing(id){
-  return getFollowing().some(x => x.id === id);
-}
-function toggleFollowing(project){
-  let list = getFollowing();
-  if(isFollowing(project._id)){
-    list = list.filter(x => x.id !== project._id);
-  }else{
-    list.push({id:project._id,name:project.name,description:project.description});
+async function loadSocialState(projects){
+  socialState={following:new Set(),liked:new Set(),likeCounts:{}};
+  const ids=[...new Set(projects.map(p=>String(p._id||p.id)).filter(Boolean))];
+  if(!ids.length) return;
+  try{
+    const supabase=await getSupabase();
+    const {data:sessionData}=await supabase.auth.getSession();
+    const user=sessionData?.session?.user;
+    const [{data:follows,error:followError},{data:likes,error:likeError}]=await Promise.all([
+      supabase.from('community_follows').select('project_id,user_id').in('project_id',ids),
+      supabase.from('community_likes').select('project_id,user_id').in('project_id',ids)
+    ]);
+    if(followError) throw followError;
+    if(likeError) throw likeError;
+    for(const row of (follows||[])) if(user && String(row.user_id)===String(user.id)) socialState.following.add(String(row.project_id));
+    for(const row of (likes||[])){
+      const id=String(row.project_id);
+      socialState.likeCounts[id]=(socialState.likeCounts[id]||0)+1;
+      if(user && String(row.user_id)===String(user.id)) socialState.liked.add(id);
+    }
+  }catch(e){
+    console.error('Could not load Community social state:',e);
   }
-  localStorage.setItem('singulax-community-following', JSON.stringify(list));
-  loadTab(currentTab);
+}
+function isFollowing(id){return socialState.following.has(String(id));}
+function isLiked(id){return socialState.liked.has(String(id));}
+async function toggleFollowing(project){
+  try{
+    const supabase=await getSupabase();
+    const {data:sessionData}=await supabase.auth.getSession();
+    const user=sessionData?.session?.user;
+    if(!user){alert('Sign in to follow Community projects.');return;}
+    const id=String(project._id||project.id);
+    if(isFollowing(id)){
+      const {error}=await supabase.from('community_follows').delete().eq('user_id',user.id).eq('project_id',id);
+      if(error) throw error;
+    }else{
+      const {error}=await supabase.from('community_follows').insert({user_id:user.id,project_id:id});
+      if(error) throw error;
+    }
+    await loadTab(currentTab,false);
+  }catch(e){alert('Could not update your follow: '+e.message);}
+}
+async function toggleLike(project){
+  try{
+    const supabase=await getSupabase();
+    const {data:sessionData}=await supabase.auth.getSession();
+    const user=sessionData?.session?.user;
+    if(!user){alert('Sign in to like Community projects.');return;}
+    const id=String(project._id||project.id);
+    if(isLiked(id)){
+      const {error}=await supabase.from('community_likes').delete().eq('user_id',user.id).eq('project_id',id);
+      if(error) throw error;
+    }else{
+      const {error}=await supabase.from('community_likes').insert({user_id:user.id,project_id:id});
+      if(error) throw error;
+    }
+    await loadTab(currentTab,false);
+  }catch(e){alert('Could not update your like: '+e.message);}
 }
 
 function addCommunityCard(project,profileMap={}){
@@ -176,6 +220,8 @@ function addCommunityCard(project,profileMap={}){
   const card = document.createElement('article');
   card.className = 'card';
   const followed = isFollowing(project._id);
+  const liked = isLiked(project._id);
+  const likeCount = socialState.likeCounts[String(project._id)] || 0;
   card.innerHTML =
     '<div class="author">' + (avatar ? '<img class="authorAvatar" src="'+esc(avatar)+'" alt="">' : '<div class="authorAvatar">'+esc(initial)+'</div>') + '<span>'+esc(authorName)+'</span></div>' +
     '<h3>' + esc(project.name || project._id) + '</h3>' +
@@ -184,21 +230,53 @@ function addCommunityCard(project,profileMap={}){
     '<div class="actions">' +
       '<button class="primary">Test project</button>' +
       '<button class="followBtn">' + (followed ? 'Following' : 'Follow') + '</button>' +
+      '<button class="likeBtn">' + (liked ? '♥ Liked' : '♡ Like') + ' · ' + likeCount + '</button>' +
       '<button class="filesBtn">Files</button>' +
     '</div>';
   $('grid').appendChild(card);
   card.querySelector('.primary').onclick = () => openCommunityProject(project);
   card.querySelector('.filesBtn').onclick = () => openCommunityProject(project);
   card.querySelector('.followBtn').onclick = () => toggleFollowing(project);
+  card.querySelector('.likeBtn').onclick = () => toggleLike(project);
 }
 
+function renderPagination(total){
+  document.querySelector('.pagination')?.remove();
+  const pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(total<=PAGE_SIZE) return;
+  const wrap=document.createElement('div');
+  wrap.className='pagination';
+  wrap.innerHTML='<button id="prevPage">‹</button><span class="pageInfo">Page '+currentPage+' of '+pages+'</span><button id="nextPage">›</button>';
+  $('grid').after(wrap);
+  $('prevPage').disabled=currentPage<=1;
+  $('nextPage').disabled=currentPage>=pages;
+  $('prevPage').onclick=()=>{if(currentPage>1){currentPage--;renderCurrentPage();}};
+  $('nextPage').onclick=()=>{if(currentPage<pages){currentPage++;renderCurrentPage();}};
+}
+function renderCurrentPage(){
+  const start=(currentPage-1)*PAGE_SIZE;
+  const page=currentRuntimeProjects.slice(start,start+PAGE_SIZE);
+  $('grid').innerHTML='';
+  page.forEach(p=>addCommunityCard(p,currentProfileMap));
+  renderPagination(currentRuntimeProjects.length);
+}
+let currentProfileMap={};
+async function showProjects(projects){
+  currentRuntimeProjects=projects;
+  currentPage=Math.min(currentPage,Math.max(1,Math.ceil(projects.length/PAGE_SIZE)));
+  await loadSocialState(projects);
+  renderCurrentPage();
+}
 async function loadTab(tab){
+  const preservePage = arguments[1] === false;
   currentTab = tab;
+  if(!preservePage) currentPage = 1;
   document.querySelectorAll('.tab').forEach(b =>
     b.classList.toggle('active', b.dataset.tab === tab)
   );
   $('searchBox').hidden = !(tab === 'trending' || tab === 'recommended' || tab === 'new');
   $('grid').innerHTML = '';
+  document.querySelector('.pagination')?.remove();
 
   if(tab === 'following'){
     await renderFollowing();
@@ -227,8 +305,8 @@ async function loadTab(tab){
       $('grid').innerHTML = '<div class="empty">No SingulaX projects have been published yet.</div>';
       return;
     }
-    const profileMap=await getProfileMap(projects);
-    projects.forEach(p=>addCommunityCard(p,profileMap));
+    currentProfileMap=await getProfileMap(projects);
+    await showProjects(projects);
   }catch(e){
     $('status').textContent = 'Could not load published projects: ' + e.message;
     $('grid').innerHTML =
@@ -238,27 +316,28 @@ async function loadTab(tab){
 }
 
 async function renderFollowing(){
-  const list = getFollowing();
-  $('status').textContent = list.length + ' followed Community projects.';
-  if(!list.length){
-    $('grid').innerHTML = '<div class="empty">You are not following any Community projects yet.</div>';
-    return;
-  }
   try{
-    const all = await getCommunityProjects();
-    let shown = 0;
-    list.forEach(item => {
-      const project = all.find(p => p._id === item.id);
-      if(project){
-        addCommunityCard(project);
-        shown++;
-      }
-    });
-    if(!shown){
-      $('grid').innerHTML = '<div class="empty">Your followed projects are no longer published.</div>';
+    const supabase=await getSupabase();
+    const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+    if(sessionError) throw sessionError;
+    const user=sessionData?.session?.user;
+    if(!user){
+      $('status').textContent='Sign in to see your followed projects.';
+      $('grid').innerHTML='<div class="empty">Sign in to your SingulaX account to see the projects you follow.</div>';
+      return;
     }
+    const {data:follows,error}=await supabase.from('community_follows').select('project_id,created_at').eq('user_id',user.id).order('created_at',{ascending:false});
+    if(error) throw error;
+    const all=await getCommunityProjects();
+    const ids=(follows||[]).map(x=>String(x.project_id));
+    const projects=ids.map(id=>all.find(p=>String(p._id||p.id)===id)).filter(Boolean);
+    $('status').textContent=projects.length+' followed Community projects.';
+    if(!projects.length){$('grid').innerHTML='<div class="empty">You are not following any Community projects yet.</div>';return;}
+    currentProfileMap=await getProfileMap(projects);
+    await showProjects(projects);
   }catch(e){
-    $('status').textContent = 'Could not load followed projects: ' + e.message;
+    $('status').textContent='Could not load followed projects: '+e.message;
+    $('grid').innerHTML='<div class="empty">Could not load your followed projects.</div>';
   }
 }
 
@@ -282,8 +361,8 @@ async function renderYourProjects(){
       return;
     }
     mine.sort((a,b) => String(b.published || '').localeCompare(String(a.published || '')));
-    const profileMap=await getProfileMap(mine);
-    mine.forEach(p=>addCommunityCard(p,profileMap));
+    currentProfileMap=await getProfileMap(mine);
+    await showProjects(mine);
   }catch(e){
     $('status').textContent = 'Could not load your published projects.';
     $('grid').innerHTML = '<div class="empty">Could not load your published projects: ' + esc(e.message) + '</div>';
@@ -399,6 +478,7 @@ $('searchBtn').onclick = async () => {
   const q = $('query').value.trim().toLowerCase();
   $('status').textContent = 'Searching published projects…';
   $('grid').innerHTML = '';
+  document.querySelector('.pagination')?.remove();
   try{
     const projects = await getCommunityProjects();
     const results = projects.filter(p =>
@@ -412,8 +492,9 @@ $('searchBtn').onclick = async () => {
       $('grid').innerHTML = '<div class="empty">No published projects matched your search.</div>';
       return;
     }
-    const profileMap=await getProfileMap(results);
-    results.forEach(p=>addCommunityCard(p,profileMap));
+    currentProfileMap=await getProfileMap(results);
+    currentPage=1;
+    await showProjects(results);
   }catch(e){
     $('status').textContent = 'Search failed: ' + e.message;
   }
