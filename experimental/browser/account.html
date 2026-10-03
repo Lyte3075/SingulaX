@@ -6,7 +6,7 @@
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 0%,#19142d 0,#080a12 46%);color:var(--text);font:15px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:20px}.card{width:min(520px,100%);background:rgba(17,21,34,.96);border:1px solid var(--border);border-radius:22px;padding:26px;box-shadow:0 25px 80px rgba(0,0,0,.35)}.brand{font-weight:900;font-size:25px}.brand span{background:linear-gradient(90deg,#4cc9ff,#7d7cff,#b04cff);-webkit-background-clip:text;background-clip:text;color:transparent}h1{margin:24px 0 7px;font-size:32px}p{color:var(--muted);line-height:1.55}.field{display:grid;gap:7px;margin:14px 0}.field input,.field select{width:100%;background:#0b0f1a;border:1px solid var(--border);color:var(--text);border-radius:12px;padding:13px;font-size:16px}button,a{border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:11px;padding:11px 14px;text-decoration:none;cursor:pointer;font:inherit}.primary{background:linear-gradient(135deg,#595cff,#a448ff);border:0;font-weight:800;width:100%}.actions{display:flex;gap:9px;margin-top:16px}.actions>*{flex:1;text-align:center}.status{margin:14px 0;color:#aeb8d8;min-height:22px}.error{color:#ff8f9c}.signed{display:grid;gap:12px}.hint{font-size:12px;color:#737d9c}
 </style></head>
 <body><main class="card">
-<div class="brand">◆ <span>SingulaX Account</span></div>
+<div style="display:flex;align-items:center;gap:10px;justify-content:space-between"><div class="brand">◆ <span>SingulaX Account</span></div><button id="navigate">Navigate</button></div>
 <h1>Your SingulaX account.</h1>
 <p>Your account uses only a username and password. No email address or email verification is required.</p>
 <form id="authForm">
@@ -21,4 +21,24 @@
 <div class="actions"><button id="projects">My Projects</button><button id="signOut">Sign out</button></div>
 </div>
 <div id="status" class="status"></div>
-</main><script type="module" src="account.js"></script></body></html>
+</main>
+<div id="navModal" style="display:none;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:18px">
+  <div style="width:min(500px,100%);background:#111522;border:1px solid var(--border);border-radius:18px;padding:20px">
+    <h2 style="margin-top:0">Where do you want to go?</h2>
+    <div style="display:grid;gap:10px">
+      <button class="navChoice primary" data-go="full-ide.html">SingulaX IDE</button>
+      <button class="navChoice" data-go="community.html">Community</button>
+      <button class="navChoice" data-go="my-projects.html">My Projects</button>
+      <button class="navChoice" data-go="index.html">Homepage</button>
+    </div>
+    <button id="closeNav" style="margin-top:14px;width:100%">Cancel</button>
+  </div>
+</div>
+<script>
+const navModal=document.getElementById('navModal');
+document.getElementById('navigate').onclick=()=>navModal.style.display='flex';
+document.getElementById('closeNav').onclick=()=>navModal.style.display='none';
+document.querySelectorAll('.navChoice').forEach(b=>b.onclick=()=>location.href=b.dataset.go);
+navModal.onclick=e=>{if(e.target===navModal)navModal.style.display='none'};
+</script>
+<script type="module" src="account.js"></script></body></html>
