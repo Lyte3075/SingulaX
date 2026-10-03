@@ -10,7 +10,7 @@ const ASSETS = [
   './style.css',
   './manifest.webmanifest',
   './sw.js',
-  './logo.png',
+  '../../icons/logo.png',
   './singulax-icon.png',
   '../runtime/sglx.mjs'
 ];
