@@ -241,38 +241,33 @@ async function renderFollowing(){
 }
 async function renderYourProjects(){
   $('grid').innerHTML='';
-  $('status').textContent='Loading your projects…';
+  $('status').textContent='Loading your published projects…';
   try{
     const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
     if(sessionError)throw sessionError;
     const user=sessionData?.session?.user;
     if(!user){
-      $('status').textContent='Sign in to see your projects.';
-      $('grid').innerHTML='<div class="empty">Sign in to your SingulaX account to see your projects.</div>';
+      $('status').textContent='Sign in to see your published projects.';
+      $('grid').innerHTML='<div class="empty">Sign in to your SingulaX account to see the projects you have published.</div>';
       return;
     }
-    const {data,error}=await supabase.from('projects')
-      .select('id,name,description,updated_at,data')
-      .eq('owner_id',user.id)
-      .order('updated_at',{ascending:false});
-    if(error)throw error;
-    $('status').textContent=(data?.length||0)+' projects in your SingulaX account.';
-    if(!data?.length){
-      $('grid').innerHTML='<div class="empty">You have not created any projects yet. Create one in My Projects.</div>';
+    const projects=await getCommunityProjects();
+    let published=projects.filter(p=>String(p.author_id||'')===String(user.id));
+    try{
+      const local=JSON.parse(localStorage.getItem('singulax-community-published')||'[]');
+      const ids=new Set(local.map(x=>String(x.id)));
+      published=projects.filter(p=>published.some(x=>x._id===p._id)||ids.has(String(p._id||p.id)));
+    }catch{}
+    $('status').textContent=published.length+' projects you have published.';
+    if(!published.length){
+      $('grid').innerHTML='<div class="empty">You have not published any projects yet. Publish one with Upload Project.</div>';
       return;
     }
-    for(const p of data){
-      const d=p.data||{},files=d.files||{};
-      addCommunityCard({
-        _id:'cloud:'+p.id,name:p.name,description:p.description,
-        version:d.version||'1.0.0',author:'You',
-        files:Object.keys(files),main:d.main||Object.keys(files)[0]||'',
-        _cloudId:p.id,_cloudData:d
-      });
-    }
+    published.sort((a,b)=>String(b.published||'').localeCompare(String(a.published||'')));
+    published.forEach(addCommunityCard);
   }catch(e){
-    $('status').textContent='Could not load your projects.';
-    $('grid').innerHTML='<div class="empty">Could not load your projects: '+esc(e.message||'Unknown error')+'</div>';
+    $('status').textContent='Could not load your published projects.';
+    $('grid').innerHTML='<div class="empty">Could not load your published projects: '+esc(e.message||'Unknown error')+'</div>';
   }
 }
 function getPublished(){try{return JSON.parse(localStorage.getItem('singulax-community-published')||'[]')}catch{return[]}}
@@ -383,9 +378,6 @@ async function publishProject(){
     if(functionError)throw new Error(functionError.message||'Community publisher failed.');
     if(result?.error)throw new Error(result.error);
     const id=result.id;
-    const published={id,name,description,version,full_name:'Lyte3075/SingulaX',html_url:'https://github.com/Lyte3075/SingulaX/tree/'+COMMUNITY_BRANCH+'/projects/'+id};
-    const list=getPublished().filter(x=>x.id!==id);list.push(published);
-    localStorage.setItem('singulax-community-published',JSON.stringify(list));
     $('uploadStatus').textContent='Published to Community! 🎉';
     setTimeout(()=>{$('uploadModal').classList.remove('show');loadTab('yours');},900);
   }catch(e){$('uploadStatus').textContent='Publish failed: '+e.message;}
