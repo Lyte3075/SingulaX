@@ -235,6 +235,16 @@ main {
   will-change: transform, opacity;
 }
 
+.hero-logo {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin: 0 auto 18px;
+  border-radius: 22px;
+  filter: drop-shadow(0 12px 30px rgba(75,224,227,0.12));
+}
+
 .hero-stars {
   margin-bottom: 20px;
 
@@ -247,9 +257,10 @@ main {
 
 .hero h1 {
   margin: 0;
+  padding: 0 0.08em 0.12em;
 
   font-size: clamp(48px, 10vw, 100px);
-  line-height: 0.95;
+  line-height: 1.05;
   letter-spacing: -0.065em;
 
   background: linear-gradient(
@@ -640,6 +651,12 @@ footer {
 
 <section class="hero">
   <div class="hero-content" id="heroContent">
+
+    <img
+      class="hero-logo"
+      src="browser/logo.png"
+      alt="SingulaX logo"
+    >
 
     <div class="hero-stars">
       ✦ ✦ ✦
