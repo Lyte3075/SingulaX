@@ -76,7 +76,7 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
   <div class="modalBox">
     <h2>Publish a SingulaX Project 🚀</h2>
     <p class="hint">Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.</p>
-    <div class="field"><label>Project package</label><input id="projectFile" type="file" accept="*/*"></div>
+    <div class="field"><label>My Projects</label><select id="cloudProject"><option value="">Choose a project from your SingulaX account…</option></select></div><div class="field"><label>Or upload a project file</label><input id="projectFile" type="file" accept="*/*"></div>
     <div class="field"><label>Project name</label><input id="repoName" placeholder="My SingulaX Project"></div>
     <div class="field"><label>Description</label><input id="repoDescription" placeholder="A SingulaX project"></div>
     <div class="field"><label>Version</label><input id="projectVersion" value="1.0.0" placeholder="1.0.0"></div>
@@ -88,7 +88,8 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
 
 <script src="runtime.js"></script>
 <script>const SUPABASE_URL="https://xkguvpwhfpksaltjdofv.supabase.co";const SUPABASE_PUBLISHABLE_KEY="sb_publishable_rA4N5-KX3A_ACZHbylEjBw_WvokXs85";</script>
-<script>
+<script type="module">
+import { supabase } from "./supabase.js";
 const $=id=>document.getElementById(id);
 const EXTENSIONS=['sglx','txt','vlla','cyln','smsc','wsc','ctrsc','ezsc','lyte3075'];
 const COMMUNITY_BRANCH='community-projects';
@@ -123,6 +124,242 @@ async function getCommunityProjects(){
 async function loadTab(tab){
   currentTab=tab;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  $('searchBox').hidden=!(tab==='trending'||tab==='recommended'||tab==='new');
+  $('grid').innerHTML='';
+  if(tab==='following'){await renderFollowing();return;}
+  if(tab==='yours'){await renderYourProjects();return;}
+  $('status').textContent='Loading published SingulaX projects…';
+  try{
+    let projects=await getCommunityProjects();
+    if(tab==='trending')projects.sort((a,b)=>((b.downloads||0)*2+(b.likes||0))-((a.downloads||0)*2+(a.likes||0)));
+    else if(tab==='recommended')projects.sort((a,b)=>(b.likes||0)-(a.likes||0));
+    else projects.sort((a,b)=>String(b.published||'').localeCompare(String(a.published||'')));
+    $('status').textContent=projects.length+' published SingulaX projects.';
+    if(!projects.length){$('grid').innerHTML='<div class="empty">No SingulaX projects have been published yet.</div>';return;}
+    projects.forEach(addCommunityCard);
+  }catch(e){
+    $('status').textContent='Could not load published projects: '+e.message;
+    $('grid').innerHTML='<div class="empty">The Community project store is not available yet.</div>';
+  }
+}
+
+function addRepo(repo){
+  const card=document.createElement('article');card.className='card';
+  const following=isFollowing(repo.full_name);
+  card.innerHTML='<h3>'+esc(repo.name)+'</h3><p>'+esc(repo.description||'No description.')+'</p><div class="meta">GitHub repository · ★ '+repo.stargazers_count+'</div><div class="actions"><button class="primary">Inspect</button><button class="followBtn">'+(following?'Following':'Follow')+'</button><a href="'+esc(repo.html_url)+'" target="_blank" rel="noopener">GitHub</a></div>';
+  $('grid').appendChild(card);
+  card.querySelector('.primary').onclick=()=>loadRepo(repo,card);
+  card.querySelector('.followBtn').onclick=()=>toggleFollowing(repo);
+}
+
+async function renderPublishedProjects(){
+  $('status').textContent='Loading published SingulaX projects…';
+  $('grid').innerHTML='';
+  try{
+    const projects=await getCommunityProjects();
+    $('status').textContent=projects.length+' published SingulaX projects.';
+    if(!projects.length){$('grid').innerHTML='<div class="empty">No SingulaX projects have been published yet.</div>';return;}
+    projects.sort((a,b)=>String(b.published||'').localeCompare(String(a.published||'')));
+    projects.forEach(addCommunityCard);
+  }catch(e){
+    $('status').textContent='Could not load published projects: '+e.message;
+    $('grid').innerHTML='<div class="empty">The Community project store is not available yet.</div>';
+  }
+}
+function addCommunityCard(p){
+  const card=document.createElement('article');card.className='card';
+  const following=isFollowing('community:'+p._id);
+  card.innerHTML='<h3>'+esc(p.name||p._id)+'</h3><p>'+esc(p.description||'SingulaX project')+'</p><div class="meta">by '+esc(p.author||'Unknown')+' · v'+esc(p.version||'1.0.0')+'</div><div class="actions"><button class="primary">Test project</button><button class="followBtn">'+(following?'Following':'Follow')+'</button><button class="openProject">Files</button></div>';
+  $('grid').appendChild(card);
+  card.querySelector('.primary').onclick=()=>openCommunityProject(p);
+  card.querySelector('.followBtn').onclick=()=>toggleFollowing({full_name:'community:'+p._id,name:p.name,description:p.description});
+  card.querySelector('.openProject').onclick=()=>openCommunityProject(p);
+}
+async function openCommunityProject(p){
+  try{
+    $('status').textContent='Loading '+(p.name||'project')+'…';
+    const files={};
+    for(const path of (p.files||[])){
+      const normalizedPath=String(path).replace(/^\/+/, '');
+      const rawUrl=COMMUNITY_RAW_BASE+normalizedPath.split('/').map(encodeURIComponent).join('/')+'?t='+Date.now();
+      const r=await fetch(rawUrl);
+      if(!r.ok)throw new Error('Source HTTP '+r.status);
+      const rel=normalizedPath.indexOf('/files/')>=0?normalizedPath.split('/files/').slice(1).join('/'):normalizedPath;
+      files[rel]=await r.text();
+    }
+    const mainPath=(p.main&&p.main.split('/files/').pop())||Object.keys(files).find(x=>/\.(sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(x))||Object.keys(files)[0];
+    currentProject={community:p,src:{path:mainPath,text:files[mainPath]},files};
+    $('viewerTitle').textContent=(p.name||p._id)+' · '+mainPath;
+    $('code').textContent=files[mainPath]||'';
+    $('viewer').classList.add('show');
+    await testSource();
+    $('viewer').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){alert('Could not open this project: '+e.message);}
+}
+
+function getFollowing(){try{return JSON.parse(localStorage.getItem('singulax-community-following')||'[]')}catch{return[]}}
+function isFollowing(name){return getFollowing().some(x=>x.full_name===name)}
+function toggleFollowing(repo){
+  let list=getFollowing();
+  if(isFollowing(repo.full_name))list=list.filter(x=>x.full_name!==repo.full_name);
+  else list.push({full_name:repo.full_name,name:repo.name,html_url:repo.html_url,description:repo.description});
+  localStorage.setItem('singulax-community-following',JSON.stringify(list));
+  if(currentTab==='following')renderFollowing();else if(currentTab==='yours')renderYourProjects();else loadTab(currentTab);
+}
+async function renderFollowing(){
+  const followed=getFollowing().filter(x=>String(x.full_name).startsWith('community:'));
+  const repos=getFollowing().filter(x=>!String(x.full_name).startsWith('community:'));
+  $('grid').innerHTML='';
+  $('status').textContent=followed.length+' published projects and '+repos.length+' GitHub repositories followed.';
+  if(!followed.length&&!repos.length){$('grid').innerHTML='<div class="empty">You are not following anything yet.</div>';return;}
+  if(followed.length){
+    try{
+      const all=await getCommunityProjects();
+      followed.forEach(f=>{const p=all.find(x=>'community:'+x._id===f.full_name);if(p)addCommunityCard(p);});
+    }catch(e){}
+  }
+  repos.forEach(addRepo);
+}
+async function renderYourProjects(){
+  const mine=getPublished();
+  $('grid').innerHTML='';
+  $('status').textContent=mine.length+' projects published from this browser.';
+  if(!mine.length){$('grid').innerHTML='<div class="empty">You have not published a project from this browser yet.</div>';return;}
+  try{
+    const all=await getCommunityProjects();
+    mine.forEach(m=>{
+      const p=all.find(x=>x._id===m.id);
+      if(p) addCommunityCard(p);
+      else addCommunityCard({
+        _id:m.id,
+        name:m.name,
+        description:m.description,
+        version:m.version,
+        author:'You',
+        files:[],
+        main:''
+      });
+    });
+  }catch(e){$('status').textContent='Could not load your published projects: '+e.message;}
+}
+function getPublished(){try{return JSON.parse(localStorage.getItem('singulax-community-published')||'[]')}catch{return[]}}
+
+async function findSource(repo){
+  const tree=await github('/repos/'+encodeURIComponent(repo.full_name)+'/git/trees/'+encodeURIComponent(repo.default_branch)+'?recursive=1');
+  const files=(tree.tree||[]).filter(x=>x.type==='blob'&&new RegExp('\\.('+EXTENSIONS.join('|')+')$','i').test(x.path));
+  if(!files.length)throw new Error('No SingulaX source file found.');
+  const preferred=files.find(x=>new RegExp('^(main|index)\\.('+EXTENSIONS.join('|')+')$','i').test(x.path))||files[0];
+  const raw='https://raw.githubusercontent.com/'+repo.full_name+'/'+encodeURIComponent(repo.default_branch).replace(/%2F/g,'/')+'/'+preferred.path.split('/').map(encodeURIComponent).join('/');
+  const text=await fetch(raw).then(r=>{if(!r.ok)throw new Error('Source HTTP '+r.status);return r.text()});
+  return {path:preferred.path,text,files};
+}
+async function loadRepo(repo,card){
+  const btn=card?.querySelector?.('.primary,button');if(btn)btn.disabled=true;
+  try{const src=await findSource(repo);currentProject={repo,src};$('viewerTitle').textContent=repo.full_name+' / '+src.path;$('code').textContent=src.text;$('viewer').classList.add('show');await testSource();$('viewer').scrollIntoView({behavior:'smooth',block:'start'});}
+  catch(e){alert('Could not load this project: '+e.message);}
+  finally{if(btn)btn.disabled=false;}
+}
+
+async function testSource(){
+  generation++;const runId=generation;if(runtime)runtime.running=false;
+  const c=$('preview'),ctx=c.getContext('2d');ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);frame=[];
+  runtime=new SingulaxRuntime({output:console.log,frame:f=>frame=f.slice(),input:async()=>'',fileRead:async()=>'',fileWrite:async()=>true,playAudio:()=>{},mode3d:()=>{}});
+  runtime.setInput({keys:[],buttons:[],mouse:{x:0,y:0},touch:{x:0,y:0,active:false},gamepads:{}});
+  const projectFiles=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  const project={name:currentProject.community?.name||currentProject.repo?.name||'Community Project',files:projectFiles,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
+  try{await runtime.runProject(project);if(runId===generation)drawFrame();}catch(e){ctx.fillStyle='#ff6b8a';ctx.font='16px system-ui';ctx.fillText('Test error: '+e.message,18,30);}
+}
+function drawFrame(){
+  const c=$('preview'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);
+  for(const x of frame){ctx.fillStyle=x.fill||'white';ctx.strokeStyle=x.fill||'white';if(x.type==='rect')ctx.fillRect(x.x,x.y,x.w,x.h);else if(x.type==='circle'){ctx.beginPath();ctx.arc(x.x,x.y,x.r,0,Math.PI*2);ctx.fill();}else if(x.type==='line'){ctx.lineWidth=x.width||2;ctx.beginPath();ctx.moveTo(x.x1,x.y1);ctx.lineTo(x.x2,x.y2);ctx.stroke();}else if(x.type==='text'){ctx.font=(x.size||20)+'px sans-serif';ctx.fillText(x.text,x.x,x.y);}}
+  if(runtime&&generation)requestAnimationFrame(drawFrame);
+}
+
+async function loadMyCloudProjects(){
+  const select=$('cloudProject');
+  select.innerHTML='<option value="">Loading your projects…</option>';
+  const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+  if(sessionError||!sessionData?.session){
+    select.innerHTML='<option value="">Sign in to choose a project</option>';
+    return;
+  }
+  const {data,error}=await supabase.from('projects')
+    .select('id,name,description,updated_at,data')
+    .eq('owner_id',sessionData.session.user.id)
+    .order('updated_at',{ascending:false});
+  if(error){
+    select.innerHTML='<option value="">Could not load your projects</option>';
+    $('uploadStatus').textContent='Could not load My Projects: '+error.message;
+    return;
+  }
+  select.innerHTML='<option value="">Choose a project from your SingulaX account…</option>';
+  for(const project of (data||[])){
+    const option=document.createElement('option');
+    option.value=project.id;
+    option.textContent=project.name;
+    select.appendChild(option);
+  }
+  select.onchange=()=>{
+    const project=data.find(x=>x.id===select.value);
+    if(!project)return;
+    $('repoName').value=project.name||'My SingulaX Project';
+    $('repoDescription').value=project.description||'';
+    $('projectVersion').value=project.data?.version||'1.0.0';
+    $('projectFile').value='';
+  };
+}
+
+async function publishProject(){
+  const cloudId=$('cloudProject').value;
+  const file=$('projectFile').files[0];
+  let name=$('repoName').value.trim();
+  let description=$('repoDescription').value.trim()||'A SingulaX project';
+  let version=$('projectVersion').value.trim()||'1.0.0';
+  if(!cloudId&&!file){$('uploadStatus').textContent='Choose one of your My Projects or upload a project file.';return;}
+  $('publishBtn').disabled=true;$('uploadStatus').textContent='Reading project…';
+  try{
+    let files={},main='';
+    if(cloudId){
+      const {data:project,error}=await supabase.from('projects').select('id,name,description,data').eq('id',cloudId).single();
+      if(error||!project)throw new Error(error?.message||'Could not load that project.');
+      const owned=project.data||{};
+      name=name||project.name||'My SingulaX Project';
+      description=project.description||description;
+      version=owned.version||version;
+      for(const [path,value] of Object.entries(owned.files||{})){
+        if(typeof value==='string')files[String(path).replace(/^\/+/, '')]=value;
+      }
+      main=owned.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
+    }else{
+      const raw=await file.text();
+      if(/\.sglxproj$/i.test(file.name)){
+        let p;try{p=JSON.parse(raw)}catch{throw new Error('The project package is not valid JSON.')}
+        for(const [path,value] of Object.entries(p.files||{}))if(typeof value==='string')files[path.replace(/^\/+/, '')]=value;
+        main=p.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
+      }else{
+        const ext=sourceExt(file.name);
+        if(!EXTENSIONS.includes(ext))throw new Error('Unsupported file type. Use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.');
+        main='main.'+ext;files[main]=raw;
+      }
+    }
+    if(!name)throw new Error('Project name is required.');
+    if(!Object.keys(files).length)throw new Error('The project contains no source files.');
+    const payload={name,description,version,main,files:Object.entries(files).map(([path,content])=>({path,content}))};
+    $('uploadStatus').textContent='Publishing securely…';
+    const {data:result,error:functionError}=await supabase.functions.invoke('community-publish',{body:payload});
+    if(functionError)throw new Error(functionError.message||'Community publisher failed.');
+    if(result?.error)throw new Error(result.error);
+    const id=result.id;
+    const published={id,name,description,version,full_name:'Lyte3075/SingulaX',html_url:'https://github.com/Lyte3075/SingulaX/tree/'+COMMUNITY_BRANCH+'/projects/'+id};
+    const list=getPublished().filter(x=>x.id!==id);list.push(published);
+    localStorage.setItem('singulax-community-published',JSON.stringify(list));
+    $('uploadStatus').textContent='Published to Community! 🎉';
+    setTimeout(()=>{$('uploadModal').classList.remove('show');loadTab('yours');},900);
+  }catch(e){$('uploadStatus').textContent='Publish failed: '+e.message;}
+  finally{$('publishBtn').disabled=false;}
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   $('searchBox').hidden=!(tab==='trending'||tab==='recommended'||tab==='new');
   $('grid').innerHTML='';
   if(tab==='following'){await renderFollowing();return;}
@@ -358,7 +595,7 @@ document.querySelectorAll('.ideOption').forEach(b=>b.onclick=()=>{
   location.href=target;
 });
 $('cancelIdePicker').onclick=closeIdePicker;
-$('uploadBtn').onclick=()=>{$('uploadModal').classList.add('show');$('uploadStatus').textContent='';};
+$('uploadBtn').onclick=()=>{$('uploadModal').classList.add('show');$('uploadStatus').textContent='';loadMyCloudProjects();};
 $('cancelUpload').onclick=()=>{$('uploadModal').classList.remove('show');};
 $('publishBtn').onclick=publishProject;
 loadTab('trending');
