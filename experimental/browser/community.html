@@ -91,7 +91,11 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
 <script src="runtime.js"></script>
 <script>const SUPABASE_URL="https://xkguvpwhfpksaltjdofv.supabase.co";const SUPABASE_PUBLISHABLE_KEY="sb_publishable_rA4N5-KX3A_ACZHbylEjBw_WvokXs85";</script>
 <script type="module">
-import { supabase } from "./supabase.js";
+let supabasePromise=null;
+async function getSupabase(){
+  if(!supabasePromise) supabasePromise=import('./supabase.js').then(m=>m.supabase);
+  return supabasePromise;
+}
 const $=id=>document.getElementById(id);
 const EXTENSIONS=['sglx','txt','vlla','cyln','smsc','wsc','ctrsc','ezsc','lyte3075'];
 const COMMUNITY_BRANCH='community-projects';
@@ -113,8 +117,8 @@ function tabSearch(tab){
   return null;
 }
 
-const COMMUNITY_INDEX_RAW='https://github.com/Lyte3075/SingulaX/raw/refs/heads/'+COMMUNITY_BRANCH+'/projects/index.json';
-const COMMUNITY_RAW_BASE='https://github.com/Lyte3075/SingulaX/raw/refs/heads/'+COMMUNITY_BRANCH+'/';
+const COMMUNITY_INDEX_RAW='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/projects/index.json';
+const COMMUNITY_RAW_BASE='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/';
 
 async function getCommunityProjects(){
   const urls=[COMMUNITY_INDEX_RAW+'?'+Date.now(),'https://cdn.jsdelivr.net/gh/Lyte3075/SingulaX@community-projects/projects/index.json?'+Date.now()];
@@ -190,6 +194,7 @@ async function openCommunityProject(p){
     $('status').textContent='Loading '+(p.name||'project')+'…';
     let files={};
     if(p._cloudId){
+      const supabase=await getSupabase();
       const {data:project,error}=await supabase.from('projects')
         .select('id,name,data')
         .eq('id',p._cloudId)
@@ -247,6 +252,7 @@ async function renderFollowing(){
   repos.forEach(addRepo);
 }
 async function renderYourProjects(){
+  const supabase=await getSupabase();
   $('grid').innerHTML='';
   $('status').textContent='Loading your published projects…';
   try{
@@ -307,6 +313,7 @@ function drawFrame(){
 }
 
 async function loadMyCloudProjects(){
+  const supabase=await getSupabase();
   const select=$('cloudProject');
   select.innerHTML='<option value="">Loading your projects…</option>';
   const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
@@ -341,6 +348,7 @@ async function loadMyCloudProjects(){
 }
 
 async function publishProject(){
+  const supabase=await getSupabase();
   const cloudId=$('cloudProject').value;
   const file=$('projectFile').files[0];
   let name=$('repoName').value.trim();
