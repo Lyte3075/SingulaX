@@ -117,10 +117,15 @@ const COMMUNITY_INDEX_RAW='https://raw.githubusercontent.com/Lyte3075/SingulaX/'
 const COMMUNITY_RAW_BASE='https://raw.githubusercontent.com/Lyte3075/SingulaX/'+COMMUNITY_BRANCH+'/';
 
 async function getCommunityProjects(){
-  const r=await fetch(COMMUNITY_INDEX_RAW+'?t='+Date.now());
+  const api='https://api.github.com/repos/Lyte3075/SingulaX/contents/projects/index.json?ref='+encodeURIComponent(COMMUNITY_BRANCH);
+  const r=await fetch(api,{headers:{Accept:'application/vnd.github+json'}});
   if(!r.ok)throw new Error('Community index HTTP '+r.status);
   const data=await r.json();
-  return Array.isArray(data.projects)?data.projects:[];
+  if(!data?.content)throw new Error('Community index is empty.');
+  const raw=atob(String(data.content).replace(/\\s/g,''));
+  const bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
+  const parsed=JSON.parse(new TextDecoder().decode(bytes));
+  return Array.isArray(parsed.projects)?parsed.projects:[];
 }
 
 async function loadTab(tab){
@@ -241,7 +246,7 @@ async function renderYourProjects(){
   $('status').textContent='Loading your projects…';
   try{
     const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
-    if(sessionError) throw sessionError;
+    if(sessionError)throw sessionError;
     const user=sessionData?.session?.user;
     if(!user){
       $('status').textContent='Sign in to see your projects.';
@@ -252,24 +257,19 @@ async function renderYourProjects(){
       .select('id,name,description,updated_at,data')
       .eq('owner_id',user.id)
       .order('updated_at',{ascending:false});
-    if(error) throw error;
+    if(error)throw error;
     $('status').textContent=(data?.length||0)+' projects in your SingulaX account.';
     if(!data?.length){
       $('grid').innerHTML='<div class="empty">You have not created any projects yet. Create one in My Projects.</div>';
       return;
     }
     for(const p of data){
-      const projectData=p.data||{};
+      const d=p.data||{},files=d.files||{};
       addCommunityCard({
-        _id:'cloud:'+p.id,
-        name:p.name,
-        description:p.description,
-        version:projectData.version||'1.0.0',
-        author:'You',
-        files:Object.keys(projectData.files||{}).map(path=>path),
-        main:projectData.main||Object.keys(projectData.files||{}).find(x=>/\\.(sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(x))||'',
-        _cloudId:p.id,
-        _cloudData:projectData
+        _id:'cloud:'+p.id,name:p.name,description:p.description,
+        version:d.version||'1.0.0',author:'You',
+        files:Object.keys(files),main:d.main||Object.keys(files)[0]||'',
+        _cloudId:p.id,_cloudData:d
       });
     }
   }catch(e){
