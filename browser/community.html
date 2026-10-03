@@ -262,7 +262,7 @@ function addCommunityCard(project,profileMap={}){
   card.querySelector('.filesBtn').onclick = () => openCommunityProject(project);
   card.querySelector('.followBtn').onclick = () => toggleFollowing(project);
   card.querySelector('.likeBtn').onclick = () => toggleLike(project);
-  card.querySelector('.updateBtn')?.addEventListener('click', () => openUpdateModal(project););
+  card.querySelector('.updateBtn')?.addEventListener('click', () => openUpdateModal(project));
 }
 
 function renderPagination(total){
