@@ -283,7 +283,343 @@ function getPublished(){try{return JSON.parse(localStorage.getItem('singulax-com
 
 async function findSource(repo){
   const tree=await github('/repos/'+encodeURIComponent(repo.full_name)+'/git/trees/'+encodeURIComponent(repo.default_branch)+'?recursive=1');
-  const files=(tree.tree||[]).filter(x=>x.type==='blob'&&new RegExp('\\.('+EXTENSIONS.join('|')+').test(x.path));
+  const files=(tree.tree||[]).filter(x=>x.type==='blob'&&new RegExp('\\.('+EXTENSIONS.join('|')+'));
+  if(!files.length)throw new Error('No SingulaX source file found.');
+  const preferred=files.find(x=>new RegExp('^(main|index)\\.('+EXTENSIONS.join('|')+')$','i').test(x.path))||files[0];
+  const raw='https://raw.githubusercontent.com/'+repo.full_name+'/'+encodeURIComponent(repo.default_branch).replace(/%2F/g,'/')+'/'+preferred.path.split('/').map(encodeURIComponent).join('/');
+  const text=await fetch(raw).then(r=>{if(!r.ok)throw new Error('Source HTTP '+r.status);return r.text()});
+  return {path:preferred.path,text,files};
+}
+async function loadRepo(repo,card){
+  const btn=card?.querySelector?.('.primary,button');if(btn)btn.disabled=true;
+  try{const src=await findSource(repo);currentProject={repo,src};$('viewerTitle').textContent=repo.full_name+' / '+src.path;$('code').textContent=src.text;$('viewer').classList.add('show');await testSource();$('viewer').scrollIntoView({behavior:'smooth',block:'start'});}
+  catch(e){alert('Could not load this project: '+e.message);}
+  finally{if(btn)btn.disabled=false;}
+}
+
+async function testSource(){
+  generation++;const runId=generation;if(runtime)runtime.running=false;
+  const c=$('preview'),ctx=c.getContext('2d');ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);frame=[];
+  runtime=new SingulaxRuntime({output:console.log,frame:f=>frame=f.slice(),input:async()=>'',fileRead:async()=>'',fileWrite:async()=>true,playAudio:()=>{},mode3d:()=>{}});
+  runtime.setInput({keys:[],buttons:[],mouse:{x:0,y:0},touch:{x:0,y:0,active:false},gamepads:{}});
+  const projectFiles=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  const project={name:currentProject.community?.name||currentProject.repo?.name||'Community Project',files:projectFiles,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
+  try{await runtime.runProject(project);if(runId===generation)drawFrame();}catch(e){ctx.fillStyle='#ff6b8a';ctx.font='16px system-ui';ctx.fillText('Test error: '+e.message,18,30);}
+}
+function drawFrame(){
+  const c=$('preview'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);
+  for(const x of frame){ctx.fillStyle=x.fill||'white';ctx.strokeStyle=x.fill||'white';if(x.type==='rect')ctx.fillRect(x.x,x.y,x.w,x.h);else if(x.type==='circle'){ctx.beginPath();ctx.arc(x.x,x.y,x.r,0,Math.PI*2);ctx.fill();}else if(x.type==='line'){ctx.lineWidth=x.width||2;ctx.beginPath();ctx.moveTo(x.x1,x.y1);ctx.lineTo(x.x2,x.y2);ctx.stroke();}else if(x.type==='text'){ctx.font=(x.size||20)+'px sans-serif';ctx.fillText(x.text,x.x,x.y);}}
+  if(runtime&&generation)requestAnimationFrame(drawFrame);
+}
+
+async function loadMyCloudProjects(){
+  const supabase=await getSupabase();
+  const select=$('cloudProject');
+  select.innerHTML='<option value="">Loading your projects…</option>';
+  const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+  if(sessionError||!sessionData?.session){
+    select.innerHTML='<option value="">Sign in to choose a project</option>';
+    return;
+  }
+  const {data,error}=await supabase.from('projects')
+    .select('id,name,description,updated_at,data')
+    .eq('owner_id',sessionData.session.user.id)
+    .order('updated_at',{ascending:false});
+  if(error){
+    select.innerHTML='<option value="">Could not load your projects</option>';
+    $('uploadStatus').textContent='Could not load My Projects: '+error.message;
+    return;
+  }
+  select.innerHTML='<option value="">Choose a project from your SingulaX account…</option>';
+  for(const project of (data||[])){
+    const option=document.createElement('option');
+    option.value=project.id;
+    option.textContent=project.name;
+    select.appendChild(option);
+  }
+  select.onchange=()=>{
+    const project=data.find(x=>x.id===select.value);
+    if(!project)return;
+    $('repoName').value=project.name||'My SingulaX Project';
+    $('repoDescription').value=project.description||'';
+    $('projectVersion').value=project.data?.version||'1.0.0';
+    $('projectFile').value='';
+  };
+}
+
+async function publishProject(){
+  const supabase=await getSupabase();
+  const cloudId=$('cloudProject').value;
+  const file=$('projectFile').files[0];
+  let name=$('repoName').value.trim();
+  let description=$('repoDescription').value.trim()||'A SingulaX project';
+  let version=$('projectVersion').value.trim()||'1.0.0';
+  if(!cloudId&&!file){$('uploadStatus').textContent='Choose one of your My Projects or upload a project file.';return;}
+  $('publishBtn').disabled=true;$('uploadStatus').textContent='Reading project…';
+  try{
+    let files={},main='';
+    if(cloudId){
+      const {data:project,error}=await supabase.from('projects').select('id,name,description,data').eq('id',cloudId).single();
+      if(error||!project)throw new Error(error?.message||'Could not load that project.');
+      const owned=project.data||{};
+      name=name||project.name||'My SingulaX Project';
+      description=project.description||description;
+      version=owned.version||version;
+      for(const [path,value] of Object.entries(owned.files||{})){
+        if(typeof value==='string')files[String(path).replace(/^\/+/, '')]=value;
+      }
+      main=owned.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
+    }else{
+      const raw=await file.text();
+      if(/\.sglxproj$/i.test(file.name)){
+        let p;try{p=JSON.parse(raw)}catch{throw new Error('The project package is not valid JSON.')}
+        for(const [path,value] of Object.entries(p.files||{}))if(typeof value==='string')files[path.replace(/^\/+/, '')]=value;
+        main=p.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
+      }else{
+        const ext=sourceExt(file.name);
+        if(!EXTENSIONS.includes(ext))throw new Error('Unsupported file type. Use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.');
+        main='main.'+ext;files[main]=raw;
+      }
+    }
+    if(!name)throw new Error('Project name is required.');
+    if(!Object.keys(files).length)throw new Error('The project contains no source files.');
+    const payload={name,description,version,main,files:Object.entries(files).map(([path,content])=>({path,content}))};
+    $('uploadStatus').textContent='Publishing securely…';
+    const {data:result,error:functionError}=await supabase.functions.invoke('community-publish',{body:payload});
+    if(functionError)throw new Error(functionError.message||'Community publisher failed.');
+    if(result?.error)throw new Error(result.error);
+    const id=result.id;
+    $('uploadStatus').textContent='Published to Community! 🎉';
+    setTimeout(()=>{$('uploadModal').classList.remove('show');loadTab('yours');},900);
+  }catch(e){$('uploadStatus').textContent='Publish failed: '+e.message;}
+  finally{$('publishBtn').disabled=false;}
+}
+
+async function testSource(){
+  generation++;const runId=generation;if(runtime)runtime.running=false;
+  const c=$('preview'),ctx=c.getContext('2d');ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);frame=[];
+  runtime=new SingulaxRuntime({output:console.log,frame:f=>frame=f.slice(),input:async()=>'',fileRead:async()=>'',fileWrite:async()=>true,playAudio:()=>{},mode3d:()=>{}});
+  runtime.setInput({keys:[],buttons:[],mouse:{x:0,y:0},touch:{x:0,y:0,active:false},gamepads:{}});
+  const projectFiles=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  const project={name:currentProject.community?.name||currentProject.repo?.name||'Community Project',files:projectFiles,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
+  try{await runtime.runProject(project);if(runId===generation)drawFrame();}catch(e){ctx.fillStyle='#ff6b8a';ctx.font='16px system-ui';ctx.fillText('Test error: '+e.message,18,30);}
+}
+function drawFrame(){
+  const c=$('preview'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);
+  for(const x of frame){ctx.fillStyle=x.fill||'white';ctx.strokeStyle=x.fill||'white';if(x.type==='rect')ctx.fillRect(x.x,x.y,x.w,x.h);else if(x.type==='circle'){ctx.beginPath();ctx.arc(x.x,x.y,x.r,0,Math.PI*2);ctx.fill();}else if(x.type==='line'){ctx.lineWidth=x.width||2;ctx.beginPath();ctx.moveTo(x.x1,x.y1);ctx.lineTo(x.x2,x.y2);ctx.stroke();}else if(x.type==='text'){ctx.font=(x.size||20)+'px sans-serif';ctx.fillText(x.text,x.x,x.y);}}
+  if(runtime&&generation)requestAnimationFrame(drawFrame);
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>loadTab(b.dataset.tab));
+$('searchBtn').onclick=async()=>{
+  const q=$('query').value.trim().toLowerCase();
+  $('status').textContent='Searching published projects…';$('grid').innerHTML='';
+  try{
+    const projects=await getCommunityProjects();
+    const results=projects.filter(p=>!q||String(p.name||'').toLowerCase().includes(q)||String(p.description||'').toLowerCase().includes(q)||String(p.author||'').toLowerCase().includes(q));
+    $('status').textContent=results.length+' published projects found.';
+    if(!results.length){$('grid').innerHTML='<div class="empty">No published projects matched your search.</div>';return;}
+    results.forEach(addCommunityCard);
+  }catch(e){$('status').textContent='Search failed: '+e.message;}
+};
+$('query').onkeydown=e=>{if(e.key==='Enter')$('searchBtn').click()};
+$('closeBtn').onclick=()=>{$('viewer').classList.remove('show');generation++;if(runtime)runtime.running=false;runtime=null};
+let idePickerMode='remix';
+function openIdePicker(mode='open'){
+  idePickerMode=mode;
+  $('idePickerTitle').textContent=mode==='remix'?'Choose an IDE for your remix':'Choose a SingulaX IDE';
+  $('idePicker').classList.add('show');
+}
+function closeIdePicker(){$('idePicker').classList.remove('show');}
+$('remixBtn').onclick=()=>{
+  if(!currentProject)return;
+  const files=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  localStorage.setItem('singulax-project',JSON.stringify({name:(currentProject.community?.name||currentProject.repo?.name||'Project')+' Remix',files,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:true}}));
+  openIdePicker('remix');
+};
+$('openIdeBtn').onclick=()=>openIdePicker('open');
+document.querySelectorAll('.ideOption').forEach(b=>b.onclick=()=>{
+  const target=b.dataset.ide;
+  closeIdePicker();
+  location.href=target;
+});
+$('cancelIdePicker').onclick=closeIdePicker;
+$('uploadBtn').onclick=()=>{$('uploadModal').classList.add('show');$('uploadStatus').textContent='';loadMyCloudProjects();};
+$('cancelUpload').onclick=()=>{$('uploadModal').classList.remove('show');};
+$('publishBtn').onclick=publishProject;
+loadTab('trending');
+</script>
+</body>
+</html>
+,'i').test(x.path));
+  if(!files.length)throw new Error('No SingulaX source file found.');
+  const preferred=files.find(x=>new RegExp('^(main|index)\\.('+EXTENSIONS.join('|')+')$','i').test(x.path))||files[0];
+  const raw='https://raw.githubusercontent.com/'+repo.full_name+'/'+encodeURIComponent(repo.default_branch).replace(/%2F/g,'/')+'/'+preferred.path.split('/').map(encodeURIComponent).join('/');
+  const text=await fetch(raw).then(r=>{if(!r.ok)throw new Error('Source HTTP '+r.status);return r.text()});
+  return {path:preferred.path,text,files};
+}
+async function loadRepo(repo,card){
+  const btn=card?.querySelector?.('.primary,button');if(btn)btn.disabled=true;
+  try{const src=await findSource(repo);currentProject={repo,src};$('viewerTitle').textContent=repo.full_name+' / '+src.path;$('code').textContent=src.text;$('viewer').classList.add('show');await testSource();$('viewer').scrollIntoView({behavior:'smooth',block:'start'});}
+  catch(e){alert('Could not load this project: '+e.message);}
+  finally{if(btn)btn.disabled=false;}
+}
+
+async function testSource(){
+  generation++;const runId=generation;if(runtime)runtime.running=false;
+  const c=$('preview'),ctx=c.getContext('2d');ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);frame=[];
+  runtime=new SingulaxRuntime({output:console.log,frame:f=>frame=f.slice(),input:async()=>'',fileRead:async()=>'',fileWrite:async()=>true,playAudio:()=>{},mode3d:()=>{}});
+  runtime.setInput({keys:[],buttons:[],mouse:{x:0,y:0},touch:{x:0,y:0,active:false},gamepads:{}});
+  const projectFiles=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  const project={name:currentProject.community?.name||currentProject.repo?.name||'Community Project',files:projectFiles,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
+  try{await runtime.runProject(project);if(runId===generation)drawFrame();}catch(e){ctx.fillStyle='#ff6b8a';ctx.font='16px system-ui';ctx.fillText('Test error: '+e.message,18,30);}
+}
+function drawFrame(){
+  const c=$('preview'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);
+  for(const x of frame){ctx.fillStyle=x.fill||'white';ctx.strokeStyle=x.fill||'white';if(x.type==='rect')ctx.fillRect(x.x,x.y,x.w,x.h);else if(x.type==='circle'){ctx.beginPath();ctx.arc(x.x,x.y,x.r,0,Math.PI*2);ctx.fill();}else if(x.type==='line'){ctx.lineWidth=x.width||2;ctx.beginPath();ctx.moveTo(x.x1,x.y1);ctx.lineTo(x.x2,x.y2);ctx.stroke();}else if(x.type==='text'){ctx.font=(x.size||20)+'px sans-serif';ctx.fillText(x.text,x.x,x.y);}}
+  if(runtime&&generation)requestAnimationFrame(drawFrame);
+}
+
+async function loadMyCloudProjects(){
+  const supabase=await getSupabase();
+  const select=$('cloudProject');
+  select.innerHTML='<option value="">Loading your projects…</option>';
+  const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+  if(sessionError||!sessionData?.session){
+    select.innerHTML='<option value="">Sign in to choose a project</option>';
+    return;
+  }
+  const {data,error}=await supabase.from('projects')
+    .select('id,name,description,updated_at,data')
+    .eq('owner_id',sessionData.session.user.id)
+    .order('updated_at',{ascending:false});
+  if(error){
+    select.innerHTML='<option value="">Could not load your projects</option>';
+    $('uploadStatus').textContent='Could not load My Projects: '+error.message;
+    return;
+  }
+  select.innerHTML='<option value="">Choose a project from your SingulaX account…</option>';
+  for(const project of (data||[])){
+    const option=document.createElement('option');
+    option.value=project.id;
+    option.textContent=project.name;
+    select.appendChild(option);
+  }
+  select.onchange=()=>{
+    const project=data.find(x=>x.id===select.value);
+    if(!project)return;
+    $('repoName').value=project.name||'My SingulaX Project';
+    $('repoDescription').value=project.description||'';
+    $('projectVersion').value=project.data?.version||'1.0.0';
+    $('projectFile').value='';
+  };
+}
+
+async function publishProject(){
+  const supabase=await getSupabase();
+  const cloudId=$('cloudProject').value;
+  const file=$('projectFile').files[0];
+  let name=$('repoName').value.trim();
+  let description=$('repoDescription').value.trim()||'A SingulaX project';
+  let version=$('projectVersion').value.trim()||'1.0.0';
+  if(!cloudId&&!file){$('uploadStatus').textContent='Choose one of your My Projects or upload a project file.';return;}
+  $('publishBtn').disabled=true;$('uploadStatus').textContent='Reading project…';
+  try{
+    let files={},main='';
+    if(cloudId){
+      const {data:project,error}=await supabase.from('projects').select('id,name,description,data').eq('id',cloudId).single();
+      if(error||!project)throw new Error(error?.message||'Could not load that project.');
+      const owned=project.data||{};
+      name=name||project.name||'My SingulaX Project';
+      description=project.description||description;
+      version=owned.version||version;
+      for(const [path,value] of Object.entries(owned.files||{})){
+        if(typeof value==='string')files[String(path).replace(/^\/+/, '')]=value;
+      }
+      main=owned.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
+    }else{
+      const raw=await file.text();
+      if(/\.sglxproj$/i.test(file.name)){
+        let p;try{p=JSON.parse(raw)}catch{throw new Error('The project package is not valid JSON.')}
+        for(const [path,value] of Object.entries(p.files||{}))if(typeof value==='string')files[path.replace(/^\/+/, '')]=value;
+        main=p.main||Object.keys(files).find(x=>/\.sglx$/i.test(x))||Object.keys(files)[0]||'main.sglx';
+      }else{
+        const ext=sourceExt(file.name);
+        if(!EXTENSIONS.includes(ext))throw new Error('Unsupported file type. Use .sglx, .txt, .vlla, .cyln, .smsc, .wsc, .ctrsc, .ezsc, or .lyte3075.');
+        main='main.'+ext;files[main]=raw;
+      }
+    }
+    if(!name)throw new Error('Project name is required.');
+    if(!Object.keys(files).length)throw new Error('The project contains no source files.');
+    const payload={name,description,version,main,files:Object.entries(files).map(([path,content])=>({path,content}))};
+    $('uploadStatus').textContent='Publishing securely…';
+    const {data:result,error:functionError}=await supabase.functions.invoke('community-publish',{body:payload});
+    if(functionError)throw new Error(functionError.message||'Community publisher failed.');
+    if(result?.error)throw new Error(result.error);
+    const id=result.id;
+    $('uploadStatus').textContent='Published to Community! 🎉';
+    setTimeout(()=>{$('uploadModal').classList.remove('show');loadTab('yours');},900);
+  }catch(e){$('uploadStatus').textContent='Publish failed: '+e.message;}
+  finally{$('publishBtn').disabled=false;}
+}
+
+async function testSource(){
+  generation++;const runId=generation;if(runtime)runtime.running=false;
+  const c=$('preview'),ctx=c.getContext('2d');ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);frame=[];
+  runtime=new SingulaxRuntime({output:console.log,frame:f=>frame=f.slice(),input:async()=>'',fileRead:async()=>'',fileWrite:async()=>true,playAudio:()=>{},mode3d:()=>{}});
+  runtime.setInput({keys:[],buttons:[],mouse:{x:0,y:0},touch:{x:0,y:0,active:false},gamepads:{}});
+  const projectFiles=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  const project={name:currentProject.community?.name||currentProject.repo?.name||'Community Project',files:projectFiles,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:false}};
+  try{await runtime.runProject(project);if(runId===generation)drawFrame();}catch(e){ctx.fillStyle='#ff6b8a';ctx.font='16px system-ui';ctx.fillText('Test error: '+e.message,18,30);}
+}
+function drawFrame(){
+  const c=$('preview'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#05060a';ctx.fillRect(0,0,c.width,c.height);
+  for(const x of frame){ctx.fillStyle=x.fill||'white';ctx.strokeStyle=x.fill||'white';if(x.type==='rect')ctx.fillRect(x.x,x.y,x.w,x.h);else if(x.type==='circle'){ctx.beginPath();ctx.arc(x.x,x.y,x.r,0,Math.PI*2);ctx.fill();}else if(x.type==='line'){ctx.lineWidth=x.width||2;ctx.beginPath();ctx.moveTo(x.x1,x.y1);ctx.lineTo(x.x2,x.y2);ctx.stroke();}else if(x.type==='text'){ctx.font=(x.size||20)+'px sans-serif';ctx.fillText(x.text,x.x,x.y);}}
+  if(runtime&&generation)requestAnimationFrame(drawFrame);
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>loadTab(b.dataset.tab));
+$('searchBtn').onclick=async()=>{
+  const q=$('query').value.trim().toLowerCase();
+  $('status').textContent='Searching published projects…';$('grid').innerHTML='';
+  try{
+    const projects=await getCommunityProjects();
+    const results=projects.filter(p=>!q||String(p.name||'').toLowerCase().includes(q)||String(p.description||'').toLowerCase().includes(q)||String(p.author||'').toLowerCase().includes(q));
+    $('status').textContent=results.length+' published projects found.';
+    if(!results.length){$('grid').innerHTML='<div class="empty">No published projects matched your search.</div>';return;}
+    results.forEach(addCommunityCard);
+  }catch(e){$('status').textContent='Search failed: '+e.message;}
+};
+$('query').onkeydown=e=>{if(e.key==='Enter')$('searchBtn').click()};
+$('closeBtn').onclick=()=>{$('viewer').classList.remove('show');generation++;if(runtime)runtime.running=false;runtime=null};
+let idePickerMode='remix';
+function openIdePicker(mode='open'){
+  idePickerMode=mode;
+  $('idePickerTitle').textContent=mode==='remix'?'Choose an IDE for your remix':'Choose a SingulaX IDE';
+  $('idePicker').classList.add('show');
+}
+function closeIdePicker(){$('idePicker').classList.remove('show');}
+$('remixBtn').onclick=()=>{
+  if(!currentProject)return;
+  const files=currentProject.files||{[currentProject.src.path]:currentProject.src.text};
+  localStorage.setItem('singulax-project',JSON.stringify({name:(currentProject.community?.name||currentProject.repo?.name||'Project')+' Remix',files,assets:{},folders:[],settings:{theme:'midnight',fontSize:15,autosave:true}}));
+  openIdePicker('remix');
+};
+$('openIdeBtn').onclick=()=>openIdePicker('open');
+document.querySelectorAll('.ideOption').forEach(b=>b.onclick=()=>{
+  const target=b.dataset.ide;
+  closeIdePicker();
+  location.href=target;
+});
+$('cancelIdePicker').onclick=closeIdePicker;
+$('uploadBtn').onclick=()=>{$('uploadModal').classList.add('show');$('uploadStatus').textContent='';loadMyCloudProjects();};
+$('cancelUpload').onclick=()=>{$('uploadModal').classList.remove('show');};
+$('publishBtn').onclick=publishProject;
+loadTab('trending');
+</script>
+</body>
+</html>
+,'i').test(x.path));
   if(!files.length)throw new Error('No SingulaX source file found.');
   const preferred=files.find(x=>new RegExp('^(main|index)\\.('+EXTENSIONS.join('|')+')$','i').test(x.path))||files[0];
   const raw='https://raw.githubusercontent.com/'+repo.full_name+'/'+encodeURIComponent(repo.default_branch).replace(/%2F/g,'/')+'/'+preferred.path.split('/').map(encodeURIComponent).join('/');
