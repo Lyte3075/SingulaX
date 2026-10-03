@@ -1,4 +1,4 @@
-const CACHE = 'singulax-studio-v8';
+const CACHE = 'singulax-studio-v10';
 
 const ASSETS = [
   './',
@@ -38,19 +38,35 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const request = event.request;
+  const isPage = request.mode === 'navigate' ||
+    request.destination === 'document' ||
+    /\.html(?:$|\?)/i.test(new URL(request.url).pathname);
+
+  if (isPage) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
+    caches.match(request)
       .then(cached => {
         if (cached) return cached;
 
-        return fetch(event.request)
+        return fetch(request)
           .then(response => {
-            const copy = response.clone();
-
-            caches.open(CACHE).then(cache => {
-              cache.put(event.request, copy);
-            });
-
+            if (response.ok) {
+              const copy = response.clone();
+              caches.open(CACHE).then(cache => cache.put(request, copy));
+            }
             return response;
           })
           .catch(() => caches.match('./lite-ide.html'));
