@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080a12">
+<link rel="icon" type="image/png" href="logo.png">
+<title>SingulaX Documentation</title>
+<style>
+:root{--bg:#080a12;--panel:#10131d;--panel2:#151a27;--text:#f5f7ff;--muted:#9ba5b9;--cyan:#4be0e3;--purple:#9b6cff;--pink:#fccaee;--border:rgba(255,255,255,.09)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--text);background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",system-ui,sans-serif}
+body:before{content:"";position:fixed;inset:0;z-index:-2;background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);background-size:48px 48px}
+body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 10% 0%,rgba(75,224,227,.1),transparent 30%),radial-gradient(circle at 90% 70%,rgba(155,108,255,.1),transparent 30%)}
+.topbar{position:sticky;top:0;z-index:20;padding:13px 18px;background:rgba(8,10,18,.76);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.top{max-width:1280px;margin:auto;display:flex;align-items:center;gap:14px}.brand{color:var(--text);text-decoration:none;font-weight:800}.back{margin-left:auto;color:#071013;background:var(--cyan);border:0;border-radius:999px;padding:9px 15px;font-weight:800;text-decoration:none}
+.layout{max-width:1280px;margin:auto;display:grid;grid-template-columns:245px minmax(0,1fr);gap:25px;padding:28px 18px 70px}
+.sidebar{position:sticky;top:78px;height:calc(100vh - 100px);overflow:auto;padding:14px;border:1px solid var(--border);border-radius:20px;background:rgba(16,19,29,.78)}
+.sidebar h3{margin:6px 8px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.13em;color:var(--cyan)}
+.side a{display:block;padding:8px 10px;color:var(--muted);text-decoration:none;border-radius:10px;font-size:13px}.side a:hover{background:rgba(255,255,255,.06);color:var(--text)}
+.hero{padding:35px 4px 28px}.eyebrow{color:var(--cyan);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.15em}.hero h1{font-size:clamp(42px,7vw,76px);letter-spacing:-.06em;margin:10px 0 12px;background:linear-gradient(110deg,var(--cyan),var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}.hero p{max-width:780px;color:var(--muted);font-size:18px;line-height:1.6;margin:0}
+.search{position:sticky;top:69px;z-index:10;padding:10px 0 16px;background:linear-gradient(var(--bg) 75%,transparent)}.searchbox{display:flex;gap:9px}.searchbox input{width:100%;padding:14px 16px;border-radius:14px;border:1px solid var(--border);background:var(--panel);color:var(--text);font:inherit;outline:none}.searchbox input:focus{border-color:rgba(75,224,227,.45);box-shadow:0 0 0 3px rgba(75,224,227,.08)}.count{color:var(--muted);font-size:12px;margin-top:8px}
+section{scroll-margin-top:100px;margin:22px 0 42px}.section-title{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--border);padding-bottom:10px}.section-title h2{margin:0;font-size:30px;letter-spacing:-.04em}.section-title span{color:var(--cyan);font-size:12px;font-weight:800}
+.topic{background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.018)),var(--panel);border:1px solid var(--border);border-radius:18px;padding:20px;margin:14px 0}.topic h3{margin:0 0 8px;font-size:20px}.topic p,.topic li{color:var(--muted);line-height:1.6}.topic code{color:var(--pink);background:rgba(252,202,238,.07);padding:2px 5px;border-radius:5px}.topic pre{overflow:auto;padding:15px;border-radius:12px;background:#070910;border:1px solid rgba(255,255,255,.06);color:#dce7ff;line-height:1.55}table{width:100%;border-collapse:collapse;overflow:hidden}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--border);vertical-align:top}th{color:var(--text);font-size:13px}td{color:var(--muted);font-size:13px}details{border-top:1px solid var(--border);padding:10px 0}summary{cursor:pointer;font-weight:750}.badge{display:inline-block;padding:3px 7px;border-radius:999px;background:rgba(75,224,227,.09);color:var(--cyan);font-size:11px;font-weight:800}.hidden{display:none!important}.note{border-left:3px solid var(--cyan);padding:10px 14px;background:rgba(75,224,227,.05);border-radius:8px;color:var(--muted)}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{display:none}.search{top:61px}.layout{padding-left:12px;padding-right:12px}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="top"><a class="brand" href="../">⚛️ SingulaX</a><strong>Documentation</strong><a class="back" href="../">Home</a></div></header>
+<div class="layout">
+<aside class="sidebar"><h3>Contents</h3><nav class="side">
+<a href="#architecture">Architecture</a><a href="#language">Language & Runtime</a><a href="#control">Control Flow</a><a href="#functions">Functions & Data</a><a href="#input">Input</a><a href="#drawing">2D Drawing</a><a href="#timing">Timing & Audio</a><a href="#projects">Projects & Assets</a><a href="#three-d">3D Engine</a><a href="#vectors">3D Math</a><a href="#scene">Scenes & Objects</a><a href="#camera">Camera & Lighting</a><a href="#materials">Materials & Meshes</a><a href="#collision">Collision & Raycast</a><a href="#browser">Browser IDE Logic</a><a href="#examples">Quick Examples</a>
+</nav></aside>
+<main>
+<div class="hero"><div class="eyebrow">SingulaX Browser Reference</div><h1>Documentation.</h1><p>A searchable guide to the browser runtime, IDE-facing APIs, input, drawing, data, project execution, and the built-in 3D engine. This page documents the browser-side implementation, centered on <code>runtime.js</code>.</p></div>
+<div class="search"><div class="searchbox"><input id="search" placeholder="Search functions, topics, 3D, keyboard, camera, mesh..." autocomplete="off"></div><div id="count" class="count"></div></div>
+
+<section id="architecture" data-keywords="architecture runtime browser ide app.js full ide lite ide renderer supabase">
+<div class="section-title"><h2>Architecture</h2><span>HOW IT FITS TOGETHER</span></div>
+<div class="topic"><h3>Browser execution pipeline</h3><pre>SingulaX source
+   ↓
+browser IDE / app.js
+   ↓
+SingulaxRuntime in runtime.js
+   ↓
+lexer/parser/executor + built-in APIs
+   ↓
+frame / host callbacks
+   ↓
+browser renderer, input, audio and UI</pre><p>The browser IDE does not depend on <code>sglx.py</code> to execute a project. The browser runtime is JavaScript. <code>runtime.js</code> parses SingulaX, executes it, owns the environment of built-in functions, and sends drawing/scene frames to the browser host.</p></div>
+<div class="topic"><h3>Important browser files</h3><table><tr><th>File / area</th><th>Role</th></tr><tr><td><code>browser/full-ide.html</code></td><td>Full IDE interface.</td></tr><tr><td><code>browser/lite-ide.html</code></td><td>Lighter IDE interface for smaller screens.</td></tr><tr><td><code>browser/app.js</code></td><td>IDE/application orchestration and UI logic.</td></tr><tr><td><code>runtime.js</code></td><td>Browser/Node SingulaX interpreter and built-in runtime APIs.</td></tr><tr><td><code>runtime/sglx.mjs</code></td><td>Separate JavaScript runtime used by the Node CLI.</td></tr><tr><td><code>index.html</code></td><td>Public homepage and navigation.</td></tr><tr><td><code>supabase/functions/community-publish/index.ts</code></td><td>Server-side Community publishing logic.</td></tr></table></div>
+</section>
+
+<section id="language" data-keywords="language runtime parser variables expressions comments interpreter syntax">
+<div class="section-title"><h2>Language & Runtime</h2><span>CORE</span></div>
+<div class="topic"><h3>Comments</h3><p>Browser parsing removes <code>//</code>, <code>#</code>, and <code>--</code> comments where supported by the parser. Strings are protected while stripping <code>//</code> comments.</p></div>
+<div class="topic"><h3>Variables and expressions</h3><pre>local speed = 5
+var score = 0
+score += 10
+name = "SingulaX"
+alive = true</pre><p>The runtime evaluates expressions against the current scope and exposes built-ins through its environment. It supports arithmetic, comparisons, boolean operators, function calls, object properties, lists, and JavaScript-backed values.</p></div>
+<div class="topic"><h3>Built-in output and conversion</h3><table><tr><th>API</th><th>Purpose</th></tr><tr><td><code>say()</code>, <code>print()</code>, <code>log()</code></td><td>Send formatted output to the host.</td></tr><tr><td><code>input(prompt)</code></td><td>Request text through the host input provider or browser prompt fallback.</td></tr><tr><td><code>string(v)</code></td><td>Convert to string.</td></tr><tr><td><code>number(v)</code></td><td>Convert to number.</td></tr><tr><td><code>boolean(v)</code></td><td>Convert to boolean.</td></tr><tr><td><code>type_of(v)</code></td><td>Return JavaScript type information.</td></tr><tr><td><code>exists(v)</code></td><td>Test for non-null/non-undefined values.</td></tr><tr><td><code>length(v)</code></td><td>Read length when available.</td></tr><tr><td><code>concat(...values)</code></td><td>Join values into one string.</td></tr></table></div>
+</section>
+
+<section id="control" data-keywords="if else elseif while forever repeat for each break continue loops control flow">
+<div class="section-title"><h2>Control Flow</h2><span>LOGIC</span></div>
+<div class="topic"><h3>Conditionals</h3><pre>if score &gt; 10 then
+    say("High score")
+elseif score == 10 then
+    say("Exactly 10")
+else
+    say("Low score")
+end</pre></div>
+<div class="topic"><h3>Loops</h3><pre>while alive do
+    update()
+end
+
+repeat 10 times
+    say("tick")
+end
+
+for i = 1, 10 do
+    say(i)
+end
+
+each item in items do
+    say(item)
+end
+
+forever
+    game_loop()
+end</pre><p><code>break</code> exits a loop and <code>continue</code> skips to its next iteration. The runtime also includes safety limits on long-running loops.</p></div>
+<div class="topic"><h3>Wait/repeat-until logic</h3><pre>wait(1)
+wait.until(condition, "done")
+repeat.until(task, "done")
+repeat.until.statement(statement, "done")</pre><p>These facilities are implemented by the runtime and yield periodically so browser execution can continue.</p></div>
+</section>
+
+<section id="functions" data-keywords="functions func return list push pop data json random math">
+<div class="section-title"><h2>Functions & Data</h2><span>TOOLS</span></div>
+<div class="topic"><h3>Functions</h3><pre>function add(a, b)
+    return a + b
+end
+
+score = add(10, 5)</pre><p>Functions create child scopes. Arguments are placed in that child scope, and <code>return</code> sends a value back.</p></div>
+<div class="topic"><h3>Lists</h3><table><tr><th>API</th><th>Purpose</th></tr><tr><td><code>list(...items)</code></td><td>Create a list.</td></tr><tr><td><code>push(list,value)</code></td><td>Add an item.</td></tr><tr><td><code>pop(list)</code></td><td>Remove and return the last item.</td></tr><tr><td><code>list_get(list,index)</code></td><td>Read an item.</td></tr><tr><td><code>list_set(list,index,value)</code></td><td>Write an item.</td></tr><tr><td><code>list_remove(list,index)</code></td><td>Remove an item.</td></tr></table></div>
+<div class="topic"><h3>Data, JSON and randomness</h3><p><code>data()</code> creates a simple object; <code>data.store/find/has/clear</code> provides a runtime data store. <code>to_json()</code> and <code>from_json()</code> handle JSON. <code>random()</code>, <code>random_int()</code>, and <code>random_choice()</code> provide randomness.</p></div>
+<div class="topic"><h3>Math</h3><p>Built-ins include <code>abs</code>, <code>floor</code>, <code>ceil</code>, <code>round</code>, <code>sqrt</code>, <code>pow</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, <code>atan2</code>, <code>min</code>, <code>max</code>, <code>clamp</code>, <code>lerp</code>, <code>pi</code>, <code>e</code>, <code>tau</code>, <code>deg</code>, and <code>rad</code>.</p></div>
+</section>
+
+<section id="input" data-keywords="input keyboard mouse touch gamepad controls joystick">
+<div class="section-title"><h2>Input</h2><span>KEYBOARD · MOUSE · TOUCH · GAMEPAD</span></div>
+<div class="topic"><h3>Keyboard</h3><table><tr><th>API</th><th>Meaning</th></tr><tr><td><code>key_down(key)</code></td><td>True while a key is held.</td></tr><tr><td><code>key_pressed(key)</code></td><td>True for a press event. The event is consumed when read.</td></tr></table><pre>if key_down("w") then
+    move3d("player", 0, 0, -speed)
+end</pre></div>
+<div class="topic"><h3>Mouse</h3><p><code>mouse_down(button)</code>, <code>mouse_clicked(button)</code>, <code>mouse_x()</code>, <code>mouse_y()</code>, <code>mouse_dx()</code>, <code>mouse_dy()</code>, <code>mouse_lock()</code>, <code>mouse_unlock()</code>, and <code>mouse_locked()</code> expose mouse state and pointer-lock controls.</p></div>
+<div class="topic"><h3>Touch</h3><p><code>touching()</code>, <code>touch_x()</code>, <code>touch_y()</code>, <code>touch_started()</code>, and <code>touch_ended()</code> expose the runtime's primary touch state. Mobile UI controls can be managed through the controls API.</p></div>
+<div class="topic"><h3>Gamepad</h3><p><code>gamepad_connected(index)</code>, <code>gamepad_button(index,button)</code>, and <code>gamepad_axis(index,axis)</code> read connected controller state.</p></div>
+<div class="topic"><h3>Touch/control interface</h3><p><code>controls.all()</code>, <code>controls.reset()</code>, <code>controls.only(...names)</code>, <code>controls.show(...names)</code>, and <code>controls.hide(...names)</code> call the browser host's mobile control layer. The same operations also exist as <code>controls_all</code>, <code>controls_reset</code>, <code>controls_only</code>, <code>controls_show</code>, and <code>controls_hide</code>.</p></div>
+</section>
+
+<section id="drawing" data-keywords="2d drawing canvas rectangle circle text line image cube set 3d">
+<div class="section-title"><h2>2D Drawing</h2><span>FRAME API</span></div>
+<div class="topic"><h3>Drawing commands</h3><table><tr><th>API</th><th>What it creates</th></tr><tr><td><code>clear_screen()</code></td><td>Clears the current frame.</td></tr><tr><td><code>draw_rect(x,y,w,h,fill)</code></td><td>Rectangle.</td></tr><tr><td><code>draw_circle(x,y,r,fill)</code></td><td>Circle.</td></tr><tr><td><code>draw_text(text,x,y,size,fill)</code></td><td>Text.</td></tr><tr><td><code>draw_line(x1,y1,x2,y2,width,fill)</code></td><td>Line.</td></tr><tr><td><code>draw_image(asset,x,y,w,h)</code></td><td>Image asset.</td></tr><tr><td><code>draw_cube(x,y,z,size,fill)</code></td><td>Simple frame-level cube item.</td></tr><tr><td><code>set_3d(value)</code></td><td>Asks the host to switch display mode.</td></tr></table><pre>clear_screen()
+draw_rect(20, 20, 200, 80, "#4be0e3")
+draw_text("Hello SingulaX", 40, 70, 24, "black")</pre><p>The runtime stores drawing commands in its current frame and emits that frame through the browser host.</p></div>
+</section>
+
+<section id="timing" data-keywords="time wait audio performance clock">
+<div class="section-title"><h2>Timing & Audio</h2><span>RUNTIME SERVICES</span></div>
+<div class="topic"><p><code>wait(seconds)</code> pauses asynchronously, <code>wait_ms(milliseconds)</code> uses milliseconds, and <code>time()</code>/<code>seconds()</code> return the current performance time in seconds. <code>play_audio(asset,loop)</code> and <code>stop_audio(asset)</code> delegate audio playback to the browser host.</p></div>
+</section>
+
+<section id="projects" data-keywords="project assets runProject files sglxproj file read write">
+<div class="section-title"><h2>Projects & Assets</h2><span>PROJECT EXECUTION</span></div>
+<div class="topic"><h3>Running source</h3><p><code>runtime.run(source)</code> parses and executes one source string. <code>runtime.runProject(project,{entry})</code> loads the project's source files, joins selected <code>.sglx</code> files, supplies project assets, and runs the resulting source.</p></div>
+<div class="topic"><h3>Files and assets</h3><p>The runtime exposes <code>file_read(path)</code>, <code>file_write(path,content)</code>, <code>asset(path)</code>, and <code>asset_url(path)</code>. These delegate storage/file behavior to the host instead of assuming browser filesystem access.</p></div>
+</section>
+
+<section id="three-d" data-keywords="3d engine scene object camera light material mesh render update raycast collider transform">
+<div class="section-title"><h2>3D Engine</h2><span>BUILT-IN</span></div>
+<div class="topic"><h3>3D pipeline</h3><pre>scene3d()
+   ↓
+object3d() / camera3d() / light3d()
+   ↓
+position3d() / rotation3d() / scale3d()
+   ↓
+materials + meshes + colliders
+   ↓
+render3d()
+   ↓
+3D scene frame
+   ↓
+browser WebGL renderer</pre><p>The runtime is game-agnostic. It manages the scene and serializes it into a <code>3dscene</code> frame for the browser host's renderer.</p></div>
+</section>
+
+<section id="vectors" data-keywords="vector v3 vadd vsub vmul vlen vnorm rotation math radians">
+<div class="section-title"><h2>3D Math</h2><span>UNDER THE HOOD</span></div>
+<div class="topic"><h3>Vectors</h3><p>The internal engine represents 3D vectors as <code>{x,y,z}</code>. Its core operations are vector creation, addition, subtraction, scalar multiplication, length, and normalization.</p><pre>vadd(a,b)   → a + b
+vsub(a,b)   → a - b
+vmul(a,n)   → a × n
+vlen(a)     → √(x²+y²+z²)
+vnorm(a)    → unit direction</pre></div>
+<div class="topic"><h3>Rotation math</h3><p>The internal <code>rotXYZ</code> routine applies X, Y and Z rotations using sine and cosine. Object parenting uses this transformation when calculating world positions. SingulaX's <code>rad()</code> and <code>deg()</code> helpers convert between degrees and radians.</p></div>
+</section>
+
+<section id="scene" data-keywords="scene object object3d position rotation scale move rotate parent child visible">
+<div class="section-title"><h2>Scenes & Objects</h2><span>3D WORLD</span></div>
+<div class="topic"><h3>Scene API</h3><table><tr><th>API</th><th>Purpose</th></tr><tr><td><code>scene3d(name)</code></td><td>Create/select a scene.</td></tr><tr><td><code>add3d(object)</code></td><td>Add an object to the active scene.</td></tr><tr><td><code>remove3d(object)</code></td><td>Remove an object.</td></tr><tr><td><code>render3d()</code></td><td>Serialize and emit the active scene.</td></tr><tr><td><code>update3d(dt)</code></td><td>Run per-object update callbacks.</td></tr></table></div>
+<div class="topic"><h3>Object transforms</h3><table><tr><th>API</th><th>Purpose</th></tr><tr><td><code>object3d(name,type)</code></td><td>Create an object.</td></tr><tr><td><code>position3d(name,x,y,z)</code></td><td>Set absolute position.</td></tr><tr><td><code>move3d(name,x,y,z)</code></td><td>Move relative to current position.</td></tr><tr><td><code>rotation3d(name,x,y,z)</code></td><td>Set absolute rotation.</td></tr><tr><td><code>rotate3d(name,x,y,z)</code></td><td>Add rotation.</td></tr><tr><td><code>scale3d(name,x,y,z)</code></td><td>Set scale.</td></tr></table></div>
+<div class="topic"><h3>Object capabilities under the hood</h3><p>Objects have position, rotation, scale, visibility, size, material, collider, mesh, parent and children. The internal object API also supports <code>set_position</code>, <code>set_rotation</code>, <code>set_scale</code>, <code>move</code>, <code>rotate</code>, <code>look_at</code>, <code>mesh_set</code>, <code>material_set</code>, <code>collider_set</code>, <code>add_child</code>, and <code>remove_child</code>.</p></div>
+</section>
+
+<section id="camera" data-keywords="camera fov near far sensitivity light directional point intensity range color ambient background fog">
+<div class="section-title"><h2>Camera & Lighting</h2><span>VIEW</span></div>
+<div class="topic"><h3>Camera</h3><p><code>camera3d(name)</code> creates a camera. <code>camera3d_position()</code>, <code>camera3d_rotation()</code>, and <code>camera3d_fov()</code> control it. Internally cameras default to a 75° FOV, a near clip of 0.05, a far clip of 1000, and sensitivity 1. The internal camera also supports clip and sensitivity settings.</p></div>
+<div class="topic"><h3>Lights</h3><p><code>light3d(name)</code>, <code>light3d_position()</code>, <code>light3d_rotation()</code>, <code>light3d_intensity()</code>, and <code>light3d_color()</code> configure lights. Internal lights have a type, intensity, range and color.</p></div>
+<div class="topic"><h3>Scene environment</h3><p><code>scene3d_ambient(value)</code> controls ambient light. <code>scene3d_background(value)</code> sets the background. <code>scene3d_fog(enabled,density,color)</code> configures fog.</p></div>
+</section>
+
+<section id="materials" data-keywords="material metallic roughness opacity emission mesh vertex face custom geometry">
+<div class="section-title"><h2>Materials & Meshes</h2><span>SURFACES + GEOMETRY</span></div>
+<div class="topic"><h3>Materials</h3><p><code>material3d(name)</code> retrieves or creates a material. <code>material3d_set(object,color,metallic,roughness,opacity)</code> applies material values directly to an object. The runtime stores color, metallic, roughness, opacity and emission.</p></div>
+<div class="topic"><h3>Custom meshes</h3><pre>mesh3d("triangle")
+mesh3d_vertex("triangle", 0, 1, 0)
+mesh3d_vertex("triangle", -1, -1, 0)
+mesh3d_vertex("triangle", 1, -1, 0)
+mesh3d_face("triangle", 0, 1, 2)
+
+object3d("shape", "custom")
+mesh3d_use("shape", "triangle")
+render3d()</pre><p>A mesh is a list of vertices and faces. Faces contain vertex indices. This lets SingulaX describe custom geometry rather than only using primitive object types.</p></div>
+</section>
+
+<section id="collision" data-keywords="collision collider raycast shooting hit distance point box sphere">
+<div class="section-title"><h2>Collision & Raycast</h2><span>INTERACTION</span></div>
+<div class="topic"><h3>Colliders</h3><p><code>collider3d(name,type,size)</code> attaches collider information to an object. The current runtime is intentionally simple and does not implement a full rigid-body physics engine.</p></div>
+<div class="topic"><h3>Raycasting</h3><pre>hit = raycast3d(origin, direction, 1000)</pre><p>The runtime normalizes the direction and tests visible collidable objects. It chooses the closest intersection and returns <code>name</code>, <code>distance</code>, and <code>point</code>, or <code>null</code> if nothing is hit. This is useful for FPS shooting, interaction, picking, and line-of-sight logic.</p><div class="note">The current raycast uses a simplified sphere-style intersection derived from collider size and object scale. It is not a full mesh collision test.</div></div>
+</section>
+
+<section id="browser" data-keywords="browser ide host frame emitFrame setInput input output error renderer app">
+<div class="section-title"><h2>Browser IDE Logic</h2><span>HOST BRIDGE</span></div>
+<div class="topic"><h3>Host callbacks</h3><p>The runtime accepts a <code>host</code> object. It can receive output, frames, errors, input, file operations, audio, mouse-lock state, control visibility, and 3D mode changes. This keeps the language runtime separate from browser UI details.</p></div>
+<div class="topic"><h3>Input injection</h3><p>The host calls <code>runtime.setInput()</code> with keys, releases, pressed keys, mouse state, mouse deltas, buttons, clicks, touch state, touch events, and gamepads. The runtime then exposes those values through the SingulaX input APIs.</p></div>
+<div class="topic"><h3>Frames</h3><p>2D commands are stored in <code>runtime.frame</code>. A 3D render creates a frame containing <code>{type:"3dscene",scene:...}</code>. <code>emitFrame()</code> sends a copy to the host. This is the bridge between language execution and the IDE preview.</p></div>
+</section>
+
+<section id="examples" data-keywords="examples fps game movement 3d full example">
+<div class="section-title"><h2>Quick Examples</h2><span>START HERE</span></div>
+<div class="topic"><h3>Simple 3D scene</h3><pre>scene3d("main")
+scene3d_background("#050816")
+scene3d_ambient(0.2)
+
+object3d("cube", "cube")
+position3d("cube", 0, 0, 0)
+scale3d("cube", 2, 2, 2)
+material3d_set("cube", "#4be0e3", 0.3, 0.3, 1)
+
+camera3d("main")
+camera3d_position("main", 0, 3, 8)
+camera3d_fov("main", 75)
+
+light3d("sun")
+light3d_position("sun", 5, 10, 5)
+light3d_intensity("sun", 2)
+
+render3d()</pre></div>
+<div class="topic"><h3>Basic FPS-style movement logic</h3><pre>speed = 0.1
+
+forever
+    if key_down("w") then
+        move3d("player", 0, 0, -speed)
+    end
+
+    if key_down("s") then
+        move3d("player", 0, 0, speed)
+    end
+
+    if key_down("a") then
+        move3d("player", -speed, 0, 0)
+    end
+
+    if key_down("d") then
+        move3d("player", speed, 0, 0)
+    end
+
+    render3d()
+    wait(0.016)
+end</pre><p>This is intentionally simple. A full FPS controller can add camera-relative movement, mouse look, jumping, sliding, collision, raycast shooting, and mobile controls.</p></div>
+</section>
+
+<div class="topic" id="no-results" style="display:none"><h3>No documentation found</h3><p>Try a function name such as <code>camera3d</code>, <code>raycast3d</code>, <code>key_down</code>, <code>draw_rect</code>, or a topic such as <code>mesh</code> or <code>input</code>.</p></div>
+</main></div>
+<script>
+const input=document.getElementById("search"),count=document.getElementById("count"),sections=[...document.querySelectorAll("main section")],topics=[...document.querySelectorAll(".topic")],empty=document.getElementById("no-results");
+function norm(s){return s.toLowerCase().replace(/[^a-z0-9_]+/g," ")}
+function search(){
+ const q=norm(input.value.trim());let shown=0;
+ sections.forEach(sec=>{
+   const secText=norm(sec.innerText+" "+(sec.dataset.keywords||""));
+   let any=!q||secText.includes(q);
+   sec.querySelectorAll(".topic").forEach(t=>{
+     const hit=!q||norm(t.innerText).includes(q)||norm(sec.dataset.keywords||"").includes(q);
+     t.classList.toggle("hidden",!hit);if(hit)shown++;
+   });
+   sec.classList.toggle("hidden",!any);
+   if(any&&!q)sec.querySelectorAll(".topic").forEach(t=>t.classList.remove("hidden"));
+   if(q&&any){const topicHits=[...sec.querySelectorAll(".topic")].some(t=>!t.classList.contains("hidden"));sec.classList.toggle("hidden",!topicHits)}
+ });
+ empty.style.display=q&&shown===0?"block":"none";
+ count.textContent=q?(shown+" matching documentation topics"):(topics.length+" topics across "+sections.length+" categories");
+}
+input.addEventListener("input",search);search();
+</script>
+</body>
+</html>
