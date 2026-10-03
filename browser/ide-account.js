@@ -8,8 +8,8 @@ function setAccountBar() {
   if (!header || document.getElementById('accountNav')) return;
   const wrap = document.createElement('div');
   wrap.id = 'accountNav';
-  wrap.style.cssText = 'display:flex;align-items:center;gap:7px;margin-left:auto;flex-wrap:wrap;';
-  wrap.innerHTML = '<a href="my-projects.html" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;border:1px solid var(--border,#272e47);background:var(--panel,#151a2a);border-radius:10px;padding:8px 12px">My Projects</a><a href="account.html" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;border:1px solid var(--border,#272e47);background:var(--panel,#151a2a);border-radius:10px;padding:8px 12px">Account</a>';
+  wrap.className = 'ide-account-nav';
+  wrap.innerHTML = '<a class="ide-nav-button" href="my-projects.html">My Projects</a><a class="ide-nav-button" href="account.html">Account</a>';
   header.appendChild(wrap);
 }
 
