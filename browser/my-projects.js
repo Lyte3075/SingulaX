@@ -27,11 +27,12 @@ function openProject(id, ide='full-ide.html') {
 }
 
 async function loadProjects() {
+  $('count').textContent = 'Loading…';
   const { data, error } = await supabase.from('projects')
     .select('id,name,description,created_at,updated_at')
     .eq('owner_id', currentUser.id)
     .order('updated_at', { ascending:false });
-  if (error) throw error;
+  if (error) { $('count').textContent='Could not load'; throw error; }
   $('grid').innerHTML = '';
   if (!data?.length) {
     $('grid').innerHTML = '<div class="empty">No cloud projects yet. Create your first one above.</div>';
@@ -90,6 +91,8 @@ $('account').onclick = () => location.href = 'account.html';
 
 const { data, error } = await supabase.auth.getSession();
 if (error || !data?.session) {
+  $('count').textContent = 'Sign in required';
+  $('grid').innerHTML = '<div class="empty">Please sign in to view your cloud projects.</div>';
   location.href = 'account.html';
 } else {
   currentUser = data.session.user;
