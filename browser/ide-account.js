@@ -15,7 +15,7 @@ function setAccountBar() {
 
 async function loadCloudProject() {
   if (!cloudId) return;
-  const { data, error } = await supabase.from('projects').select('id,name,data').eq('id',cloudId).single();
+  const { data, error } = await supabase.from('projects').select('id,name,data').eq('id',cloudId).eq('owner_id',(await supabase.auth.getUser()).data.user?.id).single();
   if (error) {
     alert('Could not load cloud project: '+error.message);
     return;
@@ -37,7 +37,7 @@ async function cloudSave() {
   if (!raw) return;
   const payload = {name:raw.name || 'MyProject', data:raw, updated_at:new Date().toISOString()};
   if (raw.cloudId) {
-    const { error } = await supabase.from('projects').update(payload).eq('id',raw.cloudId);
+    const { error } = await supabase.from('projects').update(payload).eq('id',raw.cloudId).eq('owner_id',user.id);
     if (error) console.warn('SingulaX cloud save:',error.message);
   } else {
     const { data, error } = await supabase.from('projects').insert({owner_id:user.id,...payload}).select('id').single();
