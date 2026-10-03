@@ -8,17 +8,16 @@
 <body><main class="card">
 <div class="brand">◆ <span>SingulaX Account</span></div>
 <h1>Your SingulaX account.</h1>
-<p>Use a username and password. An email is optional and can be added later for verification.</p>
+<p>Your account uses only a username and password. No email address or email verification is required.</p>
 <form id="authForm">
-<div class="field"><label>Username</label><input id="usernameInput" autocomplete="username" autocapitalize="none" maxlength="24" required></div>
+<div class="field"><label>Username</label><input id="usernameInput" autocomplete="username" autocapitalize="none" maxlength="24" placeholder="Lyte3075" required></div>
 <div class="field"><label>Password</label><input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required></div>
 <div class="field"><label>Action</label><select id="mode"><option value="signin">Sign in</option><option value="signup">Create account</option></select></div>
 <button id="submit" class="primary">Sign in</button>
 </form>
 <div id="signedIn" class="signed" hidden>
 <p>Signed in as <strong id="username"></strong></p>
-<p id="verifiedEmail" class="hint"></p>
-<div id="emailSettings"><div class="field"><label>Add verification email</label><input id="emailInput" type="email" autocomplete="email" placeholder="you@example.com"></div><button id="addEmail" class="primary">Add email & send verification</button></div>
+<p class="hint">Username and password account. No email required.</p>
 <div class="actions"><button id="projects">My Projects</button><button id="signOut">Sign out</button></div>
 </div>
 <div id="status" class="status"></div>
