@@ -158,10 +158,11 @@ body::after {
   border: 1px solid var(--border);
 }
 
-.account:hover {
-  transform: translateY(-2px);
-  background: rgba(255,255,255,0.1);
-}
+.account:hover { transform: translateY(-2px); background: rgba(255,255,255,0.1); }
+.profile-link{display:inline-flex;align-items:center;gap:8px;padding:5px 10px 5px 6px;border-radius:999px;color:var(--text);background:rgba(255,255,255,.06);border:1px solid var(--border);text-decoration:none;font-size:14px;font-weight:700;transition:transform .25s ease,background .25s ease}
+.profile-link:hover{transform:translateY(-2px);background:rgba(255,255,255,.1)}
+.profile-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:linear-gradient(135deg,#4be0e3,#9b6cff);display:grid;place-items:center;font-size:12px;font-weight:900;border:1px solid rgba(255,255,255,.15)}
+
 
 main {
   width: min(1100px, calc(100% - 32px));
@@ -441,8 +442,8 @@ footer {
       <!-- Same navigation menu used on the other SingulaX pages -->
       <button class="navigate" id="navigateBtn">Navigate</button>
 
-      <!-- Opens the existing SingulaX account page -->
-      <a class="account" href="browser/account.html">Account</a>
+      <!-- Filled by Supabase auth state -->
+      <a class="account" id="accountButton" href="browser/account.html">Sign in</a>
     </div>
   </div>
 </header>
@@ -577,7 +578,27 @@ footer {
 
 <footer>SingulaX · 2026</footer>
 
-<script>
+<script type="module">
+import { supabase } from "./browser/supabase.js";
+
+async function loadAccountButton(){
+  const button=document.getElementById("accountButton");
+  try{
+    const {data}=await supabase.auth.getSession();
+    const session=data?.session;
+    if(!session) return;
+    const {data:profile}=await supabase.from("profiles").select("username,avatar_url").eq("id",session.user.id).maybeSingle();
+    const username=profile?.username||session.user.user_metadata?.username||"Account";
+    const avatar=profile?.avatar_url||"";
+    button.className="profile-link";
+    button.href="browser/account.html";
+    button.innerHTML=avatar
+      ? '<img class="profile-avatar" src="'+avatar.replace(/"/g,'&quot;')+'" alt=""> <span>'+username.replace(/[&<>"']/g,'')+'</span>'
+      : '<span class="profile-avatar">'+username.charAt(0).toUpperCase()+'</span><span>'+username.replace(/[&<>"']/g,'')+'</span>';
+  }catch(error){ console.error("Could not load account profile:",error); }
+}
+loadAccountButton();
+
 const navModal = document.getElementById("navModal");
 const navigateBtn = document.getElementById("navigateBtn");
 const closeNav = document.getElementById("closeNav");
