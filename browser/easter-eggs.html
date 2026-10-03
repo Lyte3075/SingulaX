@@ -158,6 +158,10 @@
 
     .extension-full { font-weight: 700; }
 
+    .theme-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+    .theme-actions button { cursor:pointer; font:inherit; font-weight:800; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:var(--panel-2); color:var(--text); }
+    .theme-actions button:hover { border-color:var(--accent); background:var(--panel); }
+
     .empty {
       padding: 25px;
       color: var(--muted);
@@ -174,6 +178,7 @@
       font-size: 13px;
     }
   </style>
+<script src="easter-theme.js"></script>
 </head>
 
 <body>
@@ -191,6 +196,23 @@
     <section>
       <h2 class="section-title">🥚 Easter Eggs</h2>
       <div id="easterEggs" class="grid"></div>
+    </section>
+
+
+    <section>
+      <h2 class="section-title">🎨 Themes</h2>
+      <div class="grid">
+        <article class="card theme-card">
+          <div class="egg-icon">❤️‍🔥</div>
+          <h3>Caitlyn</h3>
+          <p>Transforms the entire SingulaX site into the Caitlyn theme. It uses the same red, black, and crimson palette as the Caitlyn IDE theme, changes the site branding to Caitlyn, and replaces the four-point star decoration with hearts.</p>
+          <div class="theme-actions">
+            <button type="button" id="caitlynThemeBtn">❤️‍🔥 Apply Caitlyn</button>
+            <button type="button" id="clearThemeBtn">Reset Easter Theme</button>
+          </div>
+          <div class="secret" id="themeStatus">Checking theme…</div>
+        </article>
+      </div>
     </section>
 
     <section>
@@ -310,6 +332,26 @@
 
     renderEasterEggs();
     renderExtensions();
+
+    function updateThemeStatus() {
+      const status = document.getElementById("themeStatus");
+      const active = localStorage.getItem("singulax-easter-theme") === "caitlyn";
+      status.textContent = active
+        ? "Caitlyn is active across the site. ❤️‍🔥"
+        : "No Easter egg theme is active.";
+    }
+
+    document.getElementById("caitlynThemeBtn").addEventListener("click", () => {
+      window.SingulaXEasterTheme.set("caitlyn");
+      updateThemeStatus();
+    });
+
+    document.getElementById("clearThemeBtn").addEventListener("click", () => {
+      window.SingulaXEasterTheme.clear();
+      updateThemeStatus();
+    });
+
+    updateThemeStatus();
   </script>
 </body>
 </html>
