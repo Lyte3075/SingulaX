@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10131a"><title>Singulax Studio</title><link rel="stylesheet" href="style.css"><script src="../../browser/easter-theme.js"></script>
+<script src="../../browser/update-check.js"></script>
 </head>
 <body>
 <header><b>✦ Singulax Studio</b><input id="projectName" value="MyProject" aria-label="Project name"><select id="fileSelect" aria-label="Current file"></select><button onclick="newProject()">New</button><button onclick="newFile()">New File</button><button onclick="save()">Save</button><button id="runBtn" onclick="run()">▶ Run</button><button onclick="stopRun()">■ Stop</button><button onclick="exportProject()">Export</button><button onclick="document.getElementById('importFile').click()">Import</button><input id="importFile" type="file" accept=".zip,.sglxproj.zip" hidden onchange="importProject(event)"><button onclick="toggleMode()" id="modeBtn">Blocks</button></header>
