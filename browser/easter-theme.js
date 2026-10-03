@@ -165,6 +165,8 @@
 
     for (const node of nodes) {
       if (!node.nodeValue) continue;
+      const parent = node.parentElement;
+      if (parent && ["SCRIPT","STYLE","TEXTAREA","INPUT"].includes(parent.tagName)) continue;
       node.nodeValue = node.nodeValue
         .replaceAll("SingulaX", "Caitlyn")
         .replaceAll("Singulax", "Caitlyn")
