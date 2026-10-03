@@ -223,3 +223,49 @@ body[data-theme="caitlyn"] #suggestions button.selected,
 body[data-theme="caitlyn"] #suggestions button:hover{background:#3a1116}
 body[data-theme="caitlyn"] .brand span{background:linear-gradient(90deg,#ef3b45,#ff7b82);background-clip:text;-webkit-background-clip:text}
 body[data-theme="caitlyn"] .touchPad button{background:#3a1116}
+
+/* Theme-aware controls */
+body[data-theme="nebula"]{
+  --theme-button-bg:#24123a;
+  --theme-button-text:#f5eaff;
+  --theme-button-hover:#352052;
+  --theme-button-border:#5b3b7a;
+}
+body[data-theme="light"]{
+  --theme-button-bg:#e4eaf3;
+  --theme-button-text:#182033;
+  --theme-button-hover:#d5deeb;
+  --theme-button-border:#b9c5d6;
+}
+body[data-theme="pretty-scene"]{
+  --theme-button-bg:var(--theme-panel2);
+  --theme-button-text:#352737;
+  --theme-button-hover:#dff8fa;
+  --theme-button-border:var(--theme-border);
+}
+body[data-theme="matcha"]{
+  --theme-button-bg:var(--theme-panel2);
+  --theme-button-text:#000;
+  --theme-button-hover:var(--theme-accent);
+  --theme-button-border:var(--theme-border);
+}
+body[data-theme="caitlyn"]{
+  --theme-button-bg:var(--theme-panel2);
+  --theme-button-text:#f7eef0;
+  --theme-button-hover:var(--theme-accent);
+  --theme-button-border:var(--theme-border);
+}
+body[data-theme] button,
+body[data-theme] select{
+  background:var(--theme-button-bg);
+  color:var(--theme-button-text);
+  border-color:var(--theme-button-border);
+}
+body[data-theme] button:hover,
+body[data-theme] button:focus-visible,
+body[data-theme] select:focus-visible{
+  background:var(--theme-button-hover);
+  color:var(--theme-button-text);
+  border-color:var(--theme-accent-strong, var(--theme-button-border));
+}
+body[data-theme] button:disabled{opacity:.55;}
