@@ -1,6 +1,7 @@
 (() => {
   const STORAGE_KEY = "singulax-easter-theme";
   const THEME = "caitlyn";
+  const CAITLYN_LOGO = new URL("../icons/caitlyn-logo.png", document.currentScript?.src || location.href).href;
 
   const css = `
     html.sgx-easter-theme, body.sgx-easter-theme {
@@ -200,6 +201,24 @@
     });
   }
 
+
+  function swapThemeLogos(active) {
+    document.querySelectorAll("img, link[rel~="icon"]").forEach(el => {
+      const attr = el.tagName === "IMG" ? "src" : "href";
+      const value = el.getAttribute(attr);
+      if (!value) return;
+      if (active) {
+        if (!el.dataset.sgxOriginalLogo && /(?:^|\/)icons\/logo\.png(?:[?#].*)?$/.test(new URL(value, location.href).pathname)) {
+          el.dataset.sgxOriginalLogo = value;
+          el.setAttribute(attr, CAITLYN_LOGO);
+        }
+      } else if (el.dataset.sgxOriginalLogo) {
+        el.setAttribute(attr, el.dataset.sgxOriginalLogo);
+        delete el.dataset.sgxOriginalLogo;
+      }
+    });
+  }
+
   function apply() {
     const active = localStorage.getItem(STORAGE_KEY) === THEME;
     document.documentElement.classList.toggle("sgx-easter-theme", active);
@@ -208,8 +227,10 @@
     if (active) {
       document.body?.setAttribute("data-easter-theme", THEME);
       replaceBranding();
+      swapThemeLogos(true);
     } else {
       document.body?.removeAttribute("data-easter-theme");
+      swapThemeLogos(false);
     }
   }
 
@@ -239,6 +260,7 @@
         document.documentElement.classList.add("sgx-easter-theme");
         document.body?.classList.add("sgx-easter-theme");
         replaceBranding();
+        swapThemeLogos(true);
       }
     });
   }).observe(document.documentElement, {subtree:true, childList:true});
