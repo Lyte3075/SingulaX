@@ -29,6 +29,7 @@ function openProject(id, ide='full-ide.html') {
 async function loadProjects() {
   const { data, error } = await supabase.from('projects')
     .select('id,name,description,created_at,updated_at')
+    .eq('owner_id', currentUser.id)
     .order('updated_at', { ascending:false });
   if (error) throw error;
   $('grid').innerHTML = '';
@@ -92,6 +93,5 @@ if (error || !data?.session) {
   location.href = 'account.html';
 } else {
   currentUser = data.session.user;
-  $('email').textContent = currentUser.email || 'Account';
   try { await loadProjects(); } catch(e) { setStatus(e.message || 'Could not load projects.', true); }
 }
