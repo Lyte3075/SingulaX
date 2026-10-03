@@ -208,7 +208,7 @@ async function openCommunityProject(p){
       $('code').textContent=files[mainPath]||'';
     }else{
       for(const path of (p.files||[])){
-        const normalizedPath=String(path).replace(/^\\/+/, '');
+        const normalizedPath=String(path).replace(/^\/+/, '');
         const relPath=normalizedPath.split('/').map(encodeURIComponent).join('/');
         const urls=['https://cdn.jsdelivr.net/gh/Lyte3075/SingulaX@community-projects/'+relPath+'?'+Date.now(),COMMUNITY_RAW_BASE+relPath+'?'+Date.now()];
         let r=null,lastError=null;
