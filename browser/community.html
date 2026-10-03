@@ -372,7 +372,7 @@ async function renderFollowing(){
     }
     const {data:follows,error}=await supabase.from('community_follows').select('project_id,created_at').eq('user_id',user.id).order('created_at',{ascending:false});
     if(error) throw error;
-    const all=await getCommunityProjects();
+    const all=(await getCommunityProjects()).filter(p => String(p.author || '').trim().toLowerCase() !== 'singulax');
     const ids=(follows||[]).map(x=>String(x.project_id));
     const projects=ids.map(id=>all.find(p=>String(p._id||p.id)===id)).filter(Boolean);
     $('status').textContent=projects.length+' followed Community projects.';
@@ -397,7 +397,7 @@ async function renderYourProjects(){
       $('grid').innerHTML = '<div class="empty">Sign in to your SingulaX account to see the projects you have published.</div>';
       return;
     }
-    const projects = await getCommunityProjects();
+    const projects = (await getCommunityProjects()).filter(p => String(p.author || '').trim().toLowerCase() !== 'singulax');
     const mine = projects.filter(p => String(p.author_id || '') === String(user.id));
     $('status').textContent = mine.length + ' projects you have published.';
     if(!mine.length){
@@ -525,7 +525,7 @@ $('searchBtn').onclick = async () => {
   $('grid').innerHTML = '';
   document.querySelector('.pagination')?.remove();
   try{
-    const projects = await getCommunityProjects();
+    const projects = (await getCommunityProjects()).filter(p => String(p.author || '').trim().toLowerCase() !== 'singulax');
     const results = projects.filter(p =>
       !q ||
       String(p.name || '').toLowerCase().includes(q) ||
