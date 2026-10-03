@@ -579,18 +579,40 @@ $('closeBtn').onclick = () => {
 };
 
 let communityUpdateProject = null;
-function openUpdateModal(project){
+let communityExistingFiles = null;
+
+async function loadPublishedProjectFiles(project){
+  const files = {};
+  for(const path of (project.files || [])){
+    const normalized = String(path).replace(/^\/+/, '');
+    const url = COMMUNITY_BASE + normalized.split('/').map(encodeURIComponent).join('/') + '?t=' + Date.now();
+    const response = await fetch(url, {cache:'no-store'});
+    if(!response.ok) throw new Error('Could not load published file: ' + normalized);
+    const name = normalized.includes('/files/') ? normalized.split('/files/').slice(1).join('/') : normalized;
+    files[name] = await response.text();
+  }
+  return files;
+}
+
+async function openUpdateModal(project){
   communityUpdateProject = project;
+  communityExistingFiles = null;
   $('uploadTitle').textContent = 'Update ' + (project.name || 'Community Project') + ' 🔄';
   $('uploadHint').innerHTML = 'Update this existing Community project without creating a duplicate. Its project ID, likes, follows, and download count stay attached to it.';
   $('publishBtn').textContent = 'Publish Update';
   $('uploadModal').classList.add('show');
-  $('uploadStatus').textContent = '';
+  $('uploadStatus').textContent = 'Loading the currently published files…';
   $('repoName').value = project.name || '';
   $('repoDescription').value = project.description || '';
   $('projectVersion').value = project.version || '1.0.0';
   $('projectFile').value = '';
   loadMyCloudProjects();
+  try{
+    communityExistingFiles = await loadPublishedProjectFiles(project);
+    $('uploadStatus').textContent = 'Published files loaded. You can edit the details or choose a different project source.';
+  }catch(error){
+    $('uploadStatus').textContent = 'Could not load the published files: ' + error.message;
+  }
 }
 function openManageModal(project){
   communityManageProject=project;
@@ -615,6 +637,7 @@ function showManageHistory(){
 let communityManageProject=null;
 function resetUploadModal(){
   communityUpdateProject = null;
+  communityExistingFiles = null;
   $('uploadTitle').textContent = 'Publish a SingulaX Project 🚀';
   $('uploadHint').innerHTML = 'Projects are published into the <code>community-projects</code> branch, not the main branch. Each project gets its own folder containing <code>project.json</code> plus its project files.';
   $('publishBtn').textContent = 'Publish';
@@ -707,8 +730,10 @@ async function publishProject(){
   let description = $('repoDescription').value.trim() || 'A SingulaX project';
   let version = $('projectVersion').value.trim() || '1.0.0';
 
-  if(!cloudId && !file){
-    $('uploadStatus').textContent = 'Choose one of your My Projects or upload a project file.';
+  if(!cloudId && !file && !(communityUpdateProject && communityExistingFiles)){
+    $('uploadStatus').textContent = communityUpdateProject
+      ? 'The published project files are still loading. Please wait a moment and try again.'
+      : 'Choose one of your My Projects or upload a project file.';
     return;
   }
 
@@ -727,13 +752,13 @@ async function publishProject(){
       if(error || !project) throw new Error(error?.message || 'Could not load that project.');
       const owned = project.data || {};
       name = name || project.name || 'My SingulaX Project';
-      description = project.description || description;
-      version = owned.version || version;
+      description = description || project.description || 'A SingulaX project';
+      version = version || owned.version || '1.0.0';
       for(const [path,value] of Object.entries(owned.files || {})){
         if(typeof value === 'string') files[String(path).replace(/^\/+/, '')] = value;
       }
       main = owned.main || Object.keys(files).find(x => /\.sglx$/i.test(x)) || Object.keys(files)[0] || 'main.sglx';
-    }else{
+    }else if(file){
       const raw = await file.text();
       if(/\.sglxproj$/i.test(file.name)){
         let parsed;
@@ -748,6 +773,15 @@ async function publishProject(){
         main = 'main.' + ext;
         files[main] = raw;
       }
+    }else if(communityUpdateProject && communityExistingFiles){
+      files = {...communityExistingFiles};
+      main =
+        (communityUpdateProject.main && communityUpdateProject.main.split('/files/').pop()) ||
+        Object.keys(files).find(x => /\.sglx$/i.test(x)) ||
+        Object.keys(files)[0] ||
+        'main.sglx';
+    }else{
+      throw new Error('Choose one of your My Projects or wait for the published project files to finish loading.');
     }
 
     if(!name) throw new Error('Project name is required.');
