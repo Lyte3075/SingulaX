@@ -204,12 +204,24 @@ main {
 }
 
 .hero-stars {
-  margin-bottom: 20px;
+  width: 96px;
+  height: 22px;
+  margin: 0 auto 20px;
+  position: relative;
   color: var(--pink);
   font-size: 18px;
-  letter-spacing: 14px;
   opacity: 0.9;
 }
+
+.hero-stars span {
+  position: absolute;
+  top: 0;
+  line-height: 1;
+}
+
+.hero-stars span:nth-child(1) { left: 0; }
+.hero-stars span:nth-child(2) { left: 50%; transform: translateX(-50%); }
+.hero-stars span:nth-child(3) { right: 0; }
 
 .hero h1 {
   margin: 0;
