@@ -165,7 +165,8 @@
       filter:none;
     }
     html.sgx-rain-theme, body.sgx-rain-theme { --rain-bg:#071018; --rain-panel:#0d1821; --rain-panel-2:#12212c; --rain-border:#263d4b; --rain-text:#e5f2f8; --rain-muted:#91a9b7; --rain-accent:#67c7e8; background:linear-gradient(180deg,#071018,#0a141c 45%,#050b10)!important; color:var(--rain-text)!important; }
-    body.sgx-rain-theme::before { content:""; position:fixed; inset:0; z-index:2147483640; pointer-events:none; background:linear-gradient(180deg,rgba(7,16,24,.12),rgba(2,7,11,.48)); }
+    body.sgx-rain-theme { position:relative; min-height:100vh; }
+    body.sgx-rain-theme > :not(.sgx-rain-layer) { position:relative; z-index:1; }
     body.sgx-rain-theme header,body.sgx-rain-theme nav,body.sgx-rain-theme aside,body.sgx-rain-theme main,body.sgx-rain-theme section,body.sgx-rain-theme article,body.sgx-rain-theme footer,body.sgx-rain-theme .panel,body.sgx-rain-theme .window,body.sgx-rain-theme .card,body.sgx-rain-theme dialog { border-color:var(--rain-border)!important; }
     body.sgx-rain-theme header,body.sgx-rain-theme nav,body.sgx-rain-theme aside,body.sgx-rain-theme .panel,body.sgx-rain-theme .window,body.sgx-rain-theme dialog { background:rgba(10,20,28,.9)!important; color:var(--rain-text)!important; }
     body.sgx-rain-theme .card,body.sgx-rain-theme .project,body.sgx-rain-theme .modal,body.sgx-rain-theme .manageProject,body.sgx-rain-theme .managePanel { background:linear-gradient(145deg,var(--rain-panel-2),var(--rain-panel))!important; color:var(--rain-text)!important; }
@@ -174,7 +175,7 @@
     body.sgx-rain-theme a,body.sgx-rain-theme .accent,body.sgx-rain-theme .extension-name { color:#7dd8f2!important; }
     body.sgx-rain-theme p,body.sgx-rain-theme small,body.sgx-rain-theme .muted,body.sgx-rain-theme .hint,body.sgx-rain-theme .status { color:var(--rain-muted)!important; }
     body.sgx-rain-theme .glow,body.sgx-rain-theme .glow.cyan,body.sgx-rain-theme .glow.purple { background:#39758c!important; box-shadow:0 0 100px #39758c,0 0 180px #1d4558!important; filter:blur(70px)!important; opacity:.16!important; }
-    .sgx-rain-layer { position:fixed; inset:0; z-index:2147483645; pointer-events:none; overflow:hidden; }
+    .sgx-rain-layer { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
     .sgx-rain-drop { position:absolute; top:-15vh; width:1px; height:7vh; background:linear-gradient(transparent,rgba(150,220,245,.72)); transform:rotate(10deg); animation:sgxRainFall linear infinite; }
     .sgx-rain-clouds { position:absolute; inset:0; background:radial-gradient(ellipse at 20% 0%,rgba(70,91,105,.22),transparent 34%),radial-gradient(ellipse at 70% 8%,rgba(48,66,78,.28),transparent 38%); }
     .sgx-lightning { position:absolute; inset:0; opacity:0; background:rgba(210,240,255,.8); mix-blend-mode:screen; }
@@ -283,6 +284,7 @@
     rainTimer=setInterval(()=>{ lightning.classList.remove("flash"); void lightning.offsetWidth; lightning.classList.add("flash"); },5500+Math.random()*5500);
   }
   function apply() {
+    if (!document.body) return;
     const active = localStorage.getItem(STORAGE_KEY) === THEME;
     document.documentElement.classList.toggle("sgx-easter-theme", active);
     document.body?.classList.toggle("sgx-easter-theme", active);
@@ -320,20 +322,22 @@
     }
   };
 
-  apply();
+  function applyWhenReady() {
+    if (document.body) apply();
+    else document.addEventListener("DOMContentLoaded", apply, {once:true});
+  }
+
+  applyWhenReady();
+  window.addEventListener("pageshow", apply);
 
   let queued = false;
   new MutationObserver(() => {
-    if (localStorage.getItem(STORAGE_KEY) !== THEME || queued) return;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if ((saved !== THEME && saved !== RAIN_THEME) || queued) return;
     queued = true;
     requestAnimationFrame(() => {
       queued = false;
-      if (localStorage.getItem(STORAGE_KEY) === THEME) {
-        document.documentElement.classList.add("sgx-easter-theme");
-        document.body?.classList.add("sgx-easter-theme");
-        replaceBranding();
-        swapThemeIcons(true);
-      }
+      apply();
     });
   }).observe(document.documentElement, {subtree:true, childList:true});
 })();
