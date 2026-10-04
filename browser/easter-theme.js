@@ -285,27 +285,34 @@
   }
   function apply() {
     if (!document.body) return;
-    const active = localStorage.getItem(STORAGE_KEY) === THEME;
-    document.documentElement.classList.toggle("sgx-easter-theme", active);
-    document.body?.classList.toggle("sgx-easter-theme", active);
 
-    const rainActive = localStorage.getItem(STORAGE_KEY) === RAIN_THEME;
+    const savedTheme = localStorage.getItem(STORAGE_KEY);
+    const caitlynActive = savedTheme === THEME;
+    const rainActive = savedTheme === RAIN_THEME;
+
+    document.documentElement.classList.toggle("sgx-easter-theme", caitlynActive);
+    document.body.classList.toggle("sgx-easter-theme", caitlynActive);
     document.documentElement.classList.toggle("sgx-rain-theme", rainActive);
-    document.body?.classList.toggle("sgx-rain-theme", rainActive);
-    if (active) {
-      document.body?.setAttribute("data-easter-theme", THEME);
+    document.body.classList.toggle("sgx-rain-theme", rainActive);
+
+    if (caitlynActive) {
+      document.body.setAttribute("data-easter-theme", THEME);
       replaceBranding();
       swapThemeIcons(true);
       stopRainEffects();
-    } else if (rainActive) {
-      document.body?.setAttribute("data-easter-theme", RAIN_THEME);
-      swapThemeIcons(false);
-      startRainEffects();
-    } else {
-      document.body?.removeAttribute("data-easter-theme");
-      swapThemeIcons(false);
-      stopRainEffects();
+      return;
     }
+
+    if (rainActive) {
+      document.body.setAttribute("data-easter-theme", RAIN_THEME);
+      swapThemeIcons(false);
+      if (!document.querySelector(".sgx-rain-layer")) startRainEffects();
+      return;
+    }
+
+    document.body.removeAttribute("data-easter-theme");
+    swapThemeIcons(false);
+    stopRainEffects();
   }
 
   window.SingulaXEasterTheme = {
