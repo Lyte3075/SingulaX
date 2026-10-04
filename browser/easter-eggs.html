@@ -353,15 +353,25 @@
         : "No Easter egg theme is active.";
     }
 
-    document.getElementById("caitlynThemeBtn").addEventListener("click", () => {
-      window.SingulaXEasterTheme.set("caitlyn");
-      updateThemeStatus();
-
     function updateRainThemeStatus() {
       const status = document.getElementById("rainThemeStatus");
       const active = localStorage.getItem("singulax-easter-theme") === "rain";
-      status.textContent = active ? "Rain is active across the site. 🌧️⚡" : "Rain is not active.";
+      status.textContent = active
+        ? "Rain is active across the site. 🌧️⚡"
+        : "Rain is not active.";
     }
+
+    document.getElementById("caitlynThemeBtn").addEventListener("click", () => {
+      window.SingulaXEasterTheme.set("caitlyn");
+      updateThemeStatus();
+      updateRainThemeStatus();
+    });
+
+    document.getElementById("clearThemeBtn").addEventListener("click", () => {
+      window.SingulaXEasterTheme.clear();
+      updateThemeStatus();
+      updateRainThemeStatus();
+    });
 
     document.getElementById("rainThemeBtn").addEventListener("click", () => {
       window.SingulaXEasterTheme.set("rain");
@@ -375,15 +385,8 @@
       updateRainThemeStatus();
     });
 
-    updateRainThemeStatus();
-    });
-
-    document.getElementById("clearThemeBtn").addEventListener("click", () => {
-      window.SingulaXEasterTheme.clear();
-      updateThemeStatus();
-    });
-
     updateThemeStatus();
+    updateRainThemeStatus();
   </script>
 </body>
 </html>
