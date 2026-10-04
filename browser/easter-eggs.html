@@ -218,6 +218,16 @@
           </div>
           <div class="secret" id="themeStatus">Checking theme…</div>
         </article>
+        <article class="card theme-card">
+          <div class="egg-icon">🌧️</div>
+          <h3>Rain</h3>
+          <p>Turns the entire SingulaX site into a dark storm. Animated rain falls over the page, clouds darken the backgrounds, and lightning flashes occasionally across the screen.</p>
+          <div class="theme-actions">
+            <button type="button" id="rainThemeBtn">🌧️ Apply Rain</button>
+            <button type="button" id="clearRainThemeBtn">Reset Easter Theme</button>
+          </div>
+          <div class="secret" id="rainThemeStatus">Checking theme…</div>
+        </article>
       </div>
     </section>
 
@@ -346,6 +356,26 @@
     document.getElementById("caitlynThemeBtn").addEventListener("click", () => {
       window.SingulaXEasterTheme.set("caitlyn");
       updateThemeStatus();
+
+    function updateRainThemeStatus() {
+      const status = document.getElementById("rainThemeStatus");
+      const active = localStorage.getItem("singulax-easter-theme") === "rain";
+      status.textContent = active ? "Rain is active across the site. 🌧️⚡" : "Rain is not active.";
+    }
+
+    document.getElementById("rainThemeBtn").addEventListener("click", () => {
+      window.SingulaXEasterTheme.set("rain");
+      updateThemeStatus();
+      updateRainThemeStatus();
+    });
+
+    document.getElementById("clearRainThemeBtn").addEventListener("click", () => {
+      window.SingulaXEasterTheme.clear();
+      updateThemeStatus();
+      updateRainThemeStatus();
+    });
+
+    updateRainThemeStatus();
     });
 
     document.getElementById("clearThemeBtn").addEventListener("click", () => {
