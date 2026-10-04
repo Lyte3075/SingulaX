@@ -331,7 +331,16 @@
   window.addEventListener("pageshow", apply);
 
   let queued = false;
-  new MutationObserver(() => {
+  new MutationObserver((mutations) => {
+    const onlyRainChanges = mutations.every(m => {
+      const targetIsRain = m.target?.closest?.(".sgx-rain-layer");
+      const nodesAreRain = [...m.addedNodes, ...m.removedNodes].every(n =>
+        n.nodeType !== Node.ELEMENT_NODE || n.matches?.(".sgx-rain-layer") || n.closest?.(".sgx-rain-layer")
+      );
+      return targetIsRain || nodesAreRain;
+    });
+    if (onlyRainChanges) return;
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if ((saved !== THEME && saved !== RAIN_THEME) || queued) return;
     queued = true;
