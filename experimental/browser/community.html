@@ -52,12 +52,19 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
   <section id="viewer" class="viewer">
     <div class="viewerHead">
       <strong id="viewerTitle">Project</strong>
-      <button id="runProjectBtn" class="primary">▶ Run</button>\n      <button id="stopProjectBtn">■ Stop</button>\n      <button id="remixBtn">Remix</button>
+      <button id="runProjectBtn" class="primary">▶ Run</button>
+      <button id="stopProjectBtn">■ Stop</button>
+      <button id="remixBtn">Remix</button>
       <button id="closeBtn">Close</button>
     </div>
     <div class="viewerBody">
-      <pre id="code" class="code"></pre>
-      <canvas id="preview" class="preview" width="800" height="450"></canvas>
+      <div class="viewerCodePane">
+        <div class="viewerCodeHead"><strong>Project Source</strong><span id="sourceFileLabel"></span></div>
+        <pre id="code" class="code"></pre>
+        <div class="viewerCodeHead"><strong>Console</strong><button id="clearProjectConsole">Clear</button></div>
+        <pre id="projectConsole" class="viewerConsole" aria-live="polite">Ready. Press Run to execute this project.</pre>
+      </div>
+      <div class="viewerPreviewPane"><div class="viewerPreviewHead"><strong>Live Preview</strong><span id="previewStatus">Ready</span></div><canvas id="preview" class="preview" width="800" height="450"></canvas></div>
     </div>
   </section>
 </main>
@@ -111,7 +118,16 @@ let currentProject = null;
 let currentTab = 'trending';
 let runtime = null;
 let frame = [];
-let generation = 0;\nlet projectConsoleLines = [];\nfunction projectLog(value){\n  const line = String(value ?? '');\n  projectConsoleLines.push(line);\n  if(projectConsoleLines.length > 300) projectConsoleLines = projectConsoleLines.slice(-300);\n  $('projectConsole').textContent = projectConsoleLines.join('\\n');\n  $('projectConsole').scrollTop = $('projectConsole').scrollHeight;\n}\nfunction clearProjectConsole(){ projectConsoleLines = []; $('projectConsole').textContent = ''; }
+let generation = 0;
+let projectConsoleLines = [];
+function projectLog(value){
+  const line = String(value ?? '');
+  projectConsoleLines.push(line);
+  if(projectConsoleLines.length > 300) projectConsoleLines = projectConsoleLines.slice(-300);
+  $('projectConsole').textContent = projectConsoleLines.join('\\n');
+  $('projectConsole').scrollTop = $('projectConsole').scrollHeight;
+}
+function clearProjectConsole(){ projectConsoleLines = []; $('projectConsole').textContent = ''; }
 
 function esc(value=''){
   return String(value).replace(/[&<>"]/g, c => ({
@@ -297,6 +313,9 @@ async function openCommunityProject(project){
     currentProject = {community:project,src:{path:mainPath,text:files[mainPath]},files};
     $('viewerTitle').textContent = (project.name || project._id) + ' · ' + mainPath;
     $('code').textContent = files[mainPath];
+    $('sourceFileLabel').textContent = mainPath;
+    clearProjectConsole();
+    $('previewStatus').textContent = 'Loaded';
     $('viewer').classList.add('show');
     await testSource();
     $('viewer').scrollIntoView({behavior:'smooth',block:'start'});
@@ -317,14 +336,18 @@ async function testSource(){
   frame = [];
 
   if(typeof SingulaxRuntime !== 'function'){
+    $('previewStatus').textContent = 'Runtime unavailable';
+    projectLog('ERROR: SingulaX runtime could not be loaded.');
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px system-ui';
     ctx.fillText('Runtime is unavailable. Source is shown on the left.',18,30);
     return;
   }
 
+  $('previewStatus').textContent = 'Running';
+  projectLog('▶ Running ' + (currentProject.community?.name || 'Community Project'));
   runtime = new SingulaxRuntime({
-    output: text => console.log(text),
+    output: text => projectLog(text),
     frame: f => {frame = f.slice();},
     input: async () => '',
     fileRead: async () => '',
@@ -350,8 +373,10 @@ async function testSource(){
 
   try{
     await runtime.runProject(runtimeProject);
-    if(runId === generation) drawFrame();
+    if(runId === generation){ $('previewStatus').textContent = 'Running'; drawFrame(); }
   }catch(e){
+    $('previewStatus').textContent = 'Runtime error';
+    projectLog('ERROR: ' + (e?.stack || e?.message || e));
     ctx.fillStyle = '#ff6b8a';
     ctx.font = '16px system-ui';
     ctx.fillText('Test error: ' + e.message,18,30);
@@ -404,7 +429,17 @@ $('searchBtn').onclick = async () => {
   }
 };
 $('query').onkeydown = e => {if(e.key === 'Enter') $('searchBtn').click();};
-$('runProjectBtn').onclick = () => { clearProjectConsole(); testSource(); };\n$('stopProjectBtn').onclick = () => {\n  generation++;\n  if(runtime) runtime.running = false;\n  runtime = null;\n  $('previewStatus').textContent = 'Stopped';\n  projectLog('■ Execution stopped.');\n};\n$('clearProjectConsole').onclick = clearProjectConsole;\n\n$('closeBtn').onclick = () => {
+$('runProjectBtn').onclick = () => { clearProjectConsole(); testSource(); };\n$('stopProjectBtn').onclick = () => {\n  generation++;\n  if(runtime) runtime.running = false;\n  runtime = null;\n  $('previewStatus').textContent = 'Stopped';\n  projectLog('■ Execution stopped.');\n};\n$('clearProjectConsole').onclick = clearProjectConsole;\n\n$('runProjectBtn').onclick = () => { clearProjectConsole(); testSource(); };
+$('stopProjectBtn').onclick = () => {
+  generation++;
+  if(runtime) runtime.running = false;
+  runtime = null;
+  $('previewStatus').textContent = 'Stopped';
+  projectLog('■ Execution stopped.');
+};
+$('clearProjectConsole').onclick = clearProjectConsole;
+
+$('closeBtn').onclick = () => {
   $('viewer').classList.remove('show');
   generation++;
   if(runtime) runtime.running = false;
