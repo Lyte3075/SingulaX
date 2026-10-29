@@ -4447,6 +4447,18 @@ if (communityPreviewMode) {
       stop();
     }
   });
+  window.addEventListener('error', event => {
+    window.parent.postMessage({
+      type: 'SINGULAX_PREVIEW_ERROR',
+      message: String(event.error?.stack || event.message || 'Unexpected runtime error')
+    }, location.origin);
+  });
+  window.addEventListener('unhandledrejection', event => {
+    window.parent.postMessage({
+      type: 'SINGULAX_PREVIEW_ERROR',
+      message: String(event.reason?.stack || event.reason?.message || event.reason || 'Unhandled promise rejection')
+    }, location.origin);
+  });
   window.parent.postMessage({ type: 'SINGULAX_PREVIEW_READY' }, location.origin);
 }
 
