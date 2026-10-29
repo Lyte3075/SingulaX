@@ -124,7 +124,7 @@ function projectLog(value){
   const line = String(value ?? '');
   projectConsoleLines.push(line);
   if(projectConsoleLines.length > 300) projectConsoleLines = projectConsoleLines.slice(-300);
-  $('projectConsole').textContent = projectConsoleLines.join('\\n');
+  $('projectConsole').textContent = projectConsoleLines.join('\n');
   $('projectConsole').scrollTop = $('projectConsole').scrollHeight;
 }
 function clearProjectConsole(){ projectConsoleLines = []; $('projectConsole').textContent = ''; }
