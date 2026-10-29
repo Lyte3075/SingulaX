@@ -67,6 +67,12 @@ main{max-width:1200px;margin:0 auto;padding:26px 18px 60px}.hero h1{font-size:cl
 .nav-primary{background:linear-gradient(135deg,rgba(75,224,227,.12),rgba(155,108,255,.1));border-color:rgba(75,224,227,.22)}
 .manageBox{padding:15px;border-radius:18px}
 .manageOption{grid-template-columns:36px 1fr auto;padding:12px}
+
+/* Keep profile photos contained in their author row, regardless of global image rules. */
+.author{display:flex;align-items:center;gap:9px;min-width:0;max-width:100%;overflow:hidden}
+.author .authorAvatar{display:block!important;flex:0 0 36px!important;width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;max-width:36px!important;max-height:36px!important;object-fit:cover!important;border-radius:50%!important;overflow:hidden}
+.author img.authorAvatar{aspect-ratio:1/1!important}
+
 </style>
 <script src="easter-theme.js"></script>
 <script src="update-check.js"></script>
