@@ -1,4 +1,5 @@
 // SingulaX browser runtime is loaded before this file.
+const communityPreviewMode = new URLSearchParams(location.search).get('communityPreview') === '1';
 
 const $ = id => document.getElementById(id);
 const editor = $('editor');
@@ -209,6 +210,9 @@ function log(s) {
     (consoleEl.textContent ? '\n' : '') + s;
 
   consoleEl.scrollTop = consoleEl.scrollHeight;
+  if (communityPreviewMode && window.parent !== window) {
+    window.parent.postMessage({ type: 'SINGULAX_PREVIEW_LOG', line: String(s) }, location.origin);
+  }
 }
 
 function esc(s = '') {
@@ -1076,7 +1080,7 @@ function drawCube(ctx, x) {
 }
 
 async function run() {
-  save();
+  if (!communityPreviewMode) save();
 
   stop();
 
@@ -1225,7 +1229,8 @@ async function run() {
 
   try {
     await runtime.runProject(
-      project
+      project,
+      communityPreviewMode ? { entry: current } : undefined
     );
 
     if (thisRun !== runGeneration) {
@@ -3462,6 +3467,9 @@ function diagnose() {
 }
 
 function showError(e) {
+  if (communityPreviewMode && window.parent !== window) {
+    window.parent.postMessage({ type: 'SINGULAX_PREVIEW_ERROR', message: String(e?.stack || e?.message || e) }, location.origin);
+  }
   const m =
     String(
       e.message || e
@@ -4393,6 +4401,56 @@ $('autosave').checked =
   false;
 
 render();
+
+if (communityPreviewMode) {
+  document.body.classList.add('community-preview');
+  const previewStyle = document.createElement('style');
+  previewStyle.textContent = `
+    html,body{width:100%;height:100%;margin:0!important;overflow:hidden!important;background:#000!important}
+    body.community-preview header,body.community-preview aside,body.community-preview .studioTabs,
+    body.community-preview #window-code,body.community-preview #window-console,
+    body.community-preview #settings,body.community-preview #ideNavModal{display:none!important}
+    body.community-preview main,body.community-preview .work,body.community-preview .bottom,
+    body.community-preview #window-preview{display:block!important;position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}
+    body.community-preview #window-preview .panelHead{display:none!important}
+    body.community-preview #game{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain;touch-action:none}
+    body.community-preview #touchPad{z-index:20}
+    body.community-preview #singulax-3d-canvas{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;z-index:5!important}
+  `;
+  document.head.appendChild(previewStyle);
+  window.addEventListener('message', event => {
+    if (event.origin !== location.origin || !event.data) return;
+    if (event.data.type === 'SINGULAX_COMMUNITY_PROJECT') {
+      const incoming = event.data.project || {};
+      project = {
+        name: incoming.name || 'Community Project',
+        files: incoming.files && typeof incoming.files === 'object' ? incoming.files : {},
+        assets: incoming.assets && typeof incoming.assets === 'object' ? incoming.assets : {},
+        folders: incoming.folders || [],
+        settings: { theme: 'midnight', fontSize: 15, autosave: false, ...(incoming.settings || {}) }
+      };
+      project.settings.autosave = false;
+      current = incoming.main && project.files[incoming.main] !== undefined
+        ? incoming.main
+        : (Object.keys(project.files).find(isRunnableSingulaXFileName) || Object.keys(project.files)[0] || 'main.sglx');
+      if (project.files[current] === undefined) project.files[current] = '';
+      render();
+      setStudioTab('preview');
+      window.parent.postMessage({ type: 'SINGULAX_PREVIEW_READY', name: project.name }, location.origin);
+      stop();
+      setTimeout(() => run(), 40);
+    } else if (event.data.type === 'SINGULAX_COMMUNITY_STOP') {
+      stop();
+    }
+  });
+  window.addEventListener('error', event => {
+    window.parent.postMessage({ type: 'SINGULAX_PREVIEW_ERROR', message: String(event.error?.stack || event.message || 'Unexpected runtime error') }, location.origin);
+  });
+  window.addEventListener('unhandledrejection', event => {
+    window.parent.postMessage({ type: 'SINGULAX_PREVIEW_ERROR', message: String(event.reason?.stack || event.reason?.message || event.reason || 'Unhandled promise rejection') }, location.origin);
+  });
+  window.parent.postMessage({ type: 'SINGULAX_PREVIEW_READY' }, location.origin);
+}
 
 // Service worker.
 if (
