@@ -362,7 +362,7 @@ async function testSource(){
       project:runtimeProject
     }, location.origin);
   };
-  iframe.src = 'full-ide.html?communityPreview=1&run=' + runId;
+  iframe.src = '../../browser/full-ide.html?communityPreview=1&run=' + runId;
 }
 
 window.addEventListener('message', event => {
