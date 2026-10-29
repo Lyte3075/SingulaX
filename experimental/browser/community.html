@@ -318,10 +318,10 @@ async function openCommunityProject(project){
       const name = relative.split('/').pop() || relative;
       files[name] = content;
     }
-    const requestedMain = typeof project.main === 'string' ? project.main.replace(/^\\/+/, '').split('/').pop() : '';
+    const requestedMain = typeof project.main === 'string' ? project.main.replace(/^\/+/, '').split('/').pop() : '';
     const mainPath =
       (requestedMain && files[requestedMain] !== undefined ? requestedMain : '') ||
-      Object.keys(files).find(x => /\\.(sglx|txt|vlla|cyln|smsc|wsc|ctrsc|ezsc|lyte3075)$/i.test(x)) ||
+      Object.keys(files).find(x => new RegExp('\\.(' + EXTENSIONS.join('|') + ')$','i').test(x)) ||
       Object.keys(files)[0];
     if(!mainPath || !files[mainPath]) throw new Error('This project has no readable source file.');
     currentProject = {community:project,src:{path:mainPath,text:files[mainPath]},files};
