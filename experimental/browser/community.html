@@ -429,7 +429,15 @@ $('searchBtn').onclick = async () => {
   }
 };
 $('query').onkeydown = e => {if(e.key === 'Enter') $('searchBtn').click();};
-$('runProjectBtn').onclick = () => { clearProjectConsole(); testSource(); };\n$('stopProjectBtn').onclick = () => {\n  generation++;\n  if(runtime) runtime.running = false;\n  runtime = null;\n  $('previewStatus').textContent = 'Stopped';\n  projectLog('■ Execution stopped.');\n};\n$('clearProjectConsole').onclick = clearProjectConsole;\n\n$('runProjectBtn').onclick = () => { clearProjectConsole(); testSource(); };
+$('runProjectBtn').onclick = () => { clearProjectConsole(); testSource(); };
+$('stopProjectBtn').onclick = () => {
+  generation++;
+  if(runtime) runtime.running = false;
+  runtime = null;
+  $('previewStatus').textContent = 'Stopped';
+  projectLog('■ Execution stopped.');
+};
+$('clearProjectConsole').onclick = clearProjectConsole;
 $('stopProjectBtn').onclick = () => {
   generation++;
   if(runtime) runtime.running = false;
